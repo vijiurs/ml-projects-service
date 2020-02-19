@@ -316,9 +316,15 @@ function mapSolutionsToProgram(body) {
 
         // console.log("=============",body.isStarted);
         if (requestBody.programId && requestBody.impTemplateId) {
-            let projectDoc = await programsModel.findOne({ '_id': mongoose.Types.ObjectId(requestBody.programId) });
-            if (projectDoc) {
-                let templateData = await impTemplatesModel.findOne({ '_id': mongoose.Types.ObjectId(requestBody.impTemplateId) }).lean();
+            let programsDoc = await programsModel.findOne({ '_id': mongoose.Types.ObjectId(requestBody.programId) });
+            if (programsDoc) {
+                let templateData = "";
+                if(requestBody.templateData){
+                    templateData = requestBody.templateData;
+                }else{
+                     templateData = await impTemplatesModel.findOne({ '_id': mongoose.Types.ObjectId(requestBody.impTemplateId) }).lean();
+                }
+                
                
                 if(body.isStarted){
                     templateData['isStarted'] = body.isStarted;
@@ -326,7 +332,6 @@ function mapSolutionsToProgram(body) {
                 if(body.createdType){
                     templateData['createdType'] = body.createdType;
                 }
-
                 if(body.startDate){
                     templateData['startDate'] = body.startDate;
                 }
@@ -371,7 +376,7 @@ function mapSolutionsToProgram(body) {
                     let doc = await solutionsModel.create(solutionSchema);
                     if (doc) {
                         var projectObj = {
-                            components: projectDoc.components
+                            components: programsDoc.components
                         }
                         projectObj.components.push(doc._id);
                         let projectUp = await programsModel.findOneAndUpdate({ '_id': mongoose.Types.ObjectId(requestBody.programId) }, projectObj);
@@ -379,7 +384,6 @@ function mapSolutionsToProgram(body) {
                         if (!projectUp) {
                             resolve({ status: "failed", solutionDetails: doc, message: "during updating project", error: er });
                         } else {
-                            // console.log("ee",soluInfo);
                             resolve({ "project": projectUp, status: "success", templateData: templateData, solutionDetails: doc });
                         }
                     } else {
@@ -402,7 +406,14 @@ function projectCreateAndSolutionMapping(obj) {
             
             var userId = obj.userId;
             // console.log(element.userId, "element", obj.solutionId);
-            let solDoc = await solutionsModel.findOne({ '_id': mongoose.Types.ObjectId(obj.solutionId), 'programId': mongoose.Types.ObjectId(obj.programId) }).lean();
+
+            let solDoc;
+            if(obj.solutionDetails){
+                solDoc = obj.solutionDetails;
+            }else{
+                 solDoc = await solutionsModel.findOne({ '_id': mongoose.Types.ObjectId(obj.solutionId), 'programId': mongoose.Types.ObjectId(obj.programId) }).lean();
+            }
+            
             if (solDoc) {
                 // if (element.roles == "projectManager") {
                 //     solDoc.roles.projectManagers.push(element.userId);
@@ -444,6 +455,7 @@ function projectCreateAndSolutionMapping(obj) {
                 var docInfo = "";
                 if(obj.customBody){
                   
+                    console.log("customBody",obj.customBody.endDate)
                     doc = obj.customBody;
                     docInfo = obj.customBody;
                 }else{
@@ -489,13 +501,13 @@ function projectCreateAndSolutionMapping(obj) {
                         "startDate":docInfo.startDate ? docInfo.startDate : "",
                         "endDate": docInfo.endDate ? docInfo.endDate : ""
                     }
-
                     var projectIDs = [];
-                    let projectDoc = await projectsModel.create(projectData)
+                    let projectDoc = await projectsModel.create(projectData);
                     if (projectDoc) {
                         projectIDs.push(projectDoc._id);
                         let taskInput = docInfo;
                         var subTasksArray = [];
+                        projectDoc.tasks = [];
                         await Promise.all(docInfo.tasks.map(async function (el) {
                             var projectTaskSchema = {
                                 "projectId": projectDoc._id,
@@ -520,11 +532,14 @@ function projectCreateAndSolutionMapping(obj) {
                                 console.log("err", err);
                                 // deferred.resolve(err);
                             } else {
+
+                                projectDoc.tasks.push(taskDoc);
                                 console.log("task created", taskDoc._id);
                             }
                         })
                         );
                         var resp = {
+                            projectData:projectDoc,
                             status: "success",
                             solutionId: obj.solutionId,
                             userId: obj.userId,
@@ -559,28 +574,29 @@ function projectCreateAndSolutionMapping(obj) {
  * 
  * @param {*} req    
  */
-function createTemplateAndPrject(req) {
+function createTemplateAndPrject(projectDocument,userId) {
     return new Promise(async function (resolve, reject) {
         try {
             // syncData.tasks = req.body.tasks;
-            req.body.createdBy = req.body.userId;
-            req.body.creationType = "by self";
-            req.body.startDate = req.body.startDate;
-            req.body.endDate = req.body.endDate;
+            projectDocument.createdBy = userId;
+            projectDocument.creationType = config.createdSelf;
+            projectDocument.startDate = projectDocument.startDate;
+            projectDocument.endDate = projectDocument.endDate;
 
             
-            let data = await createImprovementTemplate(req.body);
+            let data = await createImprovementTemplate(projectDocument);
             if (data._id) {
                 let obj = {
                     programId: config.myProjectMapingProgramId,
                     impTemplateId: data._id,
-                    isStarted:req.body.isStarted ? req.body.isStarted:false,
-                    createdType: req.body.createdType ? req.body.createdType : "",
-                    startDate:req.body.startDate ? req.body.startDate : "",
-                    endDate:req.body.endDate ? req.body.endDate : ""
+                    isStarted:projectDocument.isStarted ? projectDocument.isStarted:false,
+                    createdType: projectDocument.createdType ? projectDocument.createdType : "",
+                    startDate:projectDocument.startDate ? projectDocument.startDate : "",
+                    endDate:projectDocument.endDate ? projectDocument.endDate : "",
+                    templateData:data
                 }
 
-                console.log("obj",obj)
+                // console.log("obj",obj)
                 let response = await mapSolutionsToProgram(obj);
 
                 // console.log("response",response);
@@ -588,37 +604,17 @@ function createTemplateAndPrject(req) {
                 if (response && response.solutionDetails._id) {
                     let json = {
                         programId: config.myProjectMapingProgramId,
-                        userId: req.body.userId,
+                        userId: userId,
                         solutionId: response.solutionDetails._id,
-                        isStarted:req.body.isStarted ? req.body.isStarted:false,
-                        createdType: req.body.createdType ? req.body.createdType : ""
+                        isStarted:projectDocument.isStarted ? projectDocument.isStarted:false,
+                        createdType: projectDocument.createdType ? projectDocument.createdType : "",
+                        solutionDetails:response.solutionDetails
                     }
                     let projectInfo = await projectCreateAndSolutionMapping(json);
 
                     if(projectInfo && projectInfo.status=="success"){
-
+                        // let userInfo = await userEntities.userEntities(req);
                         resolve({ status: "success", response: projectInfo });
-
-                    //     let userInfo = await userEntities.userEntities(req);
-
-                    // if (userInfo && userInfo.data && userInfo.data.status && userInfo.data.status ==200) {
-                    //     let userEntityList = JSON.parse(userInfo.data)
-                    //     await Promise.all(userEntityList.result.map(async function (ele) {
-                    //         var obj = {};
-                    //         // obj.name = ele.metaInformation.name;
-                    //         obj.entityId = ele._id;
-                    //         let updateAarray = {
-                    //             entityType: ele.entityType,
-                    //             entityId: ele._d
-                    //         }
-                    //         let updateData = await projectsModel.findOneAndUpdate({ '_id': mongoose.Types.ObjectId(projectInfo.projectIds[0]) }, updateAarray);
-                    //         console.log("updateData");
-                    //         resolve({ status: "success", response: projectInfo });
-                    //     }));
-                    // } else {
-                    //     resolve({ status: "success", response: projectInfo });
-                    // }
-
                     }else{
                         reject({ status: "failed", message: projectInfo });   
                     }
@@ -643,51 +639,32 @@ function createTemplateAndPrject(req) {
  * Project from template for the user 
  * @param {*} req    
  */
-function updateProjectFromTemplateReferance(req) {
+function updateProjectFromTemplateReferance(projectDocument,userId) {
     return new Promise(async function (resolve, reject) {
         try {
             let obj = {
                 programId: config.myProjectMapingProgramId,
-                impTemplateId: req.body.templateId,
+                impTemplateId: projectDocument.templateId,
             }
             let response = await mapSolutionsToProgram(obj);
             if( response.status && response.status=="success"){
 
                 let json = {
                     programId: config.myProjectMapingProgramId,
-                    userId: req.body.userId,
+                    userId: userId,
                     solutionId: response.solutionDetails._id,
-                    customBody:req.body
+                    customBody:projectDocument,
+                    solutionDetails:response.solutionDetails
                 }
-                if(req.body.createdType){
-                    json.customBody.createdType=req.body.createdType;
+                if(projectDocument.createdType){
+                    json.customBody.createdType=projectDocument.createdType;
                 }
-                if(req.body.isStarted){
-                    json.customBody.isStarted=req.body.isStarted;
+                if(projectDocument.isStarted){
+                    json.customBody.isStarted=projectDocument.isStarted;
                 }
                 let projectInfo = await projectCreateAndSolutionMapping(json);
-
                 if(projectInfo.status && projectInfo.status=="success" ){
-
                     resolve({ status: "success", response: projectInfo });
-                    
-                //     let userInfo = await userEntities.userEntities(req);
-                // if (userInfo && userInfo.data && userInfo.data.status && userInfo.data.status==200) {
-                //     let userEntityList = JSON.parse(userInfo.data)
-                //     await Promise.all(userEntityList.result.map(async function (ele) {
-                //         var obj = {};
-                //         // obj.name = ele.metaInformation.name;
-                //         obj.entityId = ele._id;
-                //         let updateAarray = {
-                //             entityType: ele.entityType,
-                //             entityId: ele._d
-                //         }
-                //         let updateData = await projectsModel.findOneAndUpdate({ '_id': mongoose.Types.ObjectId(projectInfo.projectIds[0]) }, updateAarray);
-                //         resolve({ status: "success", response: projectInfo });
-                //     }));
-                // } else {
-                //     resolve({ status: "success", response: projectInfo });
-                // }
                 }else{
                     // console.log("errror ----------");
                     reject({ status: "failed", message: projectInfo });

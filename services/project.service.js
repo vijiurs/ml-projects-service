@@ -360,6 +360,11 @@ async function syncProject(req) {
                     if (projectDocument && projectDocument._id && projectDocument.isEdited == true &&
                         projectDocument.isNew == false) {
 
+
+                            if(projectDocument.share==true){
+                                shareDocs = projectDocument._id;
+                            }
+
                         let doc = await projectsModel.findOne({ '_id': projectDocument._id }, { '_id': 1 });
                         if (doc) {
                             projectsModel.findOneAndUpdate({ '_id': projectDocument._id },
@@ -499,12 +504,12 @@ async function syncProject(req) {
                 let allProjectData = await getAllProjects(requestedData);
 
                 if (allProjectData) {
-                    if(allProjectData.data){
+                    if(allProjectData.data && allProjectData.data.length > 0){
                     await Promise.all(allProjectData.data.map(async function (projectGroup, index) {
                         if (projectGroup.projects) {
                             await Promise.all(projectGroup.projects.map(async function (eachProjects, projectIndex) {
                                 if (eachProjects) {
-                                    if (shareDocs.toString()===((eachProjects._id).toString())) {
+                                    if (shareDocs===((eachProjects._id).toString())) {
                                          // eachProjects['share']=
                                         allProjectData.data[index].projects[projectIndex]['share'] = true;
                                     }

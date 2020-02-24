@@ -255,6 +255,7 @@ function getAllProjects(req) {
                                         resp.isNew = false;
                                         resp.isSync = true;
                                         resp.isEdited = false;
+                                        resp.share = false;
                                         projectsOfProgram.push(resp);
 
                                         if (prLn == lp) {

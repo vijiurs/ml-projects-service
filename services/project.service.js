@@ -175,14 +175,14 @@ function getAllProjects(req) {
         if (req.query && req.query.type && req.query.type == "quarter") {
             var dateFrom = moment().subtract(3, 'months').format('YYYY-MM-DD');
             let dt = new Date(dateFrom);
-            query = { 'projects.userId': req.body.userId, 'projects.createdAt': { $gte: dt },'isDeleted':false }
+            query = { 'projects.userId': req.body.userId, 'projects.createdAt': { $gte: dt }, 'isDeleted': false }
         } else if (req.query && req.query.type && req.query.type == "month") {
             var dateFrom = moment().subtract(1, 'months').format('YYYY-MM-DD');
             let dt = new Date(dateFrom);
-            query = { 'projects.userId': req.body.userId, 'projects.createdAt': { $gte: dt },'isDeleted':false }
+            query = { 'projects.userId': req.body.userId, 'projects.createdAt': { $gte: dt }, 'isDeleted': false }
         } else {
 
-            query = { 'projects.userId': req.body.userId,'isDeleted':false }
+            query = { 'projects.userId': req.body.userId, 'isDeleted': false }
         }
 
 
@@ -251,7 +251,7 @@ function getAllProjects(req) {
                                     await getProjectAndTaskDetails(element._id).then(function (resp) {
                                         console.log("resp======", resp);
                                         lp = lp + 1;
-                                        
+
                                         resp.isNew = false;
                                         resp.isSync = true;
                                         resp.isEdited = false;
@@ -330,6 +330,7 @@ async function syncProject(req) {
     return new Promise(async function (resolve, reject) {
         try {
             // console.log("sync api - userId : " + req.body.userId, req.body);
+            let shareDocs;
             let failedToSync = [];
             if (req.body && req.body.projects) {
                 await Promise.all(req.body.projects.map(async function (projectDocument) {
@@ -355,7 +356,7 @@ async function syncProject(req) {
 
 
                     // Get hardcoded value from .env file.
-                    if (projectDocument && projectDocument._id && projectDocument.isEdited == true && 
+                    if (projectDocument && projectDocument._id && projectDocument.isEdited == true &&
                         projectDocument.isNew == false) {
 
                         let doc = await projectsModel.findOne({ '_id': projectDocument._id }, { '_id': 1 });
@@ -428,17 +429,22 @@ async function syncProject(req) {
                                 // console.log("projectMap", projectMap);
                                 if (projectMap.status && projectMap.status == "failed") {
                                     winston.error("error at Sync  userId:" + req.body.userId + " project" + JSON.stringify(projectMap));
-                          
+
 
                                     let failed = {
                                         message: projectMap.message ? projectMap.message : "",
                                         projectDocument: projectDocument
                                     }
                                     failedToSync.push(failed);
+                                } else {
+                                    if (projectMap.response && projectMap.response.projectData && projectMap.response.projectData._id && projectDocument.share) {
+                                        shareDocs = projectMap.response.projectData._id;
+                                        console.log("shareDocs", shareDocs);
+                                    }
                                 }
                             } else {
                                 winston.error("templateId not found at Sync  userId:" + req.body.userId + " project" + JSON.stringify(projectMap));
-                          
+
                                 let failed = {
                                     message: "templateId not found",
                                     projectDocument: projectDocument
@@ -446,7 +452,7 @@ async function syncProject(req) {
                                 failedToSync.push(failed);
                             }
                         }
-                        updateProjectWithReferanceTemplate()
+                        await updateProjectWithReferanceTemplate()
                     }
                     else if (projectDocument && projectDocument.createdType && projectDocument.createdType == config.createdSelf && projectDocument.isNew == true) {
                         // create template for project if only createdType is by self
@@ -454,16 +460,23 @@ async function syncProject(req) {
                         let response = await commonHandler.createTemplateAndPrject(projectDocument, req.body.userId);
                         if (response.status && response.status != "success") {
                             winston.error("templateId not found at Sync  userId:" + req.body.userId + " project" + JSON.stringify(response));
-                          
+
                             let failed = {
                                 message: response.message ? response.message : "",
                                 status: "failed",
                                 projectDocument: projectDocument
                             }
                             failedToSync.push(failed);
+                        } else {
+                            if (response.response && response.response.projectData && response.response.projectData._id && projectDocument.share) {
+                                shareDocs = response.response.projectData._id;
+                                console.log("shareDocs", shareDocs);
+                            }
+
                         }
+
                     } else {
-                        
+
                         winston.error("error at Sync  userId:" + req.body.userId + " project" + JSON.stringify(projectDocument));
                         failedToSync.push(projectDocument);
                     }
@@ -484,6 +497,25 @@ async function syncProject(req) {
 
                 let allProjectData = await getAllProjects(requestedData);
 
+                if (allProjectData) {
+                    if(allProjectData.data){
+                    await Promise.all(allProjectData.data.map(async function (projectGroup, index) {
+                        if (projectGroup.projects) {
+                            await Promise.all(projectGroup.projects.map(async function (eachProjects, projectIndex) {
+                                if (eachProjects) {
+                                    if (shareDocs.toString()===((eachProjects._id).toString())) {
+                                         // eachProjects['share']=
+                                        allProjectData.data[index].projects[projectIndex]['share'] = true;
+                                    }
+                                }
+  
+                            }));
+                        }
+                    }));
+                    }
+                }
+
+                
                 // console.log("allProjectData",allProjectData);
                 if (failedToSync.length > 0) {
                     return resolve({ status: "failed", message: "failed to sync" })

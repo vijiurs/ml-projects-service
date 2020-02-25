@@ -256,6 +256,10 @@ function getAllProjects(req) {
                                         resp.isSync = true;
                                         resp.isEdited = false;
                                         resp.share = false;
+                                        resp.createdType  = resp.createdType ? resp.createdType : "";
+                                        resp.isDeleted = resp.isDeleted ? resp.isDeleted : false;
+                                        resp.isStarted = resp.isStarted ? resp.isStarted : false;
+
                                         projectsOfProgram.push(resp);
 
                                         if (prLn == lp) {
@@ -300,16 +304,17 @@ function getAllProjects(req) {
 async function getProjectAndTaskDetails(projectId) {
     return new Promise(async (resolve, reject) => {
         try {
-            let projectData = await projectsModel.findOne({ '_id': projectId }).lean();
+            let projectData = await projectsModel.findOne({ '_id': projectId , isDeleted: { $ne:true  } }).lean();
             // console.log("porgram",projectId);
             if (projectData) {
                 let tasks = [];
-                tasks = await taskModel.find({ 'projectId': projectId }).sort({ _id: 1 }).lean();
+                tasks = await taskModel.find({ 'projectId': projectId, isDeleted: { $ne:true  } }).sort({ _id: 1 }).lean();
                 // console.log("tasks",tasks);
                 var response = {
                 };
                 // console.log("tasks",tasks);
                 // projectData.tasks  = "";
+
                 projectData.tasks = tasks;
                 response = projectData;
                 return resolve(response);
@@ -352,7 +357,9 @@ async function syncProject(req) {
                         "concepts": projectDocument.concepts,
                         "keywords": projectDocument.keywords,
                         "startDate": projectDocument.startDate ? projectDocument.startDate : "",
-                        'endDate': projectDocument.endDate ? projectDocument.endDate : ""
+                        'endDate': projectDocument.endDate ? projectDocument.endDate : "",
+                        'createdType': projectDocument.createdType ? projectDocument.createdType : "",
+                        'isStarted': projectDocument.isStarted ? projectDocument.isStarted : false,
                     };
 
 

@@ -439,7 +439,7 @@ async function syncProject(req) {
             }
         }
 
-        createTemplate();
+        await createTemplate();
 
     } else {
 

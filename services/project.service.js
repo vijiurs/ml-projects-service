@@ -251,7 +251,7 @@ function getAllProjects(req) {
                                 projectList.projects.map(async function (element) {
                                     // projectList.projects.forEach(function (element, index) {
                                     await getProjectAndTaskDetails(element._id).then(function (resp) {
-                                        console.log("resp======", resp);
+                                        // console.log("resp======", resp);
                                         lp = lp + 1;
 
                                         resp.isNew = false;
@@ -483,6 +483,7 @@ async function syncProject(req) {
                             }
                             failedToSync.push(failed);
                         } else {
+                            console.log("response.response.projectData",response.response.projectData);
                             if (response.response && response.response.projectData && response.response.projectData._id && projectDocument.share) {
                                 shareDocs = response.response.projectData._id;
                                 console.log("shareDocs", shareDocs);
@@ -518,9 +519,14 @@ async function syncProject(req) {
                         if (projectGroup.projects) {
                             await Promise.all(projectGroup.projects.map(async function (eachProjects, projectIndex) {
                                 if (eachProjects) {
-                                    if (shareDocs===((eachProjects._id).toString())) {
+                                    console.log(eachProjects._id,"shareDocs",shareDocs)
+                                    if (shareDocs.toString()===((eachProjects._id).toString())) {
                                          // eachProjects['share']=
+                                         console.log("matching");
+                                        //  console.log("allProjectData.data[index]",allProjectData.data[index]);
                                         allProjectData.data[index].projects[projectIndex]['share'] = true;
+
+                                        // console.log(" allProjectData.data[index].projects[projectIndex]", allProjectData.data[index].projects[projectIndex]);
                                     }
                                 }
   

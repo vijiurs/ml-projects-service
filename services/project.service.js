@@ -513,21 +513,24 @@ async function syncProject(req) {
 
                 let allProjectData = await getAllProjects(requestedData);
 
-                if (allProjectData) {
+                if (allProjectData && shareDocs) {
                     if(allProjectData.data && allProjectData.data.length > 0){
                     await Promise.all(allProjectData.data.map(async function (projectGroup, index) {
                         if (projectGroup.projects) {
                             await Promise.all(projectGroup.projects.map(async function (eachProjects, projectIndex) {
                                 if (eachProjects) {
-                                    console.log(eachProjects._id,"shareDocs",shareDocs)
-                                    if (shareDocs.toString()===((eachProjects._id).toString())) {
-                                         // eachProjects['share']=
-                                         console.log("matching");
-                                        //  console.log("allProjectData.data[index]",allProjectData.data[index]);
-                                        allProjectData.data[index].projects[projectIndex]['share'] = true;
-
-                                        // console.log(" allProjectData.data[index].projects[projectIndex]", allProjectData.data[index].projects[projectIndex]);
+                                    // console.log(eachProjects._id,"shareDocs",shareDocs)
+                                    if(shareDocs){
+                                        if (shareDocs.toString()===((eachProjects._id).toString())) {
+                                            // eachProjects['share']=
+                                            console.log("matching");
+                                           //  console.log("allProjectData.data[index]",allProjectData.data[index]);
+                                           allProjectData.data[index].projects[projectIndex]['share'] = true;
+   
+                                           // console.log(" allProjectData.data[index].projects[projectIndex]", allProjectData.data[index].projects[projectIndex]);
+                                       }
                                     }
+                                    
                                 }
   
                             }));

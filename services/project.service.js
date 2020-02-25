@@ -259,7 +259,7 @@ function getAllProjects(req) {
                                         resp.isEdited = false;
                                         resp.share = false;
 
-                                        console.log(resp.title,"resp.createdType",resp.createdType)
+                                        console.log(resp.title,"resp.createdType",resp.createdType);
                                         resp.createdType = resp.createdType ? resp.createdType : "";
                                         resp.isDeleted = resp.isDeleted ? resp.isDeleted : false;
                                         resp.isStarted = resp.isStarted ? resp.isStarted : false;

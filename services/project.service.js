@@ -171,18 +171,20 @@ function getAllProjects(req) {
     // console.log("req", req.body.userId);
     if (req.body.userId) {
         let query = {};
-        if (req.query.type && req.query.type == "quarter") {
-            var dateFrom = moment().subtract(3, 'months').format('YYYY-MM-DD');
-            let dt = new Date(dateFrom);
-            query = { 'projects.userId': req.body.userId, 'projects.createdAt': { $gte: dt } }
-        } else if (req.query.type && req.query.type == "month") {
-            var dateFrom = moment().subtract(1, 'months').format('YYYY-MM-DD');
-            let dt = new Date(dateFrom);
-            query = { 'projects.userId': req.body.userId, 'projects.createdAt': { $gte: dt } }
-        } else {
+        // if (req.query.type && req.query.type == "quarter") {
+        //     var dateFrom = moment().subtract(3, 'months').format('YYYY-MM-DD');
+        //     let dt = new Date(dateFrom);
+        //     query = { 'projects.userId': req.body.userId, 'projects.createdAt': { $gte: dt } }
+        // } else if (req.query.type && req.query.type == "month") {
+        //     var dateFrom = moment().subtract(1, 'months').format('YYYY-MM-DD');
+        //     let dt = new Date(dateFrom);
+        //     query = { 'projects.userId': req.body.userId, 'projects.createdAt': { $gte: dt } }
+        // } else {
 
-            query = { 'projects.userId': req.body.userId }
-        }
+        //     query = { 'projects.userId': req.body.userId }
+        // }
+
+        query = { 'projects.userId': req.body.userId }
 
 
         async function getUserProjects(resolve, reject) {
@@ -213,7 +215,6 @@ function getAllProjects(req) {
                             concepts: { $first: "$concepts" },
                             createdFor: { $first: "$createdFor" },
                             imageCompression: { $first: "$imageCompression" },
-                            components: { $first: "$components" },
                             externalId: { $first: "$externalId" },
                             name: { $first: "$name" },
                             description: { $first: "$description" },
@@ -242,7 +243,7 @@ function getAllProjects(req) {
                             var prLn = projectList.projects.length;
                             // var pr = projectList;
                             var lp = 0;
-                            console.log("projectList.projects", projectList.projects.length);
+                            // console.log("projectList.projects", projectList.projects.length);
                             await Promise.all(
                                 projectList.projects.map(async function (element) {
                                     // projectList.projects.forEach(function (element, index) {
@@ -303,6 +304,24 @@ async function getProjectAndTaskDetails(projectId) {
                 };
                 // console.log("tasks",tasks);
                 // projectData.tasks  = "";
+
+                // as from front end requirement
+                if(!projectData.createdType){
+                    projectData.createdType = "";
+                }
+
+                if(!projectData.isStarted){
+                    projectData.isStarted = false;
+                }
+
+                if(!projectData.startDate){
+                    projectData.startDate = "";
+                }
+
+                if(!projectData.endDate){
+                    projectData.endDate = "";
+                }
+
                 projectData.tasks = tasks;
                 response = projectData;
                 return resolve(response);
@@ -341,7 +360,9 @@ async function syncProject(req) {
         "concepts": req.body.concepts,
         "keywords": req.body.keywords,
         "startDate":req.body.startDate ? req.body.startDate : "",
-        'endDate':req.body.endDate ? req.body.endDate : ""
+        'endDate':req.body.endDate ? req.body.endDate : "",
+        "isStarted":req.body.isStarted ? req.body.isStarted : false, 
+        "createdType":req.body.createdType ? req.body.createdType : ""
     };
 
     //map the project to template only if createdType is by referance
@@ -351,7 +372,6 @@ async function syncProject(req) {
             userId : req.body.userId
         },
         query : {
-            type : req.query.type ? req.query.type : "month"
         }
     }
     // Get hardcoded value from .env file.
@@ -390,7 +410,7 @@ async function syncProject(req) {
                 deferred.resolve({ status: "failed", message: "templateId not found" });
             }
         }
-        updateProjectWithReferanceTemplate()
+       await updateProjectWithReferanceTemplate()
 
     }
     else if (req.body && req.body.createdType && req.body.createdType == "by self") {
@@ -422,7 +442,7 @@ async function syncProject(req) {
         createTemplate();
 
     } else {
-        let allProjectData = await getAllProjects(requestedData);
+       
         projectsModel.findOne({ '_id': req.body._id }, function (err, doc) {
 
             // console.log("doc", doc);
@@ -439,6 +459,8 @@ async function syncProject(req) {
                 }));
                 var taskUpdateData = req.body.tasks;
                 var loop = 0;
+
+                if(req.body.tasks && req.body.tasks.length > 0){
                 taskUpdateData.forEach(element => {
                     if (element.isNew == true) {
                         var taskData = new taskModel({
@@ -491,14 +513,24 @@ async function syncProject(req) {
                             }
                             loop = loop + 1;
                             if (loop == taskUpdateData.length) {
-                                getProjectAndTaskDetails(req.body._id).then(function (response) {
+                                getProjectAndTaskDetails(req.body._id).then( async function (response) {
                                     commonHandler.projectCompletedNotificationPoint(req.body._id);
+                                    let allProjectData = await getAllProjects(requestedData);
+
                                     deferred.resolve({ status: "succes", message: "sync successfully done", data: response, allProjects : allProjectData });
                                 });
                             }
                         }));
                     }
                 });
+            }else{
+                getProjectAndTaskDetails(req.body._id).then(async function (response) {
+                    commonHandler.projectCompletedNotificationPoint(req.body._id);
+                    let allProjectData = await getAllProjects(requestedData);
+                    deferred.resolve({ status: "succes", message: "sync successfully done", data: response, allProjects : allProjectData });
+                });
+
+            }
             } else {
                 deferred.resolve({ status: "failed", message: "project not found" });
             }

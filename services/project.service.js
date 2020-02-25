@@ -185,7 +185,7 @@ function getAllProjects(req) {
         //     query = { 'projects.userId': req.body.userId, 'isDeleted': false }
         // }
 
-        query = { 'projects.userId': req.body.userId, 'isDeleted': { $ne:true  } }
+        query = { 'projects.userId': req.body.userId }
 
 
         console.log("query", query);
@@ -254,6 +254,7 @@ function getAllProjects(req) {
                                         // console.log("resp======", resp);
                                         lp = lp + 1;
 
+                                        
                                         resp.isNew = false;
                                         resp.isSync = true;
                                         resp.isEdited = false;
@@ -308,7 +309,7 @@ function getAllProjects(req) {
 async function getProjectAndTaskDetails(projectId) {
     return new Promise(async (resolve, reject) => {
         try {
-            let projectData = await projectsModel.findOne({ '_id': projectId, isDeleted: { $ne: true } }).lean();
+            let projectData = await projectsModel.findOne({ '_id': projectId }).lean();
             // console.log("porgram",projectId);
             if (projectData) {
                 let tasks = [];

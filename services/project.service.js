@@ -323,7 +323,7 @@ async function getProjectAndTaskDetails(projectId) {
 
                 await Promise.all(tasks.map(async function(taskList){
 
-                    taskList['isNew'] =false;
+                    taskList['isNew'] = false;
                     tasksData.push(taskList);
                 }));
 

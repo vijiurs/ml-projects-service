@@ -306,19 +306,19 @@ async function getProjectAndTaskDetails(projectId) {
                 // projectData.tasks  = "";
 
                 // as from front end requirement
-                if(!projectData.createdType){
+                if (!projectData.createdType) {
                     projectData.createdType = "";
                 }
 
-                if(!projectData.isStarted){
+                if (!projectData.isStarted) {
                     projectData.isStarted = false;
                 }
 
-                if(!projectData.startDate){
+                if (!projectData.startDate) {
                     projectData.startDate = "";
                 }
 
-                if(!projectData.endDate){
+                if (!projectData.endDate) {
                     projectData.endDate = "";
                 }
 
@@ -341,7 +341,7 @@ async function getProjectAndTaskDetails(projectId) {
 
 async function syncProject(req) {
 
-    console.log("sync api - userId : "+req.body.userId,req.body);
+    console.log("sync api - userId : " + req.body.userId, req.body);
     var deferred = Q.defer();
     var syncData = {
         // "id": "String",
@@ -351,7 +351,7 @@ async function syncProject(req) {
         "collaborator": req.body.collaborator,
         "organisation": req.body.organisation,
         "duration": req.body.duration,
-        "isDeleted" : req.body.isDeleted ? req.body.isDeleted : false,
+        "isDeleted": req.body.isDeleted ? req.body.isDeleted : false,
         "difficultyLevel": req.body.difficultyLevel,
         "status": req.body.status,
         // "lastSync": { type : Date, default: Date.now },
@@ -359,19 +359,19 @@ async function syncProject(req) {
         "primaryAudience": req.body.primaryAudience,
         "concepts": req.body.concepts,
         "keywords": req.body.keywords,
-        "startDate":req.body.startDate ? req.body.startDate : "",
-        'endDate':req.body.endDate ? req.body.endDate : "",
-        "isStarted":req.body.isStarted ? req.body.isStarted : false, 
-        "createdType":req.body.createdType ? req.body.createdType : ""
+        "startDate": req.body.startDate ? req.body.startDate : "",
+        'endDate': req.body.endDate ? req.body.endDate : "",
+        "isStarted": req.body.isStarted ? req.body.isStarted : false,
+        "createdType": req.body.createdType ? req.body.createdType : ""
     };
 
     //map the project to template only if createdType is by referance
 
     let requestedData = {
         body: {
-            userId : req.body.userId
+            userId: req.body.userId
         },
-        query : {
+        query: {
         }
     }
     // Get hardcoded value from .env file.
@@ -410,7 +410,7 @@ async function syncProject(req) {
                 deferred.resolve({ status: "failed", message: "templateId not found" });
             }
         }
-       await updateProjectWithReferanceTemplate()
+        await updateProjectWithReferanceTemplate()
 
     }
     else if (req.body && req.body.createdType && req.body.createdType == "by self") {
@@ -442,95 +442,95 @@ async function syncProject(req) {
         createTemplate();
 
     } else {
-       
+
         projectsModel.findOne({ '_id': req.body._id }, function (err, doc) {
 
             // console.log("doc", doc);
 
-            if (doc) {  
-                projectsModel.findOneAndUpdate({ '_id': req.body._id }, syncData, {new: true}, (function (err, projectDoc) {
+            if (doc) {
+                projectsModel.findOneAndUpdate({ '_id': req.body._id }, syncData, { new: true }, (function (err, projectDoc) {
                     if (err) {
                         deferred.resolve(err);
                     }
-                    
+
                     // if (projectDoc) {
-                        // deferred.resolve({ status: "200", message: "project data" });
+                    // deferred.resolve({ status: "200", message: "project data" });
                     // }
                 }));
                 var taskUpdateData = req.body.tasks;
                 var loop = 0;
 
-                if(req.body.tasks && req.body.tasks.length > 0){
-                taskUpdateData.forEach(element => {
-                    if (element.isNew == true) {
-                        var taskData = new taskModel({
-                            "title": element.title,
-                            "startDate": element.startDate,
-                            "endDate": element.endDate,
-                            "status": element.status,
-                            "assignedTo": element.assignedTo,
-                            "lastSync": moment().format(),
-                            "subTasks": element.subTasks,
-                            "projectId": req.body._id,
-                            "userId": req.body.userId,
-                            "isDeleted": false,
-                            "imageUrl" : element.imageUrl ? element.imageUrl : "",
-                            "file" : element.file ? element.file : {},
-                            "remarks" : element.remarks ? element.remarks : ""
-                        });
-                        taskData.save(taskData, function (err, taskDt) {
-                            loop = loop + 1;
-                            if (loop == taskUpdateData.length) {
-                                getProjectAndTaskDetails(req.body._id).then(function (response) {
-                                    commonHandler.projectCompletedNotificationPoint(req.body._id);
-                                    deferred.resolve({ status: "succes", message: "sync successfully done", data: response });
-                                });
-                            }
-                            if (taskData) {
+                if (req.body.tasks && req.body.tasks.length > 0) {
+                    taskUpdateData.forEach(element => {
+                        if (element.isNew == true) {
+                            var taskData = new taskModel({
+                                "title": element.title,
+                                "startDate": element.startDate,
+                                "endDate": element.endDate,
+                                "status": element.status,
+                                "assignedTo": element.assignedTo,
+                                "lastSync": moment().format(),
+                                "subTasks": element.subTasks,
+                                "projectId": req.body._id,
+                                "userId": req.body.userId,
+                                "isDeleted": false,
+                                "imageUrl": element.imageUrl ? element.imageUrl : "",
+                                "file": element.file ? element.file : {},
+                                "remarks": element.remarks ? element.remarks : ""
+                            });
+                            taskData.save(taskData, function (err, taskDt) {
+                                loop = loop + 1;
+                                if (loop == taskUpdateData.length) {
+                                    getProjectAndTaskDetails(req.body._id).then(function (response) {
+                                        commonHandler.projectCompletedNotificationPoint(req.body._id);
+                                        deferred.resolve({ status: "succes", message: "sync successfully done", data: response });
+                                    });
+                                }
+                                if (taskData) {
+                                } else {
+                                    winston.error(err);
+                                }
+                            });
+                        } else if (element._id) {
+
+                            let taskData = {};
+                            Object.keys(element).forEach(eachElement => {
+                                if (["startDate", "endDate", "isDeleted", "_id", "projectId", "programId", "createdAt", "projectStarted"].indexOf(eachElement) == -1) {
+                                    taskData[eachElement] = element[eachElement];
+                                }
+                            });
+                            if (!element.isDeleted) {
+                                // taskData['isDeleted'] =false;
                             } else {
-                                winston.error(err);
+                                taskData['isDeleted'] = element.isDeleted;
                             }
-                        });
-                    } else if (element._id) {
 
-                        let taskData = {};
-                        Object.keys(element).forEach(eachElement=>{
-                            if(["startDate","endDate","isDeleted","_id","projectId","programId","createdAt","projectStarted"].indexOf(eachElement) == -1){ 
-                                taskData[eachElement] = element[eachElement];
-                            }
-                        });
-                        if(!element.isDeleted){
-                            // taskData['isDeleted'] =false;
-                        }else{
-                            taskData['isDeleted'] = element.isDeleted;
+
+                            taskModel.findOneAndUpdate({ '_id': element._id }, taskData, { new: true }, (function (err, taskUpdateDataInfo) {
+                                if (err) {
+                                    console.log("err--", err);
+                                    deferred.resolve(err);
+                                }
+                                loop = loop + 1;
+                                if (loop == taskUpdateData.length) {
+                                    getProjectAndTaskDetails(req.body._id).then(async function (response) {
+                                        commonHandler.projectCompletedNotificationPoint(req.body._id);
+                                        let allProjectData = await getAllProjects(requestedData);
+
+                                        deferred.resolve({ status: "succes", message: "sync successfully done", data: response, allProjects: allProjectData });
+                                    });
+                                }
+                            }));
                         }
+                    });
+                } else {
+                    getProjectAndTaskDetails(req.body._id).then(async function (response) {
+                        commonHandler.projectCompletedNotificationPoint(req.body._id);
+                        let allProjectData = await getAllProjects(requestedData);
+                        deferred.resolve({ status: "succes", message: "sync successfully done", data: response, allProjects: allProjectData });
+                    });
 
-
-                        taskModel.findOneAndUpdate({ '_id': element._id }, taskData,{new: true}, (function (err, taskUpdateDataInfo) {
-                            if (err) {
-                                console.log("err--", err);
-                                deferred.resolve(err);
-                            }
-                            loop = loop + 1;
-                            if (loop == taskUpdateData.length) {
-                                getProjectAndTaskDetails(req.body._id).then( async function (response) {
-                                    commonHandler.projectCompletedNotificationPoint(req.body._id);
-                                    let allProjectData = await getAllProjects(requestedData);
-
-                                    deferred.resolve({ status: "succes", message: "sync successfully done", data: response, allProjects : allProjectData });
-                                });
-                            }
-                        }));
-                    }
-                });
-            }else{
-                getProjectAndTaskDetails(req.body._id).then(async function (response) {
-                    commonHandler.projectCompletedNotificationPoint(req.body._id);
-                    let allProjectData = await getAllProjects(requestedData);
-                    deferred.resolve({ status: "succes", message: "sync successfully done", data: response, allProjects : allProjectData });
-                });
-
-            }
+                }
             } else {
                 deferred.resolve({ status: "failed", message: "project not found" });
             }
@@ -1187,26 +1187,41 @@ function getProjectPdf(req) {
         try {
             // console.log("req.body.projectId",req.body.projectId)
             let projectData = await getProjectAndTaskDetails(req.body.projectId);
-             if (projectData) {
+            if (projectData) {
 
-                if(projectData.tasks){
+                if (projectData.tasks) {
                     let tasks = [];
                     // to remove files from object
                     await Promise.all(
-                         projectData.tasks.map(async list => {
-                             let taskList = {};
-                              taskList = list;
-                              if(taskList.file){
+                        projectData.tasks.map(async list => {
+                            let taskList = {};
+                            taskList = list;
+                            if (taskList.file) {
                                 delete taskList.file;
-                              }
-                            if(taskList.imageUrl){
+                            }
+                            if (taskList.imageUrl) {
                                 delete taskList.imageUrl;
                             }
-                             tasks.push(taskList);
-                         })
-                     )
-                     projectData.tasks = tasks;
-                 }
+                            if (list.isDeleted == true) {
+                                // dont push tasks 
+                            } else {
+
+                                let subTasks = [];
+                                await Promise.all(
+                                    list.subTasks.map(async subTasksLoop => {
+                                        if(subTasksLoop.isDeleted && subTasksLoop.isDeleted==true ){
+                                        }else{
+                                            subTasks.push(subTasksLoop);
+                                        }
+                                        
+                                }));
+                                taskList.subTasks = subTasks; 
+                                tasks.push(taskList);
+                            }
+                        })
+                    )
+                    projectData.tasks = tasks;
+                }
 
                 try {
                     let url = config.dhiti_config.api_base_url + config.dhiti_config.getProjectPdf;
@@ -1215,13 +1230,13 @@ function getProjectPdf(req) {
                         method: "POST",
                         headers: {
                             'x-auth-token': req.headers['x-auth-token'],
-                            'Content-Type':'application/json'
+                            'Content-Type': 'application/json'
                         },
                         json: true,   // <--Very important!!!
                         body: projectData
-                    }, function (error, response, body){
+                    }, function (error, response, body) {
                         // console.log(response);
-                       if (error) {
+                        if (error) {
                             winston.error("Error at getProjectPdf ()" + error);
                             reject(body);
 

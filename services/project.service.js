@@ -172,18 +172,20 @@ function getAllProjects(req) {
     // console.log("req", req.body.userId);
     if (req.body.userId) {
         let query = {};
-        if (req.query && req.query.type && req.query.type == "quarter") {
-            var dateFrom = moment().subtract(3, 'months').format('YYYY-MM-DD');
-            let dt = new Date(dateFrom);
-            query = { 'projects.userId': req.body.userId, 'projects.createdAt': { $gte: dt }, 'isDeleted': false }
-        } else if (req.query && req.query.type && req.query.type == "month") {
-            var dateFrom = moment().subtract(1, 'months').format('YYYY-MM-DD');
-            let dt = new Date(dateFrom);
-            query = { 'projects.userId': req.body.userId, 'projects.createdAt': { $gte: dt }, 'isDeleted': false }
-        } else {
+        // if (req.query && req.query.type && req.query.type == "quarter") {
+        //     var dateFrom = moment().subtract(3, 'months').format('YYYY-MM-DD');
+        //     let dt = new Date(dateFrom);
+        //     query = { 'projects.userId': req.body.userId, 'projects.createdAt': { $gte: dt }, 'isDeleted': false }
+        // } else if (req.query && req.query.type && req.query.type == "month") {
+        //     var dateFrom = moment().subtract(1, 'months').format('YYYY-MM-DD');
+        //     let dt = new Date(dateFrom);
+        //     query = { 'projects.userId': req.body.userId, 'projects.createdAt': { $gte: dt }, 'isDeleted': false }
+        // } else {
 
-            query = { 'projects.userId': req.body.userId, 'isDeleted': false }
-        }
+        //     query = { 'projects.userId': req.body.userId, 'isDeleted': false }
+        // }
+
+        query = { 'projects.userId': req.body.userId, 'isDeleted': false }
 
 
         console.log("query", query);
@@ -359,7 +361,7 @@ async function syncProject(req) {
                         "startDate": projectDocument.startDate ? projectDocument.startDate : "",
                         'endDate': projectDocument.endDate ? projectDocument.endDate : "",
                         'createdType': projectDocument.createdType ? projectDocument.createdType : "",
-                        'isStarted': projectDocument.isStarted ? projectDocument.isStarted : false,
+                        'isStarted': projectDocument.isStarted ? projectDocument.isStarted : false
                     };
 
 

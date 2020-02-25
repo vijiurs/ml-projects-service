@@ -254,6 +254,7 @@ function getAllProjects(req) {
                                         // console.log("resp======", resp);
                                         lp = lp + 1;
 
+                                        
                                         resp.isNew = false;
                                         resp.isSync = true;
                                         resp.isEdited = false;

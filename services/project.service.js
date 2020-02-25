@@ -254,7 +254,7 @@ function getAllProjects(req) {
                                         // console.log("resp======", resp);
                                         lp = lp + 1;
 
-                                        
+
                                         resp.isNew = false;
                                         resp.isSync = true;
                                         resp.isEdited = false;
@@ -319,8 +319,15 @@ async function getProjectAndTaskDetails(projectId) {
                 };
                 // console.log("tasks",tasks);
                 // projectData.tasks  = "";
+                let tasksData = [];
 
-                projectData.tasks = tasks;
+                await Promise.all(tasks.map(async function(taskList){
+
+                    taskList['isNew'] = false;
+                    tasksData.push(taskList);
+                }));
+
+                projectData.tasks = tasksData;
                 response = projectData;
                 return resolve(response);
             } else {

@@ -408,6 +408,8 @@ function projectCreateAndSolutionMapping(obj) {
             // console.log(element.userId, "element", obj.solutionId);
 
             let solDoc;
+
+
             if(obj.solutionDetails){
                 solDoc = obj.solutionDetails;
             }else{
@@ -461,6 +463,14 @@ function projectCreateAndSolutionMapping(obj) {
                 }else{
                     doc = await solutionsModel.findOneAndUpdate({ '_id': mongoose.Types.ObjectId(obj.solutionId), 'programId': mongoose.Types.ObjectId(obj.programId) }, solDoc);
                     docInfo = doc.baseProjectDetails[0];
+                }
+
+
+                if(obj.createdType){
+                    docInfo.createdType = obj.createdType;
+                }
+                if(obj.isStarted){
+                    docInfo.isStarted = obj.isStarted;
                 }
                 
                 if (doc) {

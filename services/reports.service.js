@@ -213,7 +213,7 @@ async function getMonthViseReport(req) {
             let completed = 0;
             let pending = 0;
             let projectsData = await projectsModel.find({
-                userId: req.body.userId
+                 userId: req.body.userId
             })
             var endOf = "";
             var startFrom = "";
@@ -243,14 +243,14 @@ async function getMonthViseReport(req) {
                 await Promise.all(
                     projectsData.map(async projectList => {
                         let taskData = await taskModel.find({
-                            projectId: projectList._id, $or: [
+                            projectId: projectList._id,isDeleted:false, $or: [
                                 { lastSync: { $gte: startFrom, $lte: endOf } },
                                 { "subTasks.lastSync": { $gte: startFrom, $lte: endOf } }
                             ]
                         });
                         let isAllTaskCompleted = true;
                         let isPending = true;
-
+                        // console.log("taskData",taskData);
                         if (taskData.length > 0) {
 
                             await Promise.all(taskData.map(async taskList => {
@@ -361,11 +361,13 @@ async function getDetailViewReport(req) {
                 await Promise.all(
                     projectsData.map(async projectList => {
                         let taskData = await taskModel.find({
-                            projectId: projectList._id, $or: [
+                            projectId: projectList._id,isDeleted: false,$or: [
                                 { lastSync: { $gte: startFrom, $lte: endOf } },
                                 { "subTasks.lastSync": { $gte: startFrom, $lte: endOf } }
                             ]
                         });
+
+                        // console.log("taskData",taskData);
                         let reponseObj = {
                             title: {
                                 text: projectList.title

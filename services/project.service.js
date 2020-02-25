@@ -185,7 +185,7 @@ function getAllProjects(req) {
         //     query = { 'projects.userId': req.body.userId, 'isDeleted': false }
         // }
 
-        query = { 'projects.userId': req.body.userId, 'isDeleted': false }
+        query = { 'projects.userId': req.body.userId, 'isDeleted': { $ne:true  } }
 
 
         console.log("query", query);
@@ -258,7 +258,9 @@ function getAllProjects(req) {
                                         resp.isSync = true;
                                         resp.isEdited = false;
                                         resp.share = false;
-                                        resp.createdType  = resp.createdType ? resp.createdType : "";
+
+                                        console.log(resp.title,"resp.createdType",resp.createdType)
+                                        resp.createdType = resp.createdType ? resp.createdType : "";
                                         resp.isDeleted = resp.isDeleted ? resp.isDeleted : false;
                                         resp.isStarted = resp.isStarted ? resp.isStarted : false;
 
@@ -306,11 +308,11 @@ function getAllProjects(req) {
 async function getProjectAndTaskDetails(projectId) {
     return new Promise(async (resolve, reject) => {
         try {
-            let projectData = await projectsModel.findOne({ '_id': projectId , isDeleted: { $ne:true  } }).lean();
+            let projectData = await projectsModel.findOne({ '_id': projectId, isDeleted: { $ne: true } }).lean();
             // console.log("porgram",projectId);
             if (projectData) {
                 let tasks = [];
-                tasks = await taskModel.find({ 'projectId': projectId, isDeleted: { $ne:true  } }).sort({ _id: 1 }).lean();
+                tasks = await taskModel.find({ 'projectId': projectId, isDeleted: { $ne: true } }).sort({ _id: 1 }).lean();
                 // console.log("tasks",tasks);
                 var response = {
                 };
@@ -364,15 +366,17 @@ async function syncProject(req) {
                         'isStarted': projectDocument.isStarted ? projectDocument.isStarted : false
                     };
 
+                    // console.log("projectDocument.createdType",projectDocument.createdType);
+
 
                     // Get hardcoded value from .env file.
                     if (projectDocument && projectDocument._id && projectDocument.isEdited == true &&
                         projectDocument.isNew == false) {
 
 
-                            if(projectDocument.share==true){
-                                shareDocs = projectDocument._id;
-                            }
+                        if (projectDocument.share == true) {
+                            shareDocs = projectDocument._id;
+                        }
 
                         let doc = await projectsModel.findOne({ '_id': projectDocument._id }, { '_id': 1 });
                         if (doc) {
@@ -438,6 +442,12 @@ async function syncProject(req) {
                         async function updateProjectWithReferanceTemplate() {
                             req.createdBy = req.body.userId;
                             req.templateId = projectDocument.templateId;
+
+                            // req.createdType = projectDocument.createdType ?  projectDocument.createdType : "";
+                            // req.isStarted = projectDocument.isStarted ?  projectDocument.isStarted : "";
+
+
+
                             if (projectDocument.templateId) {
                                 let projectMap =
                                     await commonHandler.updateProjectFromTemplateReferance(projectDocument, req.body.userId);
@@ -472,6 +482,10 @@ async function syncProject(req) {
                     else if (projectDocument && projectDocument.createdType && projectDocument.createdType == config.createdSelf && projectDocument.isNew == true) {
                         // create template for project if only createdType is by self
                         req.createdBy = req.body.userId;
+
+                        req.createdType = projectDocument.createdType ?  projectDocument.createdType : "";
+                        req.isStarted = projectDocument.isStarted ?  projectDocument.isStarted : "";
+
                         let response = await commonHandler.createTemplateAndPrject(projectDocument, req.body.userId);
                         if (response.status && response.status != "success") {
                             winston.error("templateId not found at Sync  userId:" + req.body.userId + " project" + JSON.stringify(response));
@@ -483,7 +497,7 @@ async function syncProject(req) {
                             }
                             failedToSync.push(failed);
                         } else {
-                            console.log("response.response.projectData",response.response.projectData);
+                            console.log("response.response.projectData", response.response.projectData);
                             if (response.response && response.response.projectData && response.response.projectData._id && projectDocument.share) {
                                 shareDocs = response.response.projectData._id;
                                 console.log("shareDocs", shareDocs);
@@ -514,32 +528,32 @@ async function syncProject(req) {
                 let allProjectData = await getAllProjects(requestedData);
 
                 if (allProjectData && shareDocs) {
-                    if(allProjectData.data && allProjectData.data.length > 0){
-                    await Promise.all(allProjectData.data.map(async function (projectGroup, index) {
-                        if (projectGroup.projects) {
-                            await Promise.all(projectGroup.projects.map(async function (eachProjects, projectIndex) {
-                                if (eachProjects) {
-                                    // console.log(eachProjects._id,"shareDocs",shareDocs)
-                                    if(shareDocs){
-                                        if (shareDocs.toString()===((eachProjects._id).toString())) {
-                                            // eachProjects['share']=
-                                            console.log("matching");
-                                           //  console.log("allProjectData.data[index]",allProjectData.data[index]);
-                                           allProjectData.data[index].projects[projectIndex]['share'] = true;
-   
-                                           // console.log(" allProjectData.data[index].projects[projectIndex]", allProjectData.data[index].projects[projectIndex]);
-                                       }
+                    if (allProjectData.data && allProjectData.data.length > 0) {
+                        await Promise.all(allProjectData.data.map(async function (projectGroup, index) {
+                            if (projectGroup.projects) {
+                                await Promise.all(projectGroup.projects.map(async function (eachProjects, projectIndex) {
+                                    if (eachProjects) {
+                                        // console.log(eachProjects._id,"shareDocs",shareDocs)
+                                        if (shareDocs) {
+                                            if (shareDocs.toString() === ((eachProjects._id).toString())) {
+                                                // eachProjects['share']=
+                                                console.log("matching");
+                                                //  console.log("allProjectData.data[index]",allProjectData.data[index]);
+                                                allProjectData.data[index].projects[projectIndex]['share'] = true;
+
+                                                // console.log(" allProjectData.data[index].projects[projectIndex]", allProjectData.data[index].projects[projectIndex]);
+                                            }
+                                        }
+
                                     }
-                                    
-                                }
-  
-                            }));
-                        }
-                    }));
+
+                                }));
+                            }
+                        }));
                     }
                 }
 
-                
+
                 // console.log("allProjectData",allProjectData);
                 if (failedToSync.length > 0) {
                     return resolve({ status: "failed", message: "failed to sync" })

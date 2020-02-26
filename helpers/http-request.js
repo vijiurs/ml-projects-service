@@ -30,20 +30,20 @@ module.exports = api;
 async function httpsPost(headers,postData,url){
     return  new Promise( async(resolve,reject)=>{
         try {
-            console.log(postData,"url",url)
+          
             request({
                 url: url,
                 method: "POST",
                 headers: headers,
                 json: true,   // <--Very important!!!
-                body: postData[0]
+                body: postData
             }, function (error, response, body){
                if (error) {
                    console.log("error",error);
                     winston.error("Error at httpPost()" + error);
                     reject(body);
                 } else {
-                    console.log(response.statusCode,"body",body);
+                    // console.log(response,"body",body);
                     resolve(body);
                 }
             });

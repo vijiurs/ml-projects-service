@@ -474,7 +474,13 @@ async function getMonthViseReportPdf(req, res) {
         try {
             // let reportData = await getMonthViseReport(req, res);
 
-            let data = await monthOrQuarterData(req, res);
+            if(req.query.entityId){
+                query =  { userId: req.body.userId,entityId:req.query.entityId }
+            }else{
+                query = {userId: req.body.userId }
+            }
+
+            let data = await monthOrQuarterData(req,query, res);
             if (data && data.length > 0) {
                 resolve(data);
             } else {
@@ -525,7 +531,6 @@ async function getDetailViewReportPdf(req, res) {
             winston.error("error occured at getDetailViewReportPdf() in report.service.js " + error);
             reject({ status: "failed", "message": "no data found", data: [] })
         }
-
     });
 }
 
@@ -537,11 +542,17 @@ async function getDetailViewReportPdf(req, res) {
  * 
  * @param {*} req
  */
-async function monthOrQuarterData(req, res) {
+async function monthOrQuarterData(req,query, res) {
     return new Promise(async (resolve, reject) => {
         try {
+
+            console.log("req",req.query.entityId);
+
+            // let query = {};
+          
+
             let projectsData = await projectsModel.find({
-                userId: req.body.userId
+                query
             }).lean();
 
 
@@ -586,7 +597,7 @@ async function monthOrQuarterData(req, res) {
                 await Promise.all(
                     projectsData.map(async projectList => {
                         let taskData = await taskModel.find({
-                            projectId: projectList._id, $or: [
+                            projectId: projectList._id, isDeleted:{ $ne:true }, $or: [
                                 { lastSync: { $gte: startFrom, $lte: endOf } },
                                 { "subTasks.lastSync": { $gte: startFrom, $lte: endOf } }
                             ]

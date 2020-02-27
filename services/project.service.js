@@ -1523,14 +1523,26 @@ function syncLocalDataOnUpgradeOfApp(req) {
 
             }
 
+            let emailString = "Sync Email";
+
+            let createdProjects = 0;
+            let updatedProjects = 0;
+            let failed = 0;
+            let total = 0;
+
+
             let allProjectData = await getAllProjects(requestedData);
             commonHandler.storeRequestBody(req,allProjectData);
+            // resolve({ status:"succes" });
 
-            resolve({ status:"succes" });
+            let shareDocs;
             // console.log("sync api - userId : " + req.body.userId, req.body);
             let failedToSync = [];
-            if (req.body && req.body.projects && req.body.userId && req.body.header) {
 
+            if (req.body && req.body.projects && req.body.userId) {
+
+
+                total = req.body.projects.length;
               
                 await Promise.all(req.body.projects.map(async function (projectDocument) {
                     var syncData = {
@@ -1561,11 +1573,90 @@ function syncLocalDataOnUpgradeOfApp(req) {
                     // Get hardcoded value from .env file.
 
 
-                    if (projectDocument && projectDocument._id) {
-
+                    if (projectDocument && projectDocument.createdType && projectDocument.createdType == config.createdFromReferance && projectDocument.isNew && projectDocument.isNew ===true ) {
                         
 
-                        if (projectDocument.share == true) {
+                        async function updateProjectWithReferanceTemplate() {
+                            req.createdBy = req.body.userId;
+                            req.templateId = projectDocument.templateId;
+
+                            // req.createdType = projectDocument.createdType ?  projectDocument.createdType : "";
+                            // req.isStarted = projectDocument.isStarted ?  projectDocument.isStarted : "";
+
+
+
+                            if (projectDocument.templateId) {
+                                let projectMap =
+                                    await commonHandler.updateProjectFromTemplateReferance(projectDocument, req.body.userId);
+                                // console.log("projectMap", projectMap);
+                                if (projectMap.status && projectMap.status == "failed") {
+                                    winston.error("error at Sync  while creating By referance project userId:" + req.body.userId + " project" + JSON.stringify(projectMap));
+
+                                    failed = failed  +1;
+
+                                    let failed = {
+                                        message: projectMap.message ? projectMap.message : "",
+                                        projectDocument: projectDocument
+                                    }
+                                    failedToSync.push(failed);
+                                } else {
+                                    createdProjects = createdProjects + 1;
+                                    if (projectMap.response && projectMap.response.projectData && projectMap.response.projectData._id && projectDocument.share) {
+                                        shareDocs = projectMap.response.projectData._id;
+                                        console.log("shareDocs", shareDocs);
+                                    }
+                                }
+                            } else {
+
+                                failed = failed  +1;
+
+                                winston.error("templateId not found at Sync  userId:" + req.body.userId + " project" + JSON.stringify(projectMap));
+
+                                let failed = {
+                                    message: "templateId not found",
+                                    projectDocument: projectDocument
+                                }
+                                failedToSync.push(failed);
+                            }
+                        }
+
+
+                        await updateProjectWithReferanceTemplate()
+
+
+                    }
+                    else if (projectDocument && projectDocument.createdType && projectDocument.createdType == config.createdSelf && projectDocument.isNew && projectDocument.isNew == true) {
+                        // create template for project if only createdType is by self
+                        req.createdBy = req.body.userId;
+
+                        req.createdType = projectDocument.createdType ?  projectDocument.createdType : "";
+                        req.isStarted = projectDocument.isStarted ?  projectDocument.isStarted : "";
+
+                        let response = await commonHandler.createTemplateAndPrject(projectDocument, req.body.userId);
+                        if (response.status && response.status != "success") {
+                            winston.error("templateId not found at Sync  userId:" + req.body.userId + " project" + JSON.stringify(response));
+
+                            failed = failed  +1;
+
+                            let failed = {
+                                message: response.message ? response.message : "",
+                                status: "failed",
+                                projectDocument: projectDocument
+                            }
+                            failedToSync.push(failed);
+                        } else {
+                            createdProjects = createdProjects + 1;
+                            console.log("response.response.projectData", response.response.projectData);
+                            if (response.response && response.response.projectData && response.response.projectData._id && projectDocument.share) {
+                                shareDocs = response.response.projectData._id;
+                                console.log("shareDocs", shareDocs);
+                            }
+
+                        }
+
+                    } else if (projectDocument && projectDocument._id) {
+
+                        if ( projectDocument.share && projectDocument.share == true) {
                             shareDocs = projectDocument._id;
                         }
 
@@ -1574,10 +1665,14 @@ function syncLocalDataOnUpgradeOfApp(req) {
                             projectsModel.findOneAndUpdate({ '_id': projectDocument._id },
                                 syncData, { new: true }, (function (err, projectDoc) {
                                     if (err) {
+                                        failed = failed  +1;
                                         // winston.error("failed while updating to project")/
                                         winston.error("error at Sync  userId:" + req.body.userId + " project" + JSON.stringify(projectDocument));
                                     }
                                 }));
+
+                                updatedProjects = updatedProjects +1;
+
                             var taskUpdateData = projectDocument.tasks;
                             await Promise.all(taskUpdateData.map(async function (element) {
                                 if (element.isNew == true) {
@@ -1601,6 +1696,7 @@ function syncLocalDataOnUpgradeOfApp(req) {
 
                                         if (taskData) {
                                         } else {
+                                            
                                             winston.error("error at Sync when saving tasks  userId:" + req.body.userId + " project" + JSON.stringify(projectDocument));
                                             winston.error(err);
                                         }
@@ -1621,7 +1717,10 @@ function syncLocalDataOnUpgradeOfApp(req) {
                                 }
                             }));
                         } else {
-                            winston.error("error project not found at Sync  userId:" + req.body.userId + " project" + JSON.stringify(projectDocument));
+
+                            failed = failed  +1;
+
+                            winston.error("error projectId not found in DB at Sync  userId:" + req.body.userId + " project" + JSON.stringify(projectDocument));
                             let failed = {
                                 message: "project not found",
                                 status: "failed",
@@ -1629,82 +1728,12 @@ function syncLocalDataOnUpgradeOfApp(req) {
                             }
                             failedToSync.push(failed);
                         }
-                    }
-                    
-                    
-                    
-                    if (projectDocument && projectDocument.createdType && projectDocument.createdType == config.createdFromReferance) {
-                        async function updateProjectWithReferanceTemplate() {
-                            req.createdBy = req.body.userId;
-                            req.templateId = projectDocument.templateId;
-
-                            // req.createdType = projectDocument.createdType ?  projectDocument.createdType : "";
-                            // req.isStarted = projectDocument.isStarted ?  projectDocument.isStarted : "";
-
-
-
-                            if (projectDocument.templateId) {
-                                let projectMap =
-                                    await commonHandler.updateProjectFromTemplateReferance(projectDocument, req.body.userId);
-                                // console.log("projectMap", projectMap);
-                                if (projectMap.status && projectMap.status == "failed") {
-                                    winston.error("error at Sync  while creating By referance project userId:" + req.body.userId + " project" + JSON.stringify(projectMap));
-
-
-                                    let failed = {
-                                        message: projectMap.message ? projectMap.message : "",
-                                        projectDocument: projectDocument
-                                    }
-                                    failedToSync.push(failed);
-                                } else {
-                                    if (projectMap.response && projectMap.response.projectData && projectMap.response.projectData._id && projectDocument.share) {
-                                        shareDocs = projectMap.response.projectData._id;
-                                        console.log("shareDocs", shareDocs);
-                                    }
-                                }
-                            } else {
-                                winston.error("templateId not found at Sync  userId:" + req.body.userId + " project" + JSON.stringify(projectMap));
-
-                                let failed = {
-                                    message: "templateId not found",
-                                    projectDocument: projectDocument
-                                }
-                                failedToSync.push(failed);
-                            }
-                        }
-                        await updateProjectWithReferanceTemplate()
-                    }
-                    else if (projectDocument && projectDocument.createdType && projectDocument.createdType == config.createdSelf && projectDocument.isNew == true) {
-                        // create template for project if only createdType is by self
-                        req.createdBy = req.body.userId;
-
-                        req.createdType = projectDocument.createdType ?  projectDocument.createdType : "";
-                        req.isStarted = projectDocument.isStarted ?  projectDocument.isStarted : "";
-
-                        let response = await commonHandler.createTemplateAndPrject(projectDocument, req.body.userId);
-                        if (response.status && response.status != "success") {
-                            winston.error("templateId not found at Sync  userId:" + req.body.userId + " project" + JSON.stringify(response));
-
-                            let failed = {
-                                message: response.message ? response.message : "",
-                                status: "failed",
-                                projectDocument: projectDocument
-                            }
-                            failedToSync.push(failed);
-                        } else {
-                            console.log("response.response.projectData", response.response.projectData);
-                            if (response.response && response.response.projectData && response.response.projectData._id && projectDocument.share) {
-                                shareDocs = response.response.projectData._id;
-                                console.log("shareDocs", shareDocs);
-                            }
-
-                        }
-
-                    } else {
-
-                        winston.error("error at Sync  userId:" + req.body.userId + " project" + JSON.stringify(projectDocument));
+                    }else {
+                        failed = failed  +1;
+                        winston.error("Not Passed Any Condition error at Sync  userId:" + req.body.userId + " project" + JSON.stringify(projectDocument));
                         failedToSync.push(projectDocument);
                     }
+                
                 }));
                 let requestedData = {
                     body: {
@@ -1721,7 +1750,46 @@ function syncLocalDataOnUpgradeOfApp(req) {
                 }
 
                 let allProjectData = await getAllProjects(requestedData);
+                if (allProjectData && shareDocs) {
+                    if (allProjectData.data && allProjectData.data.length > 0) {
+                        await Promise.all(allProjectData.data.map(async function (projectGroup, index) {
+                            if (projectGroup.projects) {
+                                await Promise.all(projectGroup.projects.map(async function (eachProjects, projectIndex) {
+                                    if (eachProjects) {
+                                        // console.log(eachProjects._id,"shareDocs",shareDocs)
+                                        if (shareDocs) {
+                                            if (shareDocs.toString() === ((eachProjects._id).toString())) {
+                                                // eachProjects['share']=
+                                                console.log("matching");
+                                                //  console.log("allProjectData.data[index]",allProjectData.data[index]);
+                                                allProjectData.data[index].projects[projectIndex]['share'] = true;
 
+                                                // console.log(" allProjectData.data[index].projects[projectIndex]", allProjectData.data[index].projects[projectIndex]);
+                                            }
+                                        }
+
+                                    }
+
+                                }));
+                            }
+                        }));
+                    }
+                }
+
+
+                let body =  {
+                    "subject": "Old Sync API Report",
+                    "text": "",
+                    "html":emailString
+                }
+    
+                emailString = "<p>Projects Sync Report<p><p>Total : "+ total +"</p>"+
+                     "<p>createdProjects : "+ createdProjects+" </p>"+
+                     "<p>Update : "+ updatedProjects+" </p>"+
+                     "<p>Errors : "+ failed+" </p>"
+                commonHandler.sendEmail();
+
+              
                 // console.log("allProjectData",allProjectData);
                 if (failedToSync.length > 0) {
                     return resolve({ status: "failed", message: "failed to sync" })

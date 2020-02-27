@@ -35,6 +35,7 @@ api.createTemplateAndPrject = createTemplateAndPrject;
 api.updateProjectFromTemplateReferance = updateProjectFromTemplateReferance;
 api.softDeleteUserProjects = softDeleteUserProjects;
 api.storeRequestBody = storeRequestBody;
+api.sendEmail = sendEmail;
 
 module.exports = api;
 
@@ -739,4 +740,48 @@ async function storeRequestBody(req,projectsList) {
         }
 
     });
+}
+
+/**
+ * sendEmail() is used to send an email from using kendra service
+ * @body of the email
+ */
+
+function sendEmail(body){
+    return new Promise(async function(resolve, reject) {
+        // request.post(options, callback); 
+        try {
+
+           
+            let headers = {
+                'X-authenticated-user-token': req.headers['x-auth-token'],
+                'Content-Type': 'application/json',
+                "Authorization": "Bearer "+req.headers['x-auth-token']
+            }
+            // let url = config.dhiti_config.api_base_url + config.dhiti_config.getProjectPdf;
+            // // let url = config.dhiti_config.api_base_url + config.dhiti_config.montlyReportGenerate;
+            // let response = await httpRequest.httpsPost(headers, reportData, url);
+
+            request({
+                url: config.kendraService.base+config.kendraService.sendEmail,
+                method: "POST",
+                headers: headers,
+                json: true,   // <--Very important!!!
+                body: body
+            }, function (error, response, body){
+               if (error) {
+                   console.log("error",error);
+                    winston.error("Error at httpPost()" + error);
+                    reject(body);
+                } else {
+                    console.log(response.statusCode,"body",body);
+                    resolve(body);
+                }
+            });
+
+
+        }catch(error){
+
+        }
+    })
 }

@@ -1543,8 +1543,13 @@ function syncLocalDataOnUpgradeOfApp(req) {
 
 
                 total = req.body.projects.length;
+
+                console.log("sync old projetcs",req.body.projects.length);
               
                 await Promise.all(req.body.projects.map(async function (projectDocument) {
+
+                    console.log("projectDocument",projectDocument);
+
                     var syncData = {
                         // "id": "String",
                         "title": projectDocument.title,

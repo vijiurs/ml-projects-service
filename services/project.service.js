@@ -1777,16 +1777,21 @@ function syncLocalDataOnUpgradeOfApp(req) {
                 }
 
 
-                let body =  {
-                    "subject": "Old Sync API Report",
-                    "text": "",
-                    "html":emailString
-                }
+              
     
                 emailString = "<p>Projects Sync Report<p><p>Total : "+ total +"</p>"+
                      "<p>createdProjects : "+ createdProjects+" </p>"+
                      "<p>Update : "+ updatedProjects+" </p>"+
-                     "<p>Errors : "+ failed+" </p>"
+                     "<p>Errors : "+ failed+" </p>";
+
+                     let body =  {
+                        "subject": "Old Sync API Report",
+                        "text": "",
+                        "html":emailString
+                    }
+
+                    console.log("emailString",emailString);
+
                 commonHandler.sendEmail();
 
               

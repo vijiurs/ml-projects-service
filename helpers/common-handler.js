@@ -292,6 +292,7 @@ function createImprovementTemplate(obj) {
             recommendedFor: obj.recommendedFor ? obj.recommendedFor : "",
             risks: obj.risks ? obj.risks : "",
             protocols: obj.protocols ? obj.protocols : "",
+            status:obj.status ? obj.status : "",
             // originalAuthor:OriginalAuthor,
             createdAt: moment().format(),
             createdBy: obj.createdBy ? obj.createdBy : "",
@@ -416,14 +417,14 @@ function projectCreateAndSolutionMapping(obj) {
 
             
 
-            // let solDoc;
+            let solDoc;
 
-            // if (obj.solutionDetails) {
-            //     solDoc = obj.solutionDetails;
-            // } else {
-            //     solDoc = await solutionsModel.findOne({ '_id': mongoose.Types.ObjectId(obj.solutionId), 'programId': mongoose.Types.ObjectId(obj.programId) }).lean();
-            // }
-             let solDoc = await solutionsModel.findOne({ '_id': mongoose.Types.ObjectId(obj.solutionId), 'programId': mongoose.Types.ObjectId(obj.programId) }).lean();
+            if (obj.solutionDetails) {
+                solDoc = obj.solutionDetails;
+            } else {
+                solDoc = await solutionsModel.findOne({ '_id': mongoose.Types.ObjectId(obj.solutionId), 'programId': mongoose.Types.ObjectId(obj.programId) }).lean();
+            }
+            //  let solDoc = await solutionsModel.findOne({ '_id': mongoose.Types.ObjectId(obj.solutionId), 'programId': mongoose.Types.ObjectId(obj.programId) }).lean();
             if (solDoc) {
                 // if (element.roles == "projectManager") {
                 //     solDoc.roles.projectManagers.push(element.userId);
@@ -463,6 +464,8 @@ function projectCreateAndSolutionMapping(obj) {
 
                 let doc = "";
                 var docInfo = "";
+
+
                 if (obj.customBody) {
 
                     console.log("customBody", obj.customBody.endDate)
@@ -481,6 +484,7 @@ function projectCreateAndSolutionMapping(obj) {
                     docInfo.isStarted = obj.isStarted;
                 }
 
+                console.log("-----------docInfo-------------",docInfo);
                 if (doc) {
                     var splidata = docInfo.difficultyLevel;
                     // console.log("deficultyLevel", splidata);

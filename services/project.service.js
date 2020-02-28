@@ -386,9 +386,9 @@ async function syncProject(req) {
 
 
                         
-                            // if(projectDocument.createdType && projectDocument.createdType =="" ){
-                            //     commonHandler.updateCreateTypeByProgramId(projectDocument,req.body.userId);
-                            // }
+                            if(projectDocument.createdType && projectDocument.createdType =="" ){
+                                commonHandler.updateCreateTypeByProgramId(projectDocument,req.body.userId);
+                            }
 
 
                         if (projectDocument.share == true) {
@@ -527,9 +527,9 @@ async function syncProject(req) {
                     } else if(projectDocument && projectDocument._id && projectDocument.isEdited == false &&
                         projectDocument.isNew == false){
 
-                            // if(projectDocument.createdType && projectDocument.createdType =="" ){
-                            //     commonHandler.updateCreateTypeByProgramId(projectDocument,req.body.userId);
-                            // }
+                            if(projectDocument.createdType && projectDocument.createdType =="" ){
+                                commonHandler.updateCreateTypeByProgramId(projectDocument,req.body.userId);
+                            }
                             
                             console.log("No nned to  Updated the project isEdited :false",projectDocument._id);
 
@@ -1918,9 +1918,14 @@ function getProjectPdfWithSyc(req) {
                                 winston.error("Error at getProjectPdf ()" + error);
                                 reject({ status: "failed", mesage: body });
                             } else {
-                                console.log("body", body);
+                                // console.log("body", body);
                                 let syncData = await syncProject(req);
-                                resolve({ allProjects: syncData, pdfResponse: body });
+                                if(syncData.status=="success" && syncData.allProjects){
+                                    resolve({status:"success",allProjects: syncData.allProjects, pdfResponse: body });
+                                }else{
+                                    resolve({ status:"failed",message:"failed to sync the data" });
+                                }
+                                
                             }
                         });
                  

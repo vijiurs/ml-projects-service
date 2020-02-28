@@ -1909,7 +1909,7 @@ function getProjectPdfWithSyc(req) {
                             },
                             json: true,   // <--Very important!!!
                             body: projectData
-                        }, function (error, response, body) {
+                        }, async function (error, response, body) {
                             // console.log(response);
                             if (error) {
                                 winston.error("Error at getProjectPdf ()" + error);

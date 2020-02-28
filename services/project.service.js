@@ -387,6 +387,8 @@ async function syncProject(req) {
 
                         
                             if(projectDocument.createdType && projectDocument.createdType =="" ){
+
+                                console.log("updating createdType id");
                                 commonHandler.updateCreateTypeByProgramId(projectDocument,req.body.userId);
                             }
 

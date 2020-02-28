@@ -803,15 +803,21 @@ function updateCreateTypeByProgramId(projectInfo,userId){
     return new Promise(async function(resolve, reject) {
         try {
             if(projectInfo.programId && projectInfo._id){
+
+                console.log("program update function ");
                 let programsData = await programsModel.findOne({ "_id":projectInfo.programId }).lean();
                 if(programsData){
-                    if(programId==config.myProjectMapingProgramId){
 
+                    console.log("program found");
+                    if(programId==config.myProjectMapingProgramId){
+                        console.log("program id matching");
                         // if(projectInfo.templateId)
                         // updsting to by referance to project if createdType is empty As disccusion with @sriram
                         let projectUpdate =  await projectsModel.findOneAndUpdate({ "_id":projectInfo._id,"programId":projectInfo.programId,userId:userId,createdType:{ $eq:"" } },{ createdType:config.createdFromReferance })
                         if(projectUpdate){
-                            resolve({ status:"success",message :"" });
+                            resolve({ status:"success",message :" successfully updated" });
+                        }else{
+                            resolve({ status:"failed",message:"failed to update createdType" })
                         }             
                     }else{
                         resolve({ status:"failed",message:"not matching with program Id" });

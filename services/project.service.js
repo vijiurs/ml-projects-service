@@ -1874,11 +1874,10 @@ function getProjectPdfWithSyc(req) {
 
             if (req.body.pdfData && req.body.projects) {
                 try {
-                    let syncAPI = new Promise(async function (resolve, reject) {
-                        let syncData = await syncProject(req);
-                        resolve(syncData);
-                    });
-                    let callGetProjectApi = new Promise(async function (resolve, reject) {
+                    // let syncAPI = new Promise(async function (resolve, reject) {
+                       
+                    // });
+                 
                         let projectData = req.body.pdfData;
                         console.log("project Data for pdfRepoert", projectData);
                         if (projectData.tasks) {
@@ -1917,19 +1916,19 @@ function getProjectPdfWithSyc(req) {
                                 reject({ status: "failed", mesage: body });
                             } else {
                                 console.log("body", body);
-                                resolve(body);
-
+                                let syncData = await syncProject(req);
+                                resolve({ allProjects: syncData, pdfResponse: body });
                             }
                         });
-                    });
-                    Promise.all([syncAPI, callGetProjectApi]).then(function (values) {
-                        // console.log("completing promise",values[0]);
-                        if (values[0] && values[0].status && values[0].status == "success") {
-                            resolve({ allProjects: values[0].allProjects, pdfResponse: values[1] });
-                        } else {
-                            resolve({ status: "failed", "message": "sync failed" });
-                        }
-                    });
+                 
+                    // Promise.all([syncAPI, callGetProjectApi]).then(function (values) {
+                    //     // console.log("completing promise",values[0]);
+                    //     if (values[0] && values[0].status && values[0].status == "success") {
+                    //         resolve({ allProjects: values[0].allProjects, pdfResponse: values[1] });
+                    //     } else {
+                    //         resolve({ status: "failed", "message": "sync failed" });
+                    //     }
+                    // });
                 }
                 catch (ex) {
                     console.log("ex", ex);

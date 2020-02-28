@@ -794,19 +794,26 @@ function sendEmail(body){
  * @param {*} userId 
  * @param {*} programId 
  */
-function updateCreateTypeByProgramId(projectId,userId,programId){
+function updateCreateTypeByProgramId(projectInfo,userId){
     return new Promise(async function(resolve, reject) {
         try {
-            if(programId){
-                let programsData = await programsModel.findOne({ "_id":programId }).lean();
+            if(projectInfo.programId && projectInfo._id){
+                let programsData = await programsModel.findOne({ "_id":projectInfo.programId }).lean();
                 if(programsData){
                     if(programId==config.myProjectMapingProgramId){
-                        let projectUpdate =  await projectsModel.findOneAndUpdate({ "_id":projectId,"programId":programId,userId:userId,createdType:{ $eq:"" } },{ createdType:"by self" })
+
+                        // if(projectInfo.templateId)
+                        // updsting to by referance to project if createdType is empty As disccusion with @sriram
+                        let projectUpdate =  await projectsModel.findOneAndUpdate({ "_id":projectInfo._id,"programId":projectInfo.programId,userId:userId,createdType:{ $eq:"" } },{ createdType:config.createdFromReferance })
                         if(projectUpdate){
                             resolve({ status:"success",message :"" });
                         }             
+                    }else{
+                        resolve({ status:"failed",message:"not matching with program Id" });
                     }
                 }
+            }else{
+                resolve({ status:"failed",message:"invalid request" });
             }
         }catch(error){
             console.log("err",error);

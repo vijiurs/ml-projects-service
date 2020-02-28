@@ -385,6 +385,12 @@ async function syncProject(req) {
                         projectDocument.isNew == false) {
 
 
+                        
+                            if(projectDocument.createdType && projectDocument.createdType =="" ){
+                                commonHandler.updateCreateTypeByProgramId(projectDocument,req.body.userId);
+                            }
+
+
                         if (projectDocument.share == true) {
                             shareDocs = projectDocument._id;
                         }
@@ -519,6 +525,10 @@ async function syncProject(req) {
                     } else if(projectDocument && projectDocument._id && projectDocument.isEdited == false &&
                         projectDocument.isNew == false){
 
+                            if(projectDocument.createdType && projectDocument.createdType =="" ){
+                                commonHandler.updateCreateTypeByProgramId(projectDocument,req.body.userId);
+                            }
+                            
                             console.log("No nned to  Updated the project isEdited :false",projectDocument._id);
 
                     }else{
@@ -1856,6 +1866,12 @@ function syncLocalDataOnUpgradeOfApp(req) {
 function getProjectPdfWithSyc(req) {
     return new Promise(async function (resolve, reject) {
         try {
+
+
+            console.log("req.body.pdfData",req.body.pdfData);
+            console.log("req.body.projects",req.body.projects);
+
+
             if (req.body.pdfData && req.body.projects) {
                 try {
                     let syncAPI = new Promise(async function (resolve, reject) {

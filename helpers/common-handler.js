@@ -36,6 +36,7 @@ api.updateProjectFromTemplateReferance = updateProjectFromTemplateReferance;
 api.softDeleteUserProjects = softDeleteUserProjects;
 api.storeRequestBody = storeRequestBody;
 api.sendEmail = sendEmail;
+api.updateCreateTypeByProgramId =updateCreateTypeByProgramId;
 
 module.exports = api;
 
@@ -781,7 +782,35 @@ function sendEmail(body){
 
 
         }catch(error){
-
+            console.log("err",error);
+            resolve({ status:"failed",message:"error while sending data" });
         }
     })
+}
+
+/**
+ * updateCreateTypeByProgramId is If CreatedType blank
+ * @param {*} projectId 
+ * @param {*} userId 
+ * @param {*} programId 
+ */
+function updateCreateTypeByProgramId(projectId,userId,programId){
+    return new Promise(async function(resolve, reject) {
+        try {
+            if(programId){
+                let programsData = await programsModel.findOne({ "_id":programId }).lean();
+                if(programsData){
+                    if(programId==config.myProjectMapingProgramId){
+                        let projectUpdate =  await projectsModel.findOneAndUpdate({ "_id":projectId,"programId":programId,userId:userId,createdType:{ $eq:"" } },{ createdType:"by self" })
+                        if(projectUpdate){
+                            resolve({ status:"success",message :"" });
+                        }             
+                    }
+                }
+            }
+        }catch(error){
+            console.log("err",error);
+            resolve({ status:"failed",message:"error while sending data" });
+        }
+    });
 }

@@ -380,7 +380,8 @@ async function syncProject(req) {
 
 
                     // Get hardcoded value from .env file.
-                    if (projectDocument && projectDocument._id && projectDocument.isEdited == true &&
+
+                     if (projectDocument && projectDocument._id && projectDocument.isEdited == true &&
                         projectDocument.isNew == false) {
 
 
@@ -515,7 +516,12 @@ async function syncProject(req) {
 
                         }
 
-                    } else {
+                    } else if(projectDocument && projectDocument._id && projectDocument.isEdited == false &&
+                        projectDocument.isNew == false){
+
+                            console.log("No nned to  Updated the project isEdited :false",projectDocument._id);
+
+                    }else{
 
                         winston.error("error at Sync  userId:" + req.body.userId + " project" + JSON.stringify(projectDocument));
                         failedToSync.push(projectDocument);

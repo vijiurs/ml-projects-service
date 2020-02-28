@@ -386,7 +386,8 @@ async function syncProject(req) {
 
 
                         
-                            if(projectDocument.createdType && projectDocument.createdType =="" ){
+                            if(projectDocument.createdType && projectDocument.createdType != config.createdSelf && 
+                                projectDocument.createdType != config.createdFromReferance ){
 
                                 console.log("updating createdType id");
                                 commonHandler.updateCreateTypeByProgramId(projectDocument,req.body.userId);
@@ -529,9 +530,9 @@ async function syncProject(req) {
                     } else if(projectDocument && projectDocument._id && projectDocument.isEdited == false &&
                         projectDocument.isNew == false){
 
-                            if(projectDocument.createdType && projectDocument.createdType =="" ){
-                                commonHandler.updateCreateTypeByProgramId(projectDocument,req.body.userId);
-                            }
+                            // if(projectDocument.createdType && projectDocument.createdType =="" ){
+                            //     commonHandler.updateCreateTypeByProgramId(projectDocument,req.body.userId);
+                            // }
                             
                             console.log("No nned to  Updated the project isEdited :false",projectDocument._id);
 

@@ -55,6 +55,7 @@ api.getTaskDetailsById = getTaskDetailsById;
 api.getSubTaskDetails = getSubTaskDetails;
 api.getProjectPdf = getProjectPdf;
 api.syncLocalDataOnUpgradeOfApp = syncLocalDataOnUpgradeOfApp;
+api.getProjectPdfWithSyc = getProjectPdfWithSyc;
 module.exports = api;
 
 /**
@@ -261,7 +262,7 @@ function getAllProjects(req) {
                                         resp.isEdited = false;
                                         resp.share = false;
 
-                                        console.log(resp.title,"resp.createdType",resp.createdType);
+                                        console.log(resp.title, "resp.createdType", resp.createdType);
                                         resp.createdType = resp.createdType ? resp.createdType : "";
                                         resp.isDeleted = resp.isDeleted ? resp.isDeleted : false;
                                         resp.isStarted = resp.isStarted ? resp.isStarted : false;
@@ -322,7 +323,7 @@ async function getProjectAndTaskDetails(projectId) {
                 // projectData.tasks  = "";
                 let tasksData = [];
 
-                await Promise.all(tasks.map(async function(taskList){
+                await Promise.all(tasks.map(async function (taskList) {
 
                     taskList['isNew'] = false;
                     tasksData.push(taskList);
@@ -492,8 +493,8 @@ async function syncProject(req) {
                         // create template for project if only createdType is by self
                         req.createdBy = req.body.userId;
 
-                        req.createdType = projectDocument.createdType ?  projectDocument.createdType : "";
-                        req.isStarted = projectDocument.isStarted ?  projectDocument.isStarted : "";
+                        req.createdType = projectDocument.createdType ? projectDocument.createdType : "";
+                        req.isStarted = projectDocument.isStarted ? projectDocument.isStarted : "";
 
                         let response = await commonHandler.createTemplateAndPrject(projectDocument, req.body.userId);
                         if (response.status && response.status != "success") {
@@ -581,200 +582,214 @@ async function syncProject(req) {
     });
 }
 
-async function syncOldAPPData(req){
+async function syncOldAPPData(req) {
 
-        console.log("sync old api - userId : "+req.body.userId,req.body);
-        var deferred = Q.defer();
-        var syncData = {
-            // "id": "String",
-            "title": req.body.title,
-            "goal": req.body.goal,
-            // "userId": "",
-            "collaborator": req.body.collaborator,
-            "organisation": req.body.organisation,
-            "duration": req.body.duration,
-            "isDeleted" : req.body.isDeleted ? req.body.isDeleted : false,
-            "difficultyLevel": req.body.difficultyLevel,
-            "status": req.body.status,
-            // "lastSync": { type : Date, default: Date.now },
-            "lastSync": moment().format(),
-            "primaryAudience": req.body.primaryAudience,
-            "concepts": req.body.concepts,
-            "keywords": req.body.keywords,
-            "startDate":req.body.startDate ? req.body.startDate : "",
-            'endDate':req.body.endDate ? req.body.endDate : ""
-        };
-    
-        //map the project to template only if createdType is by referance
-    
-        let requestedData = {
-            body: {
-                userId : req.body.userId
-            },
-            query : {
-                type : req.query.type ? req.query.type : "month"
-            }
+    console.log("sync old api - userId : " + req.body.userId, req.body);
+    var deferred = Q.defer();
+    var syncData = {
+        // "id": "String",
+        "title": req.body.title,
+        "goal": req.body.goal,
+        // "userId": "",
+        "collaborator": req.body.collaborator,
+        "organisation": req.body.organisation,
+        "duration": req.body.duration,
+        "isDeleted": req.body.isDeleted ? req.body.isDeleted : false,
+        "difficultyLevel": req.body.difficultyLevel,
+        "status": req.body.status,
+        // "lastSync": { type : Date, default: Date.now },
+        "lastSync": moment().format(),
+        "primaryAudience": req.body.primaryAudience,
+        "concepts": req.body.concepts,
+        "keywords": req.body.keywords,
+        "startDate": req.body.startDate ? req.body.startDate : "",
+        'endDate': req.body.endDate ? req.body.endDate : ""
+    };
+
+    //map the project to template only if createdType is by referance
+
+    let requestedData = {
+        body: {
+            userId: req.body.userId
+        },
+        query: {
+            type: req.query.type ? req.query.type : "month"
         }
-        // Get hardcoded value from .env file.
-    
-        if (req.body && req.body.createdType && req.body.createdType == "by reference") {
-    
-            async function updateProjectWithReferanceTemplate() {
-                req.createdBy = req.body.userId;
-                req.templateId = req.body.templateId;
-    
-                if (req.body.templateId) {
-                    let projectMap = await commonHandler.updateProjectFromTemplateReferance(req.body, req.body.userId);
-                    if (projectMap.status && projectMap.status == "success") {
-                        let obj = {
-                            body: {
-                                projectId: projectMap.response.projectIds[0]
-                            }
-                        }
-                        let prjectDetails = await projectsDetailsById(obj);
-                        if (prjectDetails.status && prjectDetails.status == "success") {
-    
-                            let allProjectData = await getAllProjects(requestedData);
-    
-                            delete projectMap.response;
-                            projectMap.projectDetails = prjectDetails;
-                            projectMap.allProjects = allProjectData;
-                            deferred.resolve(projectMap);
-                        } else {
-                            deferred.resolve(prjectDetails);
-                        }
-                    } else {
-                        deferred.resolve(projectMap);
-                    }
-    
-                } else {
-                    deferred.resolve({ status: "failed", message: "templateId not found" });
-                }
-            }
-          await  updateProjectWithReferanceTemplate()
-    
-        }
-        else if (req.body && req.body.createdType && req.body.createdType == "by self") {
-            // create template for project if only createdType is by self
+    }
+    // Get hardcoded value from .env file.
 
-            
-            async function createTemplate() {
-    
-                req.createdBy = req.body.userId;
+    if (req.body && req.body.createdType && req.body.createdType == "by reference") {
 
-                console.log("req.body.createdType",req.body.createdType);
-                let response = await commonHandler.createTemplateAndPrject(req.body, req.body.userId);
+        async function updateProjectWithReferanceTemplate() {
+            req.createdBy = req.body.userId;
+            req.templateId = req.body.templateId;
 
-                console.log("response.status",response.status);
-                if (response.status) {
+            if (req.body.templateId) {
+                let projectMap = await commonHandler.updateProjectFromTemplateReferance(req.body, req.body.userId);
+                if (projectMap.status && projectMap.status == "success") {
                     let obj = {
                         body: {
-                            projectId: response.response.projectIds[0]
+                            projectId: projectMap.response.projectIds[0]
                         }
                     }
                     let prjectDetails = await projectsDetailsById(obj);
-
-                    console.log("prjectDetails.status",prjectDetails);
                     if (prjectDetails.status && prjectDetails.status == "success") {
+
                         let allProjectData = await getAllProjects(requestedData);
-                        response.projectDetails = prjectDetails;
-                        response.allProjects = allProjectData;
-                        deferred.resolve(response);
+
+                        delete projectMap.response;
+                        projectMap.projectDetails = prjectDetails;
+                        projectMap.allProjects = allProjectData;
+                        deferred.resolve(projectMap);
                     } else {
                         deferred.resolve(prjectDetails);
                     }
                 } else {
-                    deferred.resolve(response);
+                    deferred.resolve(projectMap);
                 }
+
+            } else {
+                deferred.resolve({ status: "failed", message: "templateId not found" });
             }
-    
-           await createTemplate();
-    
-        } else {
-            let allProjectData = await getAllProjects(requestedData);
-            projectsModel.findOne({ '_id': req.body._id }, function (err, doc) {
-    
-                // console.log("doc", doc);
-    
-                if (doc) {  
-                    projectsModel.findOneAndUpdate({ '_id': req.body._id }, syncData, {new: true}, (function (err, projectDoc) {
-                        if (err) {
-                            deferred.resolve(err);
-                        }
-                        
-                        // if (projectDoc) {
-                            // deferred.resolve({ status: "200", message: "project data" });
-                        // }
-                    }));
-                    var taskUpdateData = req.body.tasks;
-                    var loop = 0;
-                    taskUpdateData.forEach(element => {
-                        if (element.isNew == true) {
-                            var taskData = new taskModel({
-                                "title": element.title,
-                                "startDate": element.startDate,
-                                "endDate": element.endDate,
-                                "status": element.status,
-                                "assignedTo": element.assignedTo,
-                                "lastSync": moment().format(),
-                                "subTasks": element.subTasks,
-                                "projectId": req.body._id,
-                                "userId": req.body.userId,
-                                "isDeleted": false,
-                                "imageUrl" : element.imageUrl ? element.imageUrl : "",
-                                "file" : element.file ? element.file : {},
-                                "remarks" : element.remarks ? element.remarks : ""
-                            });
-                            taskData.save(taskData, function (err, taskDt) {
-                                loop = loop + 1;
-                                if (loop == taskUpdateData.length) {
-                                    getProjectAndTaskDetails(req.body._id).then(function (response) {
-                                        commonHandler.projectCompletedNotificationPoint(req.body._id);
-                                        deferred.resolve({ status: "succes", message: "sync successfully done", data: response });
-                                    });
-                                }
-                                if (taskData) {
-                                } else {
-                                    winston.error(err);
-                                }
-                            });
-                        } else if (element._id) {
-    
-                            let taskData = {};
-                            Object.keys(element).forEach(eachElement=>{
-                                if(["startDate","endDate","isDeleted","_id","projectId","programId","createdAt","projectStarted"].indexOf(eachElement) == -1){ 
-                                    taskData[eachElement] = element[eachElement];
-                                }
-                            });
-                            if(!element.isDeleted){
-                                // taskData['isDeleted'] =false;
-                            }else{
-                                taskData['isDeleted'] = element.isDeleted;
-                            }
-    
-    
-                            taskModel.findOneAndUpdate({ '_id': element._id }, taskData,{new: true}, (function (err, taskUpdateDataInfo) {
-                                if (err) {
-                                    console.log("err--", err);
-                                    deferred.resolve(err);
-                                }
-                                loop = loop + 1;
-                                if (loop == taskUpdateData.length) {
-                                    getProjectAndTaskDetails(req.body._id).then(function (response) {
-                                        commonHandler.projectCompletedNotificationPoint(req.body._id);
-                                        deferred.resolve({ status: "succes", message: "sync successfully done", data: response, allProjects : allProjectData });
-                                    });
-                                }
-                            }));
-                        }
-                    });
-                } else {
-                    deferred.resolve({ status: "failed", message: "project not found" });
-                }
-            });
         }
-        return deferred.promise;
-    
+        await updateProjectWithReferanceTemplate()
+
+    }
+    else if (req.body && req.body.createdType && req.body.createdType == "by self") {
+        // create template for project if only createdType is by self
+
+
+        async function createTemplate() {
+
+            req.createdBy = req.body.userId;
+
+            console.log("req.body.createdType", req.body.createdType);
+            let response = await commonHandler.createTemplateAndPrject(req.body, req.body.userId);
+
+            console.log("response.status", response.status);
+            if (response.status) {
+                let obj = {
+                    body: {
+                        projectId: response.response.projectIds[0]
+                    }
+                }
+                let prjectDetails = await projectsDetailsById(obj);
+
+                console.log("prjectDetails.status", prjectDetails);
+                if (prjectDetails.status && prjectDetails.status == "success") {
+                    let allProjectData = await getAllProjects(requestedData);
+                    response.projectDetails = prjectDetails;
+                    response.allProjects = allProjectData;
+                    deferred.resolve(response);
+                } else {
+                    deferred.resolve(prjectDetails);
+                }
+            } else {
+                deferred.resolve(response);
+            }
+        }
+
+        await createTemplate();
+
+    } else {
+        let allProjectData = await getAllProjects(requestedData);
+        projectsModel.findOne({ '_id': req.body._id }, function (err, doc) {
+
+            // console.log("doc", doc);
+
+            if (doc) {
+                projectsModel.findOneAndUpdate({ '_id': req.body._id }, syncData, { new: true }, (function (err, projectDoc) {
+                    if (err) {
+                        deferred.resolve(err);
+                    }
+
+                    // if (projectDoc) {
+                    // deferred.resolve({ status: "200", message: "project data" });
+                    // }
+                }));
+                var taskUpdateData = req.body.tasks;
+                var loop = 0;
+                // console.log(" taskUpdateData",JSON.stringify( taskUpdateData))
+                taskUpdateData.forEach(element => {
+                    if (element.isNew == true) {
+
+                        if (element.startDate && typeof element.startDate === 'string') {
+                            element.startDate = moment(element.startDate, 'DD-MM-YYYY')
+                            element.startDate = element.startDate.format();
+                            // element.startDate = moment(element.startDate).format();
+                        }
+                        if (element.endDate && typeof element.endDate === 'string') {
+                            element.endDate = moment(element.endDate, 'DD-MM-YYYY')
+                            element.endDate = element.endDate.format();
+                            // element.endDate = moment(element.endDate).format();
+                        }
+
+
+                        var taskData = new taskModel({
+                            "title": element.title,
+                            "startDate": element.startDate,
+                            "endDate": element.endDate,
+                            "status": element.status,
+                            "assignedTo": element.assignedTo,
+                            "lastSync": moment().format(),
+                            "subTasks": element.subTasks,
+                            "projectId": req.body._id,
+                            "userId": req.body.userId,
+                            "isDeleted": false,
+                            "imageUrl": element.imageUrl ? element.imageUrl : "",
+                            "file": element.file ? element.file : {},
+                            "remarks": element.remarks ? element.remarks : ""
+                        });
+                        taskData.save(taskData, function (err, taskDt) {
+                            loop = loop + 1;
+                            if (loop == taskUpdateData.length) {
+                                getProjectAndTaskDetails(req.body._id).then(function (response) {
+                                    commonHandler.projectCompletedNotificationPoint(req.body._id);
+                                    deferred.resolve({ status: "succes", message: "sync successfully done", data: response });
+                                });
+                            }
+                            if (taskData) {
+                            } else {
+                                winston.error(err);
+                            }
+                        });
+                    } else if (element._id) {
+
+                        let taskData = {};
+                        Object.keys(element).forEach(eachElement => {
+                            if (["startDate", "endDate", "isDeleted", "_id", "projectId", "programId", "createdAt", "projectStarted"].indexOf(eachElement) == -1) {
+                                taskData[eachElement] = element[eachElement];
+                            }
+                        });
+                        if (!element.isDeleted) {
+                            // taskData['isDeleted'] =false;
+                        } else {
+                            taskData['isDeleted'] = element.isDeleted;
+                        }
+
+
+                        taskModel.findOneAndUpdate({ '_id': element._id }, taskData, { new: true }, (function (err, taskUpdateDataInfo) {
+                            if (err) {
+                                console.log("err--", err);
+                                deferred.resolve(err);
+                            }
+                            loop = loop + 1;
+                            if (loop == taskUpdateData.length) {
+                                getProjectAndTaskDetails(req.body._id).then(function (response) {
+                                    commonHandler.projectCompletedNotificationPoint(req.body._id);
+                                    deferred.resolve({ status: "succes", message: "sync successfully done", data: response, allProjects: allProjectData });
+                                });
+                            }
+                        }));
+                    }
+                });
+            } else {
+                deferred.resolve({ status: "failed", message: "project not found" });
+            }
+        });
+    }
+    return deferred.promise;
+
 }
 
 function createTask(req) {
@@ -931,7 +946,13 @@ function syncSubTask(req) {
                         lastSync: Date.now(),
                         assignedTo: indSubtasks.assignedTo
                     }
-                    taskData.subTasks.push(subTaskDetails);
+                    if (taskData.subTasks) {
+                        taskData.subTasks.push(subTaskDetails);
+                    } else {
+                        taskData['subTasks'] = [];
+                        taskData.subTasks.push(subTaskDetails);
+                    }
+
                     taskModel.findOneAndUpdate({ '_id': req.body.taskId }, taskData, function (err, subTaskInfo) {
                         // console.log("subTaskInfo",subTaskInfo);
                         subTasksArray.push(indSubtasks);
@@ -1081,7 +1102,7 @@ function deleteSubTask(req) {
 function taskSync(req) {
     var deferred = Q.defer();
     let taskInput = req.body;
-    // console.log("taskInput", taskInput._id);
+    console.log("taskInput", taskInput._id);
     projectsModel.findOne({ '_id': req.body._id }, function (err, doc) {
         // console.log("doc", doc);
         if (doc) {
@@ -1506,6 +1527,7 @@ function getProjectPdf(req) {
 
 
 
+
 /**
  * syncLocalDataOnUpgradeOfApp API to clear the old mongodb projects and 
  * storesa all the incoming data to db
@@ -1532,7 +1554,7 @@ function syncLocalDataOnUpgradeOfApp(req) {
 
 
             let allProjectData = await getAllProjects(requestedData);
-            commonHandler.storeRequestBody(req,allProjectData);
+            commonHandler.storeRequestBody(req, allProjectData);
             // resolve({ status:"succes" });
 
             let shareDocs;
@@ -1544,11 +1566,11 @@ function syncLocalDataOnUpgradeOfApp(req) {
 
                 total = req.body.projects.length;
 
-                console.log("sync old projetcs",req.body.projects.length);
-              
+                console.log("sync old projetcs", req.body.projects.length);
+
                 await Promise.all(req.body.projects.map(async function (projectDocument) {
 
-                    console.log("projectDocument",projectDocument);
+                    console.log("projectDocument", projectDocument);
 
                     var syncData = {
                         // "id": "String",
@@ -1578,8 +1600,8 @@ function syncLocalDataOnUpgradeOfApp(req) {
                     // Get hardcoded value from .env file.
 
 
-                    if (projectDocument && projectDocument.createdType && projectDocument.createdType == config.createdFromReferance && projectDocument.isNew && projectDocument.isNew ===true ) {
-                        
+                    if (projectDocument && projectDocument.createdType && projectDocument.createdType == config.createdFromReferance && projectDocument.isNew && projectDocument.isNew === true) {
+
 
                         async function updateProjectWithReferanceTemplate() {
                             req.createdBy = req.body.userId;
@@ -1597,7 +1619,7 @@ function syncLocalDataOnUpgradeOfApp(req) {
                                 if (projectMap.status && projectMap.status == "failed") {
                                     winston.error("error at Sync  while creating By referance project userId:" + req.body.userId + " project" + JSON.stringify(projectMap));
 
-                                    failed = failed  +1;
+                                    failed = failed + 1;
 
                                     let failed = {
                                         message: projectMap.message ? projectMap.message : "",
@@ -1613,7 +1635,7 @@ function syncLocalDataOnUpgradeOfApp(req) {
                                 }
                             } else {
 
-                                failed = failed  +1;
+                                failed = failed + 1;
 
                                 winston.error("templateId not found at Sync  userId:" + req.body.userId + " project" + JSON.stringify(projectMap));
 
@@ -1634,14 +1656,14 @@ function syncLocalDataOnUpgradeOfApp(req) {
                         // create template for project if only createdType is by self
                         req.createdBy = req.body.userId;
 
-                        req.createdType = projectDocument.createdType ?  projectDocument.createdType : "";
-                        req.isStarted = projectDocument.isStarted ?  projectDocument.isStarted : "";
+                        req.createdType = projectDocument.createdType ? projectDocument.createdType : "";
+                        req.isStarted = projectDocument.isStarted ? projectDocument.isStarted : "";
 
                         let response = await commonHandler.createTemplateAndPrject(projectDocument, req.body.userId);
                         if (response.status && response.status != "success") {
                             winston.error("templateId not found at Sync  userId:" + req.body.userId + " project" + JSON.stringify(response));
 
-                            failed = failed  +1;
+                            failed = failed + 1;
 
                             let failed = {
                                 message: response.message ? response.message : "",
@@ -1661,7 +1683,7 @@ function syncLocalDataOnUpgradeOfApp(req) {
 
                     } else if (projectDocument && projectDocument._id) {
 
-                        if ( projectDocument.share && projectDocument.share == true) {
+                        if (projectDocument.share && projectDocument.share == true) {
                             shareDocs = projectDocument._id;
                         }
 
@@ -1670,13 +1692,13 @@ function syncLocalDataOnUpgradeOfApp(req) {
                             projectsModel.findOneAndUpdate({ '_id': projectDocument._id },
                                 syncData, { new: true }, (function (err, projectDoc) {
                                     if (err) {
-                                        failed = failed  +1;
+                                        failed = failed + 1;
                                         // winston.error("failed while updating to project")/
                                         winston.error("error at Sync  userId:" + req.body.userId + " project" + JSON.stringify(projectDocument));
                                     }
                                 }));
 
-                                updatedProjects = updatedProjects +1;
+                            updatedProjects = updatedProjects + 1;
 
                             var taskUpdateData = projectDocument.tasks;
                             await Promise.all(taskUpdateData.map(async function (element) {
@@ -1697,11 +1719,17 @@ function syncLocalDataOnUpgradeOfApp(req) {
                                         "remarks": element.remarks ? element.remarks : ""
                                     });
                                     taskData.save(taskData, function (err, taskDt) {
+
+                                        if (taskDt) {
+                                            console.log("task created", taskDt);
+                                        } else {
+                                            console.log("failed to save tasks", err);
+                                        }
                                         commonHandler.projectCompletedNotificationPoint(projectDocument._id);
 
                                         if (taskData) {
                                         } else {
-                                            
+
                                             winston.error("error at Sync when saving tasks  userId:" + req.body.userId + " project" + JSON.stringify(projectDocument));
                                             winston.error(err);
                                         }
@@ -1723,7 +1751,7 @@ function syncLocalDataOnUpgradeOfApp(req) {
                             }));
                         } else {
 
-                            failed = failed  +1;
+                            failed = failed + 1;
 
                             winston.error("error projectId not found in DB at Sync  userId:" + req.body.userId + " project" + JSON.stringify(projectDocument));
                             let failed = {
@@ -1733,12 +1761,12 @@ function syncLocalDataOnUpgradeOfApp(req) {
                             }
                             failedToSync.push(failed);
                         }
-                    }else {
-                        failed = failed  +1;
+                    } else {
+                        failed = failed + 1;
                         winston.error("Not Passed Any Condition error at Sync  userId:" + req.body.userId + " project" + JSON.stringify(projectDocument));
                         failedToSync.push(projectDocument);
                     }
-                
+
                 }));
                 let requestedData = {
                     body: {
@@ -1782,24 +1810,24 @@ function syncLocalDataOnUpgradeOfApp(req) {
                 }
 
 
-              
-    
-                emailString = "<p>Projects Sync Report<p><p>Total : "+ total +"</p>"+
-                     "<p>createdProjects : "+ createdProjects+" </p>"+
-                     "<p>Update : "+ updatedProjects+" </p>"+
-                     "<p>Errors : "+ failed+" </p>";
 
-                     let body =  {
-                        "subject": "Old Sync API Report",
-                        "text": "",
-                        "html":emailString
-                    }
 
-                    console.log("emailString",emailString);
+                emailString = "<p>Projects Sync Report<p><p>Total : " + total + "</p>" +
+                    "<p>createdProjects : " + createdProjects + " </p>" +
+                    "<p>Update : " + updatedProjects + " </p>" +
+                    "<p>Errors : " + failed + " </p>";
+
+                let body = {
+                    "subject": "Old Sync API Report",
+                    "text": "",
+                    "html": emailString
+                }
+
+                console.log("emailString", emailString);
 
                 commonHandler.sendEmail();
 
-              
+
                 // console.log("allProjectData",allProjectData);
                 if (failedToSync.length > 0) {
                     return resolve({ status: "failed", message: "failed to sync" })
@@ -1810,6 +1838,88 @@ function syncLocalDataOnUpgradeOfApp(req) {
             }
         } catch (error) {
             reject({ status: "failed", message: error });
+        }
+    });
+}
+
+/**
+ * 
+ * @param {*} req 
+ *  getProjectPdfWithSyc  api to get the pdf and sync the data
+ */
+function getProjectPdfWithSyc(req) {
+    return new Promise(async function (resolve, reject) {
+        try {
+            if (req.body.pdfData && req.body.projects) {
+                try {
+                    let syncAPI = new Promise(async function (resolve, reject) {
+                        let syncData = await syncProject(req);
+                        resolve(syncData);
+                    });
+                    let callGetProjectApi = new Promise(async function (resolve, reject) {
+                        let projectData = req.body.pdfData;
+                        console.log("project Data for pdfRepoert", projectData);
+                        if (projectData.tasks) {
+                            let tasks = [];
+                            // to remove files from object
+                            await Promise.all(
+                                projectData.tasks.map(async list => {
+                                    let taskList = {};
+                                    taskList = list;
+                                    if (taskList.file) {
+                                        delete taskList.file;
+                                    }
+                                    if (taskList.imageUrl) {
+                                        delete taskList.imageUrl;
+                                    }
+                                    tasks.push(taskList);
+                                })
+                            )
+                            projectData.tasks = tasks;
+                        }
+
+                        let url = config.dhiti_config.api_base_url + config.dhiti_config.getProjectPdf;
+                        request({
+                            url: url,
+                            method: "POST",
+                            headers: {
+                                'x-auth-token': req.headers['x-auth-token'],
+                                'Content-Type': 'application/json'
+                            },
+                            json: true,   // <--Very important!!!
+                            body: projectData
+                        }, function (error, response, body) {
+                            // console.log(response);
+                            if (error) {
+                                winston.error("Error at getProjectPdf ()" + error);
+                                reject({ status: "failed", mesage: body });
+                            } else {
+                                console.log("body", body);
+                                resolve(body);
+
+                            }
+                        });
+                    });
+                    Promise.all([syncAPI, callGetProjectApi]).then(function (values) {
+                        // console.log("completing promise",values[0]);
+                        if (values[0] && values[0].status && values[0].status == "success") {
+                            resolve({ allProjects: values[0].allProjects, pdfResponse: values[1] });
+                        } else {
+                            resolve({ status: "failed", "message": "sync failed" });
+                        }
+                    });
+                }
+                catch (ex) {
+                    console.log("ex", ex);
+                    reject({ status: "failed", mesage: ex });
+                }
+            } else {
+                resolve({ status: "failed", message: "pdfData or projetcs data not found" });
+            }
+        } catch (ex) {
+            console.log("ex", ex);
+            winston.error("error in getProjectPdfWithSyc", ex);
+            reject({ status: "failed", mesage: ex });
         }
     });
 }

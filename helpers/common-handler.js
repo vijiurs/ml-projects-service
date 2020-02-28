@@ -416,13 +416,14 @@ function projectCreateAndSolutionMapping(obj) {
 
             
 
+            // let solDoc;
 
             // if (obj.solutionDetails) {
             //     solDoc = obj.solutionDetails;
             // } else {
             //     solDoc = await solutionsModel.findOne({ '_id': mongoose.Types.ObjectId(obj.solutionId), 'programId': mongoose.Types.ObjectId(obj.programId) }).lean();
             // }
-            let solDoc = await solutionsModel.findOne({ '_id': mongoose.Types.ObjectId(obj.solutionId), 'programId': mongoose.Types.ObjectId(obj.programId) }).lean();
+             let solDoc = await solutionsModel.findOne({ '_id': mongoose.Types.ObjectId(obj.solutionId), 'programId': mongoose.Types.ObjectId(obj.programId) }).lean();
             if (solDoc) {
                 // if (element.roles == "projectManager") {
                 //     solDoc.roles.projectManagers.push(element.userId);
@@ -493,7 +494,7 @@ function projectCreateAndSolutionMapping(obj) {
                         "organisation": docInfo.organisation ? docInfo.organisation : "",
                         "duration": docInfo.duration ? docInfo.duration : "",
                         "difficultyLevel": docInfo.difficultyLevel ? docInfo.difficultyLevel : "",
-                        "status": "not yet started",
+                        "status": docInfo.status,
                         "createdAt": moment().format(),
                         "programId": obj.programId,
                         "solutionId": obj.solutionId,

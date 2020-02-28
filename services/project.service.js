@@ -386,16 +386,18 @@ async function syncProject(req) {
 
 
                         
-                            if(projectDocument.createdType && projectDocument.createdType =="" ){
-                                commonHandler.updateCreateTypeByProgramId(projectDocument,req.body.userId);
-                            }
+                            // if(projectDocument.createdType && projectDocument.createdType =="" ){
+                            //     commonHandler.updateCreateTypeByProgramId(projectDocument,req.body.userId);
+                            // }
 
 
                         if (projectDocument.share == true) {
                             shareDocs = projectDocument._id;
                         }
 
-                        let doc = await projectsModel.findOne({ '_id': projectDocument._id }, { '_id': 1 });
+                        let doc = await projectsModel.findOne({ '_id': projectDocument._id });
+
+                        console.log("doc",doc);
                         if (doc) {
                             projectsModel.findOneAndUpdate({ '_id': projectDocument._id },
                                 syncData, { new: true }, (function (err, projectDoc) {
@@ -525,9 +527,9 @@ async function syncProject(req) {
                     } else if(projectDocument && projectDocument._id && projectDocument.isEdited == false &&
                         projectDocument.isNew == false){
 
-                            if(projectDocument.createdType && projectDocument.createdType =="" ){
-                                commonHandler.updateCreateTypeByProgramId(projectDocument,req.body.userId);
-                            }
+                            // if(projectDocument.createdType && projectDocument.createdType =="" ){
+                            //     commonHandler.updateCreateTypeByProgramId(projectDocument,req.body.userId);
+                            // }
                             
                             console.log("No nned to  Updated the project isEdited :false",projectDocument._id);
 
@@ -1707,6 +1709,7 @@ function syncLocalDataOnUpgradeOfApp(req) {
                         if (doc) {
                             projectsModel.findOneAndUpdate({ '_id': projectDocument._id },
                                 syncData, { new: true }, (function (err, projectDoc) {
+                                    console.log(":projectDoc",projectDoc);
                                     if (err) {
                                         failed = failed + 1;
                                         // winston.error("failed while updating to project")/

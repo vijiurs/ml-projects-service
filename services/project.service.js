@@ -381,8 +381,7 @@ async function syncProject(req) {
 
                     // Get hardcoded value from .env file.
 
-                     if (projectDocument && projectDocument._id && projectDocument.isEdited == true &&
-                        projectDocument.isNew == false) {
+                     if (projectDocument && projectDocument._id && projectDocument.isEdited == true) {
 
 
                         
@@ -1924,7 +1923,7 @@ function getProjectPdfWithSyc(req) {
                                 // console.log("body", body);
                                 let syncData = await syncProject(req);
                                 if(syncData.status=="success" && syncData.allProjects){
-                                    resolve({status:"success",allProjects: syncData.allProjects, pdfResponse: body });
+                                    resolve({status:"success",syncData: syncData, pdfResponse: body });
                                 }else{
                                     resolve({ status:"failed",message:"failed to sync the data" });
                                 }

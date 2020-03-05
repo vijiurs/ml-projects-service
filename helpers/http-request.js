@@ -36,7 +36,7 @@ async function httpsPost(headers,postData,url){
                 method: "POST",
                 headers: headers,
                 json: true,   // <--Very important!!!
-                body: postData[0]
+                body: postData
             }, function (error, response, body){
                if (error) {
                    console.log("error",error);

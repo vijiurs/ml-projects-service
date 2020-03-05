@@ -562,7 +562,7 @@ async function monthOrQuarterData(req, res) {
                 await Promise.all(
                     projectsData.map(async projectList => {
                         let taskData = await taskModel.find({
-                            projectId: projectList._id, $or: [
+                            projectId: projectList._id,isDeleted:false, $or: [
                                 { lastSync: { $gte: startFrom, $lte: endOf } },
                                 { "subTasks.lastSync": { $gte: startFrom, $lte: endOf } }
                             ]

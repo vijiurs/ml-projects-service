@@ -289,15 +289,8 @@ async function getMonthViseReport(req) {
                                 } else {
                                     taskPending = taskPending + 1;
                                 }
-
-
                             }
                             ));
-
-
-                           
-
-                            
 
                         }
                         let projectStatus = projectList.status.toLowerCase();
@@ -544,7 +537,7 @@ async function monthOrQuarterData(req, res) {
                 query = { "userId": req.body.userId,isDeleted: { $ne:true } };
             }
 
-            let projectsData = await projectsModel.find(query).lean();
+            let projectsData = await projectsModel.find(query,{ title:1,_id:1,startDate:1,endDate:1,status:1  }).lean();
 
             if ( req.query && req.query.reportType && req.query.reportType == "lastQuarter") {
                 endOf = moment().subtract(1, 'months').endOf('month').format('YYYY-MM-DD');
@@ -570,7 +563,7 @@ async function monthOrQuarterData(req, res) {
                                 { lastSync: { $gte: startFrom, $lte: endOf } },
                                 { "subTasks.lastSync": { $gte: startFrom, $lte: endOf } }
                             ]
-                        }).lean();
+                        },{ title:1,status:1,_id:1 }).lean();
                         // console.log("taskData",taskData);
                         if (taskData.length > 0) {
 

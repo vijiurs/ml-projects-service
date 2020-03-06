@@ -213,7 +213,7 @@ async function getMonthViseReport(req) {
             let completed = 0;
             let pending = 0;
             let projectsData = await projectsModel.find({
-                 userId: req.body.userId
+                 userId: req.body.userId,isDeleted: { $ne:true }
             })
             var endOf = "";
             var startFrom = "";
@@ -295,15 +295,18 @@ async function getMonthViseReport(req) {
                             ));
 
 
-                            let projectStatus = projectList.status.toLowerCase();
-                            console.log("project completed", projectList.status);
+                           
 
-                            if (projectStatus == "completed") {
-                                projectCompleted = projectCompleted + 1;
-                            } else {
-                                projectPending = projectPending + 1;
-                            }
+                            
 
+                        }
+                        let projectStatus = projectList.status.toLowerCase();
+                        // console.log("project completed", projectList.status);
+
+                        if (projectStatus == "completed") {
+                            projectCompleted = projectCompleted + 1;
+                        } else {
+                            projectPending = projectPending + 1;
                         }
                     })
                 );
@@ -338,7 +341,7 @@ async function getDetailViewReport(req) {
     return new Promise(async (resolve, reject) => {
         try {
             let projectsData = await projectsModel.find({
-                userId: req.body.userId
+                userId: req.body.userId, isDeleted: { $ne:true }
             })
             let chartObject = [];
             var endOf = "";
@@ -484,7 +487,7 @@ async function getMonthlyOrQuarterReportPdf(req, res) {
             let data = await monthOrQuarterData(req, res);
             if (data && data.length > 0) {
 
-                console.log("data",data.length);
+                // console.log("data",data.length);
                let requestBody =  {
                     "schoolName" : req.query.schoolName,
                     "reportType": type,
@@ -494,10 +497,11 @@ async function getMonthlyOrQuarterReportPdf(req, res) {
                     'x-auth-token': req.headers['x-auth-token'],
                     'Content-Type': 'application/json'
                 }
-
+                console.log("requestBody",requestBody);
                 let url = config.dhiti_config.api_base_url + config.dhiti_config.monthlyReportPdf;
                 let response = await httpRequest.httpsPost(headers, requestBody, url);
 
+                
                 if (response) {
 
                     console.log("response", response);
@@ -535,9 +539,9 @@ async function monthOrQuarterData(req, res) {
 
             let query = {};
             if(req.query.entityId){
-                query =  { "userId": req.body.userId,"entityId":req.query.entityId };s
+                query =  { "userId": req.body.userId,"entityId":req.query.entityId,isDeleted: { $ne:true } };
             }else{
-                query = { "userId": req.body.userId };
+                query = { "userId": req.body.userId,isDeleted: { $ne:true } };
             }
 
             let projectsData = await projectsModel.find(query).lean();

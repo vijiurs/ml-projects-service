@@ -563,7 +563,7 @@ async function monthOrQuarterData(req, res) {
                                 { lastSync: { $gte: startFrom, $lte: endOf } },
                                 { "subTasks.lastSync": { $gte: startFrom, $lte: endOf } }
                             ]
-                        },{ title:1,status:1,_id:1 }).lean();
+                        },{ title:1,status:1,_id:1,startDate:1,endDate:1,"subTasks.title":1,"subTasks._id":1 }).lean();
                         // console.log("taskData",taskData);
                         if (taskData.length > 0) {
 

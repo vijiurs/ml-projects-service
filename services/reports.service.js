@@ -554,8 +554,13 @@ async function monthOrQuarterData(req, res) {
 
             let ArrayOfProjects = [];
 
+            console.log(projectsData.length,"projectsData",projectsData);
+
             // console.log(startFrom,"endOf",endOf,"projectsData",projectsData.length);
             if (projectsData.length > 0) {
+
+
+                console.log("projectsData =====",projectsData);
                 await Promise.all(
                     projectsData.map(async projectList => {
                         let taskData = await taskModel.find({
@@ -564,7 +569,7 @@ async function monthOrQuarterData(req, res) {
                                 { "subTasks.lastSync": { $gte: startFrom, $lte: endOf } }
                             ]
                         },{ title:1,status:1,_id:1,startDate:1,endDate:1,"subTasks.title":1,"subTasks._id":1 }).lean();
-                        // console.log("taskData",taskData);
+                        console.log(taskData.length,"taskData",taskData);
                         if (taskData.length > 0) {
 
                             await Promise.all(taskData.map(async function (taskList, index) {
@@ -582,8 +587,15 @@ async function monthOrQuarterData(req, res) {
                             ArrayOfProjects.push(projectList);
                         }
                     }));
+
+                    console.log(ArrayOfProjects.length,"ArrayOfProjects =====",ArrayOfProjects);
+                    resolve(ArrayOfProjects);
+            }else{
+                resolve(ArrayOfProjects);
             }
-            resolve(ArrayOfProjects);
+
+
+            
         } catch (error) {
             winston.error("error while gettting data for last month or quarter " + error)
             reject(error);

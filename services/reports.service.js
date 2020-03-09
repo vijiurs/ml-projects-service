@@ -572,6 +572,7 @@ async function monthOrQuarterData(req, res) {
                         console.log(taskData.length,"taskData",taskData);
                         if (taskData.length > 0) {
 
+                            let allTasks = [];
                             await Promise.all(taskData.map(async function (taskList, index) {
                                 if (taskData[index].file) {
                                     delete taskData[index].file;
@@ -579,9 +580,14 @@ async function monthOrQuarterData(req, res) {
                                 if (taskData[index].imageUrl) {
                                     delete taskData[index].imageUrl;
                                 }
-                                projectList.tasks = taskData;
-                                ArrayOfProjects.push(projectList);
+
+                                // projectList.tasks = taskData;
+                                allTasks.push(taskData);
+                           
                             }));
+                            projectList.tasks = allTasks;
+                            ArrayOfProjects.push(projectList);
+
                         }else{
                             projectList.tasks  = [];
                             ArrayOfProjects.push(projectList);

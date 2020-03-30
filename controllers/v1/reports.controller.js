@@ -19,6 +19,7 @@ router.get('/getDetailViewReport',getDetailViewReport);
 router.get('/getMonthlyOrQuarterReportPdf',getMonthlyOrQuarterReportPdf);
 router.get('/numberOfProjectsPerUser',numberOfProjectsPerUser);
 router.get('/getFullMonthlyOrQuarterPdf',getFullMonthlyOrQuarterPdf);
+router.post('/shareTaskPdf',shareTaskPdf);
 // router.post('/check',check);
 
 
@@ -141,6 +142,31 @@ function getFullMonthlyOrQuarterPdf(req, res) {
     res.status(500).send(err);
     }
 }
+
+
+  /**
+ * shareTaskPdf is used to generate the pdf file of current task
+ * @param {*} req 
+ * @param {*} res 
+ */
+function shareTaskPdf(req, res) {
+  try{
+    // calling to service method
+    reportServ.shareTaskPdf(req, res)
+    .then(function (result) {
+      res.send(result);
+    }).catch(e => {
+      winston.error("erorr while featching data at shareTaskPdf() in controller file",e);
+      res.status(500).send(e);
+    });
+  }catch(err){
+    winston.error("error occured at shareTaskPdf() in controller file",err);
+    res.status(500).send(err);
+    }
+}
+
+
+
 
 
 

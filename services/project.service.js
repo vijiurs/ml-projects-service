@@ -424,7 +424,8 @@ async function syncProject(req) {
                                         "isDeleted": false,
                                         "imageUrl": element.imageUrl ? element.imageUrl : "",
                                         "file": element.file ? element.file : {},
-                                        "remarks": element.remarks ? element.remarks : ""
+                                        "remarks": element.remarks ? element.remarks : "",
+                                        "assigneeName":element.assigneeName ? element.assigneeName : ""
                                     });
                                     taskData.save(taskData, function (err, taskDt) {
                                         commonHandler.projectCompletedNotificationPoint(projectDocument._id);

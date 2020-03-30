@@ -16,7 +16,8 @@
         "api_base_url": "",
         "observationsByEntity": "",
         "instanceLevelPdfReports": "",
-        "getProjectPdf":""
+        "getProjectPdf":"",
+        "shareTaskPdf":""
     },
     "Kafka":{
         "host":"",

@@ -546,7 +546,8 @@ function projectCreateAndSolutionMapping(obj) {
                                 "subTasks": el.subTasks,
                                 "programId": solDoc.programId,
                                 "userId": userId,
-                                "createdAt": moment().format()
+                                "createdAt": moment().format(),
+                                "assigneeName":el.assigneeName ? el.assigneeName : ""
                             };
 
                             let taskDoc = await taskModel.create(projectTaskSchema);

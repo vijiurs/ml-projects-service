@@ -266,12 +266,17 @@ async function getMonthViseReport(req) {
                             ));
 
                         }
-                        let projectStatus = projectList.status.toLowerCase();
+                        
+                        let projectStatus = ""
+                        if(projectList.status){
+                            projectStatus = projectList.status.toLowerCase();
+                        }
                         if (projectStatus == "completed") {
                             projectCompleted = projectCompleted + 1;
-                        } else {
-                            projectPending = projectPending + 1;
-                        }
+                            } else {
+                                projectPending = projectPending + 1;
+                            }
+                        
                     })
                 );
 

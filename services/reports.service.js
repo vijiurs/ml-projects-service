@@ -356,7 +356,7 @@ async function getDetailViewReport(req) {
                         reponseObj.xAxis.min = "";
                         reponseObj.xAxis.max = "";
                         reponseObj.series[0].name = projectList.title;
-                        if (taskData.length > 0) {
+                        if (taskData.length > 0) {  
                             await Promise.all(taskData.map(async taskList => {
                                 let status = (taskList.status).toLowerCase();
                                 
@@ -438,7 +438,7 @@ async function getMonthlyOrQuarterReportPdf(req, res) {
                     'x-auth-token': req.headers['x-auth-token'],
                     'Content-Type': 'application/json'
                 }
-                console.log("requestBody", requestBody);
+                // console.log("requestBody", requestBody);
                 let url = config.dhiti_config.api_base_url + config.dhiti_config.monthlyReportPdf;
                 let response = await httpRequest.httpsPost(headers, requestBody, url);
 
@@ -512,11 +512,16 @@ async function monthOrQuarterData(req, res) {
                                 { "subTasks.lastSync": { $gte: startFrom, $lte: endOf } }
                             ]
                         }, { "title": 1, "status": 1, "_id": 1, "startDate": 1, "endDate": 1, "subTasks.title": 1, "subTasks._id": 1, "assigneeName": 1 }).lean();
-                        console.log(taskData.length, "taskData", taskData);
                         if (taskData.length > 0) {
+
+                            
+                       
 
                             let allTasks = [];
                             await Promise.all(taskData.map(async function (taskList, index) {
+
+                                console.log(taskData.length, "taskList", taskList);
+                                
                                 if (taskData[index].file) {
                                     delete taskData[index].file;
                                 }

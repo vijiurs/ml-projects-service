@@ -520,24 +520,21 @@ async function monthOrQuarterData(req, res) {
                             let allTasks = [];
                             await Promise.all(taskData.map(async function (taskList, index) {
 
-                                console.log(taskData.length, "taskList", taskList);
-                                
                                 if (taskData[index].file) {
                                     delete taskData[index].file;
                                 }
                                 if (taskData[index].imageUrl) {
                                     delete taskData[index].imageUrl;
                                 }
-
-                                allTasks.push(taskData);
+                                allTasks.push(taskList);
 
                             }));
                             projectList.tasks = allTasks;
                             ArrayOfProjects.push(projectList);
 
-                        } else {
-                            projectList.tasks = [];
-                            ArrayOfProjects.push(projectList);
+                       
+                            // projectList.tasks = [];
+                            // ArrayOfProjects.push(projectList);
                         }
                     }));
 

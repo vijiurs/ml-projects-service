@@ -4,6 +4,7 @@ var express                 = require('express');
 var path                    = require('path');
 var bodyParser              = require('body-parser');
 var fs                      = require('fs');
+var cors                    = require('cors')
 
 var projectV1               = require('./controllers/v1/project.controller');
 var external                = require('./controllers/v1/external.controller');
@@ -42,21 +43,23 @@ mongoose.set('useCreateIndex', true);
 app.use(bodyParser.json({ limit: "20mb" }));
 app.use(bodyParser.urlencoded({ limit: "20mb", extended: true, parameterLimit: 20000 }));
 
+app.use(cors());
 
-app.use(function (req, res, next) { //allow cross origin requests
-    res.setHeader("Access-Control-Allow-Methods", "POST, PUT, OPTIONS, DELETE, GET");
-    res.header("Access-Control-Allow-Origin", "*");
-//     var allowedOrigins = ['http://localhost:8100', 'http://192.168.1.120:8100', 'http://127.0.0.1:9000', 'http://localhost:9000'];
-//   var origin = req.headers.origin;
-//   if(allowedOrigins.indexOf(origin) > -1){
-//        res.setHeader('Access-Control-Allow-Origin', origin);
-//   }
 
-    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With,Authorization, Content-Type, Accept,x-auth-token,x-authenticated-user-token");
-    res.header("Access-Control-Allow-Credentials", true);
+// app.use(function (req, res, next) { //allow cross origin requests
+//     res.setHeader("Access-Control-Allow-Methods", "POST, PUT, OPTIONS, DELETE, GET");
+//     res.header("Access-Control-Allow-Origin", "*");
+// //     var allowedOrigins = ['http://localhost:8100', 'http://192.168.1.120:8100', 'http://127.0.0.1:9000', 'http://localhost:9000'];
+// //   var origin = req.headers.origin;
+// //   if(allowedOrigins.indexOf(origin) > -1){
+// //        res.setHeader('Access-Control-Allow-Origin', origin);
+// //   }
 
-    next();
-});
+//     res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With,Authorization, Content-Type, Accept,x-auth-token,x-authenticated-user-token");
+//     res.header("Access-Control-Allow-Credentials", true);
+
+//     next();
+// });
 
 
 app.use(morgan('combined', { stream: winston.stream })); 

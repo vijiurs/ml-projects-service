@@ -549,6 +549,9 @@ function projectCreateAndSolutionMapping(obj) {
                                 "createdAt": moment().format(),
                                 "assigneeName":el.assigneeName ? el.assigneeName : ""
                             };
+                            if(el.attachments){
+                                projectTaskSchema.attachments = el.attachments;
+                            }
 
                             let taskDoc = await taskModel.create(projectTaskSchema);
                             if (!taskDoc) {

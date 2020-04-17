@@ -17,6 +17,8 @@ var userEntities = require('../helpers/user-entities');
 
 var config = require('../config/config.json');
 
+var fs = require('fs');
+
 
 
 var api = {};
@@ -31,6 +33,11 @@ api.mapSolutionsToProgram = mapSolutionsToProgram;
 api.projectCreateAndSolutionMapping = projectCreateAndSolutionMapping;
 api.createTemplateAndPrject = createTemplateAndPrject;
 api.updateProjectFromTemplateReferance = updateProjectFromTemplateReferance;
+api.softDeleteUserProjects = softDeleteUserProjects;
+api.storeRequestBody = storeRequestBody;
+api.sendEmail = sendEmail;
+api.updateCreateTypeByProgramId =updateCreateTypeByProgramId;
+
 module.exports = api;
 
 function httpsPost({ body, ...options }) {
@@ -285,6 +292,7 @@ function createImprovementTemplate(obj) {
             recommendedFor: obj.recommendedFor ? obj.recommendedFor : "",
             risks: obj.risks ? obj.risks : "",
             protocols: obj.protocols ? obj.protocols : "",
+            status:obj.status ? obj.status : "",
             // originalAuthor:OriginalAuthor,
             createdAt: moment().format(),
             createdBy: obj.createdBy ? obj.createdBy : "",
@@ -319,23 +327,23 @@ function mapSolutionsToProgram(body) {
             let programsDoc = await programsModel.findOne({ '_id': mongoose.Types.ObjectId(requestBody.programId) });
             if (programsDoc) {
                 let templateData = "";
-                if(requestBody.templateData){
+                if (requestBody.templateData) {
                     templateData = requestBody.templateData;
-                }else{
-                     templateData = await impTemplatesModel.findOne({ '_id': mongoose.Types.ObjectId(requestBody.impTemplateId) }).lean();
+                } else {
+                    templateData = await impTemplatesModel.findOne({ '_id': mongoose.Types.ObjectId(requestBody.impTemplateId) }).lean();
                 }
-                
-               
-                if(body.isStarted){
+
+
+                if (body.isStarted) {
                     templateData['isStarted'] = body.isStarted;
                 }
-                if(body.createdType){
+                if (body.createdType) {
                     templateData['createdType'] = body.createdType;
                 }
-                if(body.startDate){
+                if (body.startDate) {
                     templateData['startDate'] = body.startDate;
                 }
-                if(body.endDate){
+                if (body.endDate) {
                     templateData['endDate'] = body.endDate;
                 }
 
@@ -403,19 +411,20 @@ function mapSolutionsToProgram(body) {
 function projectCreateAndSolutionMapping(obj) {
     return new Promise(async function (resolve, reject) {
         try {
-            
+
             var userId = obj.userId;
             // console.log(element.userId, "element", obj.solutionId);
 
+            
+
             let solDoc;
 
-
-            if(obj.solutionDetails){
+            if (obj.solutionDetails) {
                 solDoc = obj.solutionDetails;
-            }else{
-                 solDoc = await solutionsModel.findOne({ '_id': mongoose.Types.ObjectId(obj.solutionId), 'programId': mongoose.Types.ObjectId(obj.programId) }).lean();
+            } else {
+                solDoc = await solutionsModel.findOne({ '_id': mongoose.Types.ObjectId(obj.solutionId), 'programId': mongoose.Types.ObjectId(obj.programId) }).lean();
             }
-            
+            //  let solDoc = await solutionsModel.findOne({ '_id': mongoose.Types.ObjectId(obj.solutionId), 'programId': mongoose.Types.ObjectId(obj.programId) }).lean();
             if (solDoc) {
                 // if (element.roles == "projectManager") {
                 //     solDoc.roles.projectManagers.push(element.userId);
@@ -428,17 +437,17 @@ function projectCreateAndSolutionMapping(obj) {
                 // }
 
 
-                if(solDoc.roles && solDoc.roles.collaborators){
+                if (solDoc.roles && solDoc.roles.collaborators) {
                     solDoc.roles.collaborators.push(userId)
-                }else if(solDoc.roles && !solDoc.roles.collaborators){
+                } else if (solDoc.roles && !solDoc.roles.collaborators) {
                     solDoc.roles = {
-                        collaborators :[]
+                        collaborators: []
                     }
                     solDoc.roles.collaborators.push(userId)
-                }else{
+                } else {
 
                     solDoc.roles = {
-                        collaborators :[]
+                        collaborators: []
                     }
                     solDoc.roles.collaborators.push(userId)
 
@@ -455,24 +464,27 @@ function projectCreateAndSolutionMapping(obj) {
 
                 let doc = "";
                 var docInfo = "";
-                if(obj.customBody){
-                  
-                    console.log("customBody",obj.customBody.endDate)
+
+
+                if (obj.customBody) {
+
+                    console.log("customBody", obj.customBody.endDate)
                     doc = obj.customBody;
                     docInfo = obj.customBody;
-                }else{
+                } else {
                     doc = await solutionsModel.findOneAndUpdate({ '_id': mongoose.Types.ObjectId(obj.solutionId), 'programId': mongoose.Types.ObjectId(obj.programId) }, solDoc);
                     docInfo = doc.baseProjectDetails[0];
                 }
 
 
-                if(obj.createdType){
+                if (obj.createdType) {
                     docInfo.createdType = obj.createdType;
                 }
-                if(obj.isStarted){
+                if (obj.isStarted) {
                     docInfo.isStarted = obj.isStarted;
                 }
-                
+
+                console.log("-----------docInfo-------------",docInfo);
                 if (doc) {
                     var splidata = docInfo.difficultyLevel;
                     // console.log("deficultyLevel", splidata);
@@ -486,7 +498,7 @@ function projectCreateAndSolutionMapping(obj) {
                         "organisation": docInfo.organisation ? docInfo.organisation : "",
                         "duration": docInfo.duration ? docInfo.duration : "",
                         "difficultyLevel": docInfo.difficultyLevel ? docInfo.difficultyLevel : "",
-                        "status": "not yet started",
+                        "status": docInfo.status,
                         "createdAt": moment().format(),
                         "programId": obj.programId,
                         "solutionId": obj.solutionId,
@@ -505,10 +517,10 @@ function projectCreateAndSolutionMapping(obj) {
                         "approaches": docInfo.approaches ? docInfo.approaches : "",
                         "successIndicators": docInfo.successIndicators ? docInfo.successIndicators : "",
                         "suggestedProject": docInfo.suggestedProject ? docInfo.suggestedProject : "",
-                        "category": docInfo.category ? docInfo.category : "" ,
-                        "createdType":docInfo.createdType ? docInfo.createdType:"",
-                        "isStarted":docInfo.isStarted ? docInfo.isStarted: false,
-                        "startDate":docInfo.startDate ? docInfo.startDate : "",
+                        "category": docInfo.category ? docInfo.category : "",
+                        "createdType": docInfo.createdType ? docInfo.createdType : "",
+                        "isStarted": docInfo.isStarted ? docInfo.isStarted : false,
+                        "startDate": docInfo.startDate ? docInfo.startDate : "",
                         "endDate": docInfo.endDate ? docInfo.endDate : ""
                     }
                     var projectIDs = [];
@@ -522,9 +534,9 @@ function projectCreateAndSolutionMapping(obj) {
                             var projectTaskSchema = {
                                 "projectId": projectDoc._id,
                                 "title": el.title,
-                                "imageUrl" : el.imageUrl ? el.imageUrl : "",
-                                "file" : el.file ? el.file : {},
-                                "remarks" : el.remarks ? el.remarks : "",
+                                "imageUrl": el.imageUrl ? el.imageUrl : "",
+                                "file": el.file ? el.file : {},
+                                "remarks": el.remarks ? el.remarks : "",
 
                                 // "startDate": element.start_date,
                                 // "endDate": element.end_date,
@@ -534,7 +546,8 @@ function projectCreateAndSolutionMapping(obj) {
                                 "subTasks": el.subTasks,
                                 "programId": solDoc.programId,
                                 "userId": userId,
-                                "createdAt": moment().format()
+                                "createdAt": moment().format(),
+                                "assigneeName":el.assigneeName ? el.assigneeName : ""
                             };
 
                             let taskDoc = await taskModel.create(projectTaskSchema);
@@ -549,7 +562,7 @@ function projectCreateAndSolutionMapping(obj) {
                         })
                         );
                         var resp = {
-                            projectData:projectDoc,
+                            projectData: projectDoc,
                             status: "success",
                             solutionId: obj.solutionId,
                             userId: obj.userId,
@@ -564,7 +577,7 @@ function projectCreateAndSolutionMapping(obj) {
             }
         } catch (err) {
 
-            console.log("erorr-----",err);
+            console.log("erorr-----", err);
             let obj = {
                 status: "failed",
                 errorObject: err,
@@ -584,7 +597,7 @@ function projectCreateAndSolutionMapping(obj) {
  * 
  * @param {*} req    
  */
-function createTemplateAndPrject(projectDocument,userId) {
+function createTemplateAndPrject(projectDocument, userId) {
     return new Promise(async function (resolve, reject) {
         try {
             // syncData.tasks = req.body.tasks;
@@ -593,17 +606,17 @@ function createTemplateAndPrject(projectDocument,userId) {
             projectDocument.startDate = projectDocument.startDate;
             projectDocument.endDate = projectDocument.endDate;
 
-            
+
             let data = await createImprovementTemplate(projectDocument);
             if (data._id) {
                 let obj = {
                     programId: config.myProjectMapingProgramId,
                     impTemplateId: data._id,
-                    isStarted:projectDocument.isStarted ? projectDocument.isStarted:false,
+                    isStarted: projectDocument.isStarted ? projectDocument.isStarted : false,
                     createdType: projectDocument.createdType ? projectDocument.createdType : "",
-                    startDate:projectDocument.startDate ? projectDocument.startDate : "",
-                    endDate:projectDocument.endDate ? projectDocument.endDate : "",
-                    templateData:data
+                    startDate: projectDocument.startDate ? projectDocument.startDate : "",
+                    endDate: projectDocument.endDate ? projectDocument.endDate : "",
+                    templateData: data
                 }
 
                 // console.log("obj",obj)
@@ -616,19 +629,19 @@ function createTemplateAndPrject(projectDocument,userId) {
                         programId: config.myProjectMapingProgramId,
                         userId: userId,
                         solutionId: response.solutionDetails._id,
-                        isStarted:projectDocument.isStarted ? projectDocument.isStarted:false,
+                        isStarted: projectDocument.isStarted ? projectDocument.isStarted : false,
                         createdType: projectDocument.createdType ? projectDocument.createdType : "",
-                        solutionDetails:response.solutionDetails
+                        solutionDetails: response.solutionDetails
                     }
                     let projectInfo = await projectCreateAndSolutionMapping(json);
 
-                    if(projectInfo && projectInfo.status=="success"){
+                    if (projectInfo && projectInfo.status == "success") {
                         // let userInfo = await userEntities.userEntities(req);
                         resolve({ status: "success", response: projectInfo });
-                    }else{
-                        reject({ status: "failed", message: projectInfo });   
+                    } else {
+                        reject({ status: "failed", message: projectInfo });
                     }
-                    
+
                 } else {
                     reject({ status: "failed", message: response });
                 }
@@ -649,7 +662,7 @@ function createTemplateAndPrject(projectDocument,userId) {
  * Project from template for the user 
  * @param {*} req    
  */
-function updateProjectFromTemplateReferance(projectDocument,userId) {
+function updateProjectFromTemplateReferance(projectDocument, userId) {
     return new Promise(async function (resolve, reject) {
         try {
             let obj = {
@@ -657,38 +670,166 @@ function updateProjectFromTemplateReferance(projectDocument,userId) {
                 impTemplateId: projectDocument.templateId,
             }
             let response = await mapSolutionsToProgram(obj);
-            if( response.status && response.status=="success"){
+            if (response.status && response.status == "success") {
 
                 let json = {
                     programId: config.myProjectMapingProgramId,
                     userId: userId,
                     solutionId: response.solutionDetails._id,
-                    customBody:projectDocument,
-                    solutionDetails:response.solutionDetails
+                    customBody: projectDocument,
+                    solutionDetails: response.solutionDetails
                 }
-                if(projectDocument.createdType){
-                    json.customBody.createdType=projectDocument.createdType;
+                if (projectDocument.createdType) {
+                    json.customBody.createdType = projectDocument.createdType;
                 }
-                if(projectDocument.isStarted){
-                    json.customBody.isStarted=projectDocument.isStarted;
+                if (projectDocument.isStarted) {
+                    json.customBody.isStarted = projectDocument.isStarted;
                 }
                 let projectInfo = await projectCreateAndSolutionMapping(json);
-                if(projectInfo.status && projectInfo.status=="success" ){
+                if (projectInfo.status && projectInfo.status == "success") {
                     resolve({ status: "success", response: projectInfo });
-                }else{
+                } else {
                     // console.log("errror ----------");
                     reject({ status: "failed", message: projectInfo });
                 }
-            }else{
-                if(response.message){
-                    resolve({status:"failed",message:response.message});
-                }else{
-                    resolve({status:"failed",message:response});
-                }   
+            } else {
+                if (response.message) {
+                    resolve({ status: "failed", message: response.message });
+                } else {
+                    resolve({ status: "failed", message: response });
+                }
             }
         } catch (Excep) {
             winston.error(Excep);
-            resolve({status:"failed",message:Excep});
+            resolve({ status: "failed", message: Excep });
+        }
+    });
+}
+
+async function softDeleteUserProjects(userId) {
+    return new Promise(async function (resolve, reject) {
+        try {
+            let projectsAllList = await projectsModel.find({ userId: userId });
+            if (projectsAllList.length > 0) {
+                let softDelete = await projectsModel.update({ userId: userId }, { isDeleted: true });
+                console.log("softDelete", softDelete);
+                winston.error("solft deleted all user project userId : " + userId);
+            } else {
+                winston.error("delete has no projects");
+                resolve({ status: "success", message: "" })
+            }
+        } catch (Excep) {
+            winston.error("failed at softDeleting the Projects", Excep);
+            resolve({ status: "failed", message: Excep });
+        }
+    })
+}
+
+async function storeRequestBody(req,projectsList) {
+    return new Promise(async function (resolve, reject) {
+        try {
+            var dir = './userRequests/';
+
+            if (!fs.existsSync(dir)) {
+                fs.mkdirSync(dir);
+            }
+
+            let date = moment().format('Y_MM_DD:h_mm_ss_a');
+            fs.writeFileSync(dir+"userSyncRequest_"+req.body.userId+"_"+date+".json", JSON.stringify(req.body));
+            fs.writeFileSync(dir+"userOldProjects_"+req.body.userId+"_"+date+".json", JSON.stringify(projectsList));
+
+            winston.error("logs saved for user "+req.body.userId);
+            resolve({ status:"succes",message:"logs saved"});
+
+        } catch (Excep) {
+            winston.error("failed at storing logs for userId : "+req.body.userId+" Exp : "+Excep);
+            resolve({ status: "failed", message: Excep });
+        }
+
+    });
+}
+
+/**
+ * sendEmail() is used to send an email from using kendra service
+ * @body of the email
+ */
+
+function sendEmail(body){
+    return new Promise(async function(resolve, reject) {
+        // request.post(options, callback); 
+        try {
+
+           
+            let headers = {
+                'X-authenticated-user-token': req.headers['x-auth-token'],
+                'Content-Type': 'application/json',
+                "Authorization": "Bearer "+req.headers['x-auth-token']
+            }
+            // let url = config.dhiti_config.api_base_url + config.dhiti_config.getProjectPdf;
+            // // let url = config.dhiti_config.api_base_url + config.dhiti_config.montlyReportGenerate;
+            // let response = await httpRequest.httpsPost(headers, reportData, url);
+
+            request({
+                url: config.kendraService.base+config.kendraService.sendEmail,
+                method: "POST",
+                headers: headers,
+                json: true,   // <--Very important!!!
+                body: body
+            }, function (error, response, body){
+               if (error) {
+                   console.log("error",error);
+                    winston.error("Error at httpPost()" + error);
+                    reject(body);
+                } else {
+                    console.log(response.statusCode,"body",body);
+                    resolve(body);
+                }
+            });
+
+
+        }catch(error){
+            console.log("err",error);
+            resolve({ status:"failed",message:"error while sending data" });
+        }
+    })
+}
+
+/**
+ * updateCreateTypeByProgramId is If CreatedType blank
+ * @param {*} projectId 
+ * @param {*} userId 
+ * @param {*} programId 
+ */
+function updateCreateTypeByProgramId(projectInfo,userId){
+    return new Promise(async function(resolve, reject) {
+        try {
+            if(projectInfo.programId && projectInfo._id){
+
+                console.log("program update function ");
+                let programsData = await programsModel.findOne({ "_id":projectInfo.programId }).lean();
+                if(programsData){
+
+                    console.log("program found");
+                    if(programId==config.myProjectMapingProgramId){
+                        console.log("program id matching");
+                        // if(projectInfo.templateId)
+                        // updsting to by referance to project if createdType is empty As disccusion with @sriram
+                        let projectUpdate =  await projectsModel.findOneAndUpdate({ "_id":projectInfo._id,"programId":projectInfo.programId,userId:userId,createdType:{ $eq:"" } },{ createdType:config.createdFromReferance })
+                        if(projectUpdate){
+                            resolve({ status:"success",message :" successfully updated" });
+                        }else{
+                            resolve({ status:"failed",message:"failed to update createdType" })
+                        }             
+                    }else{
+                        resolve({ status:"failed",message:"not matching with program Id" });
+                    }
+                }
+            }else{
+                resolve({ status:"failed",message:"invalid request" });
+            }
+        }catch(error){
+            console.log("err",error);
+            resolve({ status:"failed",message:"error while sending data" });
         }
     });
 }

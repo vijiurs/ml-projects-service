@@ -29,6 +29,8 @@ router.post('/projectsDetailsById',projectsDetailsById);
 router.get('/getTaskDetailsById/:id',getTaskDetailsById);
 router.get('/getSubTaskDetails/:subTaskId/:taskId',getSubTaskDetails);
 router.post('/getProjectPdf',getProjectPdf);
+router.post('/projects/syncLocalDataOnUpgradeOfApp',syncLocalDataOnUpgradeOfApp);
+router.post('/projects/getProjectPdfWithSyc',getProjectPdfWithSyc);
 module.exports = router;
 
 function createProject(req, res) {
@@ -154,6 +156,35 @@ function getProjectPdf(req,res){
         res.send(e);
       });
 }
+
+function syncLocalDataOnUpgradeOfApp(req,res){
+
+    console.log("req");
+
+    projectServe.syncLocalDataOnUpgradeOfApp(req)
+    .then(function(result){
+        res.send(result);
+    }).catch(e => {
+        winston.error("erorr while get Project Pdf",e);
+        res.send(e);
+      });
+}
+
+function getProjectPdfWithSyc(req,res){
+
+    console.log("req");
+
+    projectServe.getProjectPdfWithSyc(req)
+    .then(function(result){
+        res.send(result);
+    }).catch(e => {
+        winston.error("erorr while get Project Pdf",e);
+        res.send(e);
+      });
+}
+
+
+
 
 
 

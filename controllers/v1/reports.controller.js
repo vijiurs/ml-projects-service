@@ -16,10 +16,10 @@ router.get('/getObservationReport',getObservationReport);
 router.get('/getMonthViseReport',getMonthViseReport);
 
 router.get('/getDetailViewReport',getDetailViewReport);
-router.get('/getMonthViseReportPdf',getMonthViseReportPdf);
-router.get('/getDetailViewReportPdf',getDetailViewReportPdf);
-
+router.get('/getMonthlyOrQuarterReportPdf',getMonthlyOrQuarterReportPdf);
 router.get('/numberOfProjectsPerUser',numberOfProjectsPerUser);
+router.get('/getFullMonthlyOrQuarterPdf',getFullMonthlyOrQuarterPdf);
+router.post('/shareTaskPdf',shareTaskPdf);
 // router.post('/check',check);
 
 
@@ -78,46 +78,27 @@ function getDetailViewReport(req, res) {
       }
 }
 
+
+
 /**
- * getMonthViseReportPdf is used to generate the pdf file of monthwise and queaterly full report
+ * getMonthlyOrQuarterReportPdf is used to generate the pdf file of monthwise and queaterly full report
  * @param {*} req 
  * @param {*} res 
  */
-function getMonthViseReportPdf(req, res) {
+function getMonthlyOrQuarterReportPdf(req, res) {
   try{
     // calling to service method
-    reportServ.getMonthViseReportPdf(req, res)
+    reportServ.getMonthlyOrQuarterReportPdf(req, res)
     .then(function (result) {
       res.send(result);
     }).catch(e => {
-      winston.error("erorr while featching data at getMonthViseReportPdf() in controller file",e);
+      winston.error("erorr while featching data at getMonthlyOrQuarterReportPdf() in controller file",e);
       res.status(500).send(e);
     });
   }catch(err){
-    winston.error("error occured at getDetailViewReportPdf() in controller file",err);
+    winston.error("error occured at getMonthlyOrQuarterReportPdf() in controller file",err);
     res.status(500).send(err);
     }
-}
-
-/**
- * getDetailViewReportPdf is used to generate the pdf file of monthwise and queaterly full report
- * @param {*} req 
- * @param {*} res 
- */
-function getDetailViewReportPdf(req, res) {
-try{
-  // calling to service method
-  reportServ.getDetailViewReportPdf(req, res)
-  .then(function (result) {
-    res.send(result);
-  }).catch(e => {
-    winston.error("erorr while featching data at getDetailViewReportPdf() in controller file",e);
-    res.status(500).send(e);
-  });
-}catch(err){
-  winston.error("error occured at getDetailViewReportPdf() in controller file",err);
-  res.status(500).send(err);
-  }
 }
 
 /**
@@ -140,6 +121,52 @@ function numberOfProjectsPerUser(req, res) {
     res.status(500).send(err);
     }
   }
+
+  /**
+ * getFullMonthlyOrQuarterPdf is used to generate the pdf file of monthwise and queaterly full report
+ * @param {*} req 
+ * @param {*} res 
+ */
+function getFullMonthlyOrQuarterPdf(req, res) {
+  try{
+    // calling to service method
+    reportServ.getFullMonthlyOrQuarterPdf(req, res)
+    .then(function (result) {
+      res.send(result);
+    }).catch(e => {
+      winston.error("erorr while featching data at getFullMonthlyOrQuarterPdf() in controller file",e);
+      res.status(500).send(e);
+    });
+  }catch(err){
+    winston.error("error occured at getFullMonthlyOrQuarterPdf() in controller file",err);
+    res.status(500).send(err);
+    }
+}
+
+
+  /**
+ * shareTaskPdf is used to generate the pdf file of current task
+ * @param {*} req 
+ * @param {*} res 
+ */
+function shareTaskPdf(req, res) {
+  try{
+    // calling to service method
+    reportServ.shareTaskPdf(req, res)
+    .then(function (result) {
+      res.send(result);
+    }).catch(e => {
+      winston.error("erorr while featching data at shareTaskPdf() in controller file",e);
+      res.status(500).send(e);
+    });
+  }catch(err){
+    winston.error("error occured at shareTaskPdf() in controller file",err);
+    res.status(500).send(err);
+    }
+}
+
+
+
 
 
 

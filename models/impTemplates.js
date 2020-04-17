@@ -8,6 +8,7 @@ var impTemplatesModel = mongoose.model('impTemplates', new mongoose.Schema({
     goal: String,
     concepts: Array,
     keywords: Array,
+    status:String,
     primaryAudience: Array,
     rationale: String,
     recommendedFor: String,

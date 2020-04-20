@@ -35,9 +35,10 @@ api.getReports = getReports;
 api.getObservationReport = getObservationReport;
 api.getMonthViseReport = getMonthViseReport;
 api.getDetailViewReport = getDetailViewReport;
-api.getMonthViseReportPdf = getMonthViseReportPdf;
-api.getDetailViewReportPdf = getDetailViewReportPdf;
+api.getMonthlyOrQuarterReportPdf = getMonthlyOrQuarterReportPdf;
 api.numberOfProjectsPerUser = numberOfProjectsPerUser;
+api.getFullMonthlyOrQuarterPdf = getFullMonthlyOrQuarterPdf;
+api.shareTaskPdf = shareTaskPdf;
 
 module.exports = api;
 
@@ -210,11 +211,16 @@ async function getObservationReport(req) {
 async function getMonthViseReport(req) {
     return new Promise(async (resolve, reject) => {
         try {
-            let completed = 0;
-            let pending = 0;
-            let projectsData = await projectsModel.find({
-                 userId: req.body.userId
-            })
+            let projectQuery =  {
+                userId: req.body.userId,
+                isDeleted: { $ne:true } };
+            
+            if(req.query.entityId){
+                projectQuery["entityId"] =  req.query.entityId;
+            }
+
+            let projectsData = await projectsModel.find(projectQuery,{ _id:1,status:1,title:1 });
+            
             var endOf = "";
             var startFrom = "";
             if (req.query.reportType == "lastQuarter") {
@@ -229,9 +235,7 @@ async function getMonthViseReport(req) {
                     startFrom = moment().subtract(1, 'months').startOf('month').format('YYYY-MM-DD');
                 }
             }
-            let count = 0;
-            console.log(startFrom, "endOf", endOf);
-
+   
             let projectCompleted = 0
             let projectPending = 0;
             let taskCompleted = 0;
@@ -243,68 +247,36 @@ async function getMonthViseReport(req) {
                 await Promise.all(
                     projectsData.map(async projectList => {
                         let taskData = await taskModel.find({
-                            projectId: projectList._id,isDeleted:false, $or: [
+                            projectId: projectList._id, isDeleted: { $ne: true }, $or: [
                                 { lastSync: { $gte: startFrom, $lte: endOf } },
                                 { "subTasks.lastSync": { $gte: startFrom, $lte: endOf } }
                             ]
                         });
-                        let isAllTaskCompleted = true;
-                        let isPending = true;
-                        // console.log("taskData",taskData);
                         if (taskData.length > 0) {
 
                             await Promise.all(taskData.map(async taskList => {
-                                // let status = (taskList.status).toLowerCase();
-                                // if (taskList.subTasks.length > 0) {
-                                //     await Promise.all(taskList.subTasks.map(async subTasks => {
-                                //         if (subTasks.status) {
-                                //             let subtaskStatus = subTasks.status.toLowerCase();
-                                //             if (subtaskStatus == "completed") {
-                                //                 isAllTaskCompleted = true;
-                                //                 isPending = false;
-                                //             } else {
-                                //                 isPending = false;
-                                //                 isAllTaskCompleted = false;
-                                //             }
-                                //         }
-                                //     }));
-                                // } else {
-                                //     if (status == "completed") {
-                                //         isAllTaskCompleted = true;
-                                //         isPending = false;
-                                //     } else if (status == "not started yet" || status == "not yet started" || status == "Not started") {
-                                //         isPending = false;
-                                //         isAllTaskCompleted = false;
-                                //     } else {
-                                //         isPending = true;
-                                //         isAllTaskCompleted = false;
-                                //     }
-                                // }
-
                                 taskCount = taskCount + 1;
                                 let status = (taskList.status).toLowerCase();
-                                // console.log("status ==", status);
                                 if (status == "completed") {
                                     taskCompleted = taskCompleted + 1;
                                 } else {
                                     taskPending = taskPending + 1;
                                 }
-
-
                             }
                             ));
 
-
-                            let projectStatus = projectList.status.toLowerCase();
-                            console.log("project completed", projectList.status);
-
-                            if (projectStatus == "completed") {
-                                projectCompleted = projectCompleted + 1;
+                        }
+                        
+                        let projectStatus = ""
+                        if(projectList.status){
+                            projectStatus = projectList.status.toLowerCase();
+                        }
+                        if (projectStatus == "completed") {
+                            projectCompleted = projectCompleted + 1;
                             } else {
                                 projectPending = projectPending + 1;
                             }
-
-                        }
+                        
                     })
                 );
 
@@ -317,7 +289,6 @@ async function getMonthViseReport(req) {
                     startMonth: moment(startFrom).format('MMMM')
                 }
 
-                console.log("count", taskCount);
                 resolve({ status: "success", data: data, message: "Report Generated Succesfully " });
             } else {
                 reject({ status: "failed", "message": "no data found", data: [] })
@@ -337,16 +308,20 @@ async function getMonthViseReport(req) {
 async function getDetailViewReport(req) {
     return new Promise(async (resolve, reject) => {
         try {
-            let projectsData = await projectsModel.find({
-                userId: req.body.userId
-            })
+            let projectQuery =  {
+                userId: req.body.userId,
+                isDeleted: { $ne:true } };
+            if(req.query.entityId){
+                projectQuery["entityId"] =  req.query.entityId;
+            }
+
+            let projectsData = await projectsModel.find(projectQuery,{ _id:1,title:1 });
+
+
             let chartObject = [];
             var endOf = "";
             var startFrom = "";
-            // console.log("req.query",req.query);
-
-
-
+          
             if (req.query.reportType == "lastQuarter") {
                 endOf = moment().subtract(1, 'months').endOf('month').format('YYYY-MM-DD');
                 startFrom = moment().subtract(3, 'months').startOf('month').format('YYYY-MM-DD');
@@ -355,19 +330,16 @@ async function getDetailViewReport(req) {
                 startFrom = moment().subtract(1, 'months').startOf('month').format('YYYY-MM-DD');
             }
 
-
-            // console.log(startFrom,"endOf",projectsData.length);
             if (projectsData.length > 0) {
                 await Promise.all(
                     projectsData.map(async projectList => {
                         let taskData = await taskModel.find({
-                            projectId: projectList._id,isDeleted: false,$or: [
+                            projectId: projectList._id, isDeleted: { $ne: true }, $or: [
                                 { lastSync: { $gte: startFrom, $lte: endOf } },
                                 { "subTasks.lastSync": { $gte: startFrom, $lte: endOf } }
                             ]
                         });
 
-                        // console.log("taskData",taskData);
                         let reponseObj = {
                             title: {
                                 text: projectList.title
@@ -384,30 +356,10 @@ async function getDetailViewReport(req) {
                         reponseObj.xAxis.min = "";
                         reponseObj.xAxis.max = "";
                         reponseObj.series[0].name = projectList.title;
-                        if (taskData.length > 0) {
+                        if (taskData.length > 0) {  
                             await Promise.all(taskData.map(async taskList => {
                                 let status = (taskList.status).toLowerCase();
-                                // console.log(taskList.subTasks.length, "status: ", projectList._id," ",status);
-                                // if (taskList.subTasks.length > 0) {
-                                //     await Promise.all(taskList.subTasks.map(async subTasks => {
-
-                                //         if (subTasks.status) {
-                                //             let subtaskStatus = subTasks.status.toLowerCase();
-                                //             if (subtaskStatus == "completed" || subtaskStatus!="not started yet") {
-
-                                //                 let obj = {
-                                //                     name:taskList.title,
-                                //                     id: taskList._id,
-                                //                     start: taskList.startDate,
-                                //                     end: taskList.endDate
-                                //                 }
-                                //                 reponseObj.series.data.push(obj);
-                                //             }
-                                //         }
-                                //     }));
-                                // } else {
-                                // if (status!="not started yet") {
-
+                                
                                 if (reponseObj.xAxis.min != "" && reponseObj.xAxis.max != "") {
                                     if (moment(reponseObj.xAxis.min) > moment(taskList.startDate)) {
                                         reponseObj.xAxis.min = taskList.startDate;
@@ -436,23 +388,15 @@ async function getDetailViewReport(req) {
                                     end: moment.utc(taskList.endDate).valueOf()
                                 }
 
-                                // console.log("obj",obj)
                                 reponseObj.xAxis.min = moment.utc(reponseObj.xAxis.min).valueOf('YYYY,mm,DD');
                                 reponseObj.xAxis.max = moment.utc(reponseObj.xAxis.max).valueOf('YYYY,mm,DD');
-                                // console.log("---",moment.utc(reponseObj.xAxis.min).valueOf());
                                 reponseObj.series[0].data.push(obj);
-                                // reponseObj.push(taskList);
-                                // }
-                                // }
                             })
                             )
                             chartObject.push(reponseObj);
-
                         }
-
                     })
                 )
-                console.log("chartObject", chartObject.length);
                 resolve({ status: "success", "message": "Chart details generated succesfully", data: chartObject })
             } else {
                 reject({ status: "failed", "message": "no data found", data: [] })
@@ -464,19 +408,51 @@ async function getDetailViewReport(req) {
     }
     );
 }
+
+
+
 /**
- * getMonthViseReportPdf is used to get the complete details of lastmonth or
+ * getMonthlyOrQuarterReportPdf is used to get the complete details of lastmonth or
  *  quarter data pdf
  * @param {*} req
  */
-async function getMonthViseReportPdf(req, res) {
+async function getMonthlyOrQuarterReportPdf(req, res) {
     return new Promise(async (resolve, reject) => {
         try {
             // let reportData = await getMonthViseReport(req, res);
 
+            let type = "Monthly";
+            if (req.query.reportType && req.query.reportType == "lastQuarter") {
+                type = "Quarter";
+            }
             let data = await monthOrQuarterData(req, res);
             if (data && data.length > 0) {
-                resolve(data);
+
+                // console.log("data",data.length);
+                let requestBody = {
+                    "schoolName": req.query.schoolName,
+                    "reportType": type,
+                    "projectDetails": data
+                }
+                let headers = {
+                    'x-auth-token': req.headers['x-auth-token'],
+                    'Content-Type': 'application/json'
+                }
+                // console.log("requestBody", requestBody);
+                let url = config.dhiti_config.api_base_url + config.dhiti_config.monthlyReportPdf;
+                let response = await httpRequest.httpsPost(headers, requestBody, url);
+
+
+                if (response) {
+
+                    console.log("response", response);
+                    resolve(response);
+                } else {
+
+                    winston.error("from monthly report api" + response);
+                    resolve(response)
+                }
+
             } else {
                 resolve({ status: "failed", message: "No data Found" });
             }
@@ -488,46 +464,7 @@ async function getMonthViseReportPdf(req, res) {
 
     });
 }
-/**
- * getDetailViewReportPdf is used to get the full report of lastmonth or quarter
- *  data pdf
- * 
- * @param {*} req
- */
-async function getDetailViewReportPdf(req, res) {
-    return new Promise(async (resolve, reject) => {
 
-        try {
-            let reportData = await getDetailViewReport(req, res);
-            // resolve(reportData);
-
-            if (reportData && reportData.status && reportData.status == "success") {
-                let headers = {
-                    'x-auth-token': req.headers['x-auth-token'],
-                    'Content-Type': 'application/json'
-                }
-                let url = config.dhiti_config.api_base_url + config.dhiti_config.getProjectPdf;
-                // let url = config.dhiti_config.api_base_url + config.dhiti_config.montlyReportGenerate;
-                let response = await httpRequest.httpsPost(headers, reportData, url);
-
-                if (response) {
-
-                    console.log("response", response);
-                    resolve(response);
-                } else {
-                    resolve(response)
-                }
-            } else {
-                reject();
-            }
-
-        } catch (error) {
-            winston.error("error occured at getDetailViewReportPdf() in report.service.js " + error);
-            reject({ status: "failed", "message": "no data found", data: [] })
-        }
-
-    });
-}
 
 
 /**
@@ -540,12 +477,17 @@ async function getDetailViewReportPdf(req, res) {
 async function monthOrQuarterData(req, res) {
     return new Promise(async (resolve, reject) => {
         try {
-            let projectsData = await projectsModel.find({
-                userId: req.body.userId
-            }).lean();
 
+            let query = {};
+            if (req.query.entityId) {
+                query = { "userId": req.body.userId, "entityId": req.query.entityId, isDeleted: { $ne: true } };
+            } else {
+                query = { "userId": req.body.userId, isDeleted: { $ne: true } };
+            }
 
-            if (req.query.reportType = "lastQuarter") {
+            let projectsData = await projectsModel.find(query, { title: 1, _id: 1, startDate: 1, endDate: 1, status: 1 }).lean();
+
+            if (req.query && req.query.reportType && req.query.reportType == "lastQuarter") {
                 endOf = moment().subtract(1, 'months').endOf('month').format('YYYY-MM-DD');
                 startFrom = moment().subtract(3, 'months').startOf('month').format('YYYY-MM-DD');
             } else {
@@ -558,61 +500,56 @@ async function monthOrQuarterData(req, res) {
                 }
             }
 
-
-            // let programsData = await projectsModel.aggregate([
-            //     { $match: { "userId": req.body.userId } },
-
-            //     // { "$unwind": "$projects" },
-            //     {
-            //         $lookup: {
-            //             from: "userProjectsTasks",
-            //             localField: "_id",
-            //             foreignField: "projectId",
-            //             as: "taskList"
-
-            //         }
-            //     },
-            //       { "$unwind": "$taskList" },
-            //     { $match: { $or: [
-            //         { "taskList.lastSync": { $gte: startFrom, $lte: endOf } },
-            //         { "taskList.subTasks.lastSync": { $gte: startFrom, $lte: endOf } }
-            //             ]
-            //         }
-            //     }
-            // ]);
-
             let ArrayOfProjects = [];
+
             if (projectsData.length > 0) {
+
                 await Promise.all(
                     projectsData.map(async projectList => {
                         let taskData = await taskModel.find({
-                            projectId: projectList._id, $or: [
+                            projectId: projectList._id, isDeleted: { $ne: true }, $or: [
                                 { lastSync: { $gte: startFrom, $lte: endOf } },
                                 { "subTasks.lastSync": { $gte: startFrom, $lte: endOf } }
                             ]
-                        }).lean();
+                        }, { "title": 1, "status": 1, "_id": 1, "startDate": 1, "endDate": 1, "subTasks.title": 1, "subTasks._id": 1, "assigneeName": 1 }).lean();
                         if (taskData.length > 0) {
 
+                            
+                       
+
+                            let allTasks = [];
                             await Promise.all(taskData.map(async function (taskList, index) {
+
                                 if (taskData[index].file) {
                                     delete taskData[index].file;
                                 }
                                 if (taskData[index].imageUrl) {
                                     delete taskData[index].imageUrl;
                                 }
-                                projectList.tasks = taskData;
-                                ArrayOfProjects.push(projectList);
+                                allTasks.push(taskList);
+
                             }));
+                            projectList.tasks = allTasks;
+                            ArrayOfProjects.push(projectList);
+
+                       
+                            // projectList.tasks = [];
+                            // ArrayOfProjects.push(projectList);
                         }
                     }));
+
+                console.log(ArrayOfProjects.length, "ArrayOfProjects =====", ArrayOfProjects);
+                resolve(ArrayOfProjects);
+            } else {
+                resolve(ArrayOfProjects);
             }
-            resolve(ArrayOfProjects);
         } catch (error) {
             winston.error("error while gettting data for last month or quarter " + error)
             reject(error);
         }
     })
 }
+
 
 /**
  * numberOfProjectsPerUser func() return the report of number 
@@ -625,7 +562,7 @@ async function numberOfProjectsPerUser(req, res) {
     return new Promise(async (resolve, reject) => {
         try {
             let userDetails = await projectsModel.aggregate([
-             //   { $match:{ "createdType":"by self" } },
+                //   { $match:{ "createdType":"by self" } },
                 {
                     $lookup: {
                         from: "userProjectsTasks",
@@ -665,4 +602,91 @@ async function numberOfProjectsPerUser(req, res) {
             reject({ status: "failed", message: error });
         }
     });
+}
+
+
+
+/**
+ * getFullMonthlyOrQuarterPdf is used to get the complete details of lastmonth or
+ *  quarter data pdf
+ * @param {*} req
+ */
+async function getFullMonthlyOrQuarterPdf(req, res) {
+    return new Promise(async (resolve, reject) => {
+        try {
+            
+            let type = "Monthly";
+            if (req.query.reportType && req.query.reportType == "lastQuarter") {
+                type = "Quarter";
+            }
+            let data = await monthOrQuarterData(req, res);
+            if (data && data.length > 0) {
+
+               let requestBody =  {
+                    "schoolName" : req.query.schoolName,
+                    "reportType": type,
+                    "projectDetails": data
+                }
+
+                let headers = {
+                    'x-auth-token': req.headers['x-auth-token'],
+                    'Content-Type': 'application/json'
+                }
+
+                let url = config.dhiti_config.api_base_url + config.dhiti_config.fullMonthlyOrQueterlyReport;
+                let response = await httpRequest.httpsPost(headers, requestBody, url);
+
+                if (response) {
+
+                    resolve(response);
+                } else {
+
+                    winston.error("from monthly report api" + response);
+                    resolve(response)
+                }
+
+            } else {
+                resolve({ status: "failed", message: "No data Found" });
+            }
+
+        } catch (error) {
+            winston.error("error occured at getMonthViseReportPdf() in report.service.js " + error);
+            reject({ status: "failed", "message": "no data found", data: [] })
+        }
+
+    });
+}
+
+
+/**
+ * shareTaskPdf is used to share the task details
+ * 
+ * @param {*} req
+ */
+async function shareTaskPdf(req, res) {
+    return new Promise(async (resolve, reject) => {
+        try {
+
+            let headers = {
+                'x-auth-token': req.headers['x-auth-token'],
+                'Content-Type': 'application/json'
+            }
+
+            let url = config.dhiti_config.api_base_url + config.dhiti_config.shareTaskPdf;
+            let response = await httpRequest.httpsPost(headers, req.body, url);
+
+            if (response) {
+                resolve(response);
+            } else {
+
+                winston.error("share task report api" + response);
+                resolve(response)
+            }
+
+        } catch (error) {
+            winston.error("error occured at shareTaskPdf() in report.service.js " + error);
+            reject({ status: "failed", "message": "failed to generate pdf",  })
+        }
+
+    })
 }

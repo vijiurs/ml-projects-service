@@ -376,10 +376,7 @@ async function syncProject(req) {
                         'isStarted': projectDocument.isStarted ? projectDocument.isStarted : false
                     };
 
-                    // console.log("projectDocument.createdType",projectDocument.createdType);
-
-
-                    // Get hardcoded value from .env file.
+                    console.log("projectDocument._id",projectDocument._id);
 
                      if (projectDocument && projectDocument._id && projectDocument.isEdited == true) {
 
@@ -399,7 +396,6 @@ async function syncProject(req) {
 
                         let doc = await projectsModel.findOne({ '_id': projectDocument._id });
 
-                        console.log("doc",doc);
                         if (doc) {
                             projectsModel.findOneAndUpdate({ '_id': projectDocument._id },
                                 syncData, { new: true }, (function (err, projectDoc) {
@@ -425,8 +421,11 @@ async function syncProject(req) {
                                         "imageUrl": element.imageUrl ? element.imageUrl : "",
                                         "file": element.file ? element.file : {},
                                         "remarks": element.remarks ? element.remarks : "",
-                                        "assigneeName":element.assigneeName ? element.assigneeName : ""
+                                        "assigneeName":element.assigneeName ? element.assigneeName : "",
+                                        "attachments":element.attachments ? element.attachments : []
                                     });
+
+                                   
                                     taskData.save(taskData, function (err, taskDt) {
                                         commonHandler.projectCompletedNotificationPoint(projectDocument._id);
 

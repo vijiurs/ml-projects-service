@@ -265,17 +265,19 @@ async function getMonthViseReport(req) {
                             }
                             ));
 
+                            let projectStatus = ""
+                            if(projectList.status){
+                                projectStatus = projectList.status.toLowerCase();
+                            }
+                            if (projectStatus == "completed") {
+                                projectCompleted = projectCompleted + 1;
+                                } else {
+                                    projectPending = projectPending + 1;
+                                }
+
                         }
                         
-                        let projectStatus = ""
-                        if(projectList.status){
-                            projectStatus = projectList.status.toLowerCase();
-                        }
-                        if (projectStatus == "completed") {
-                            projectCompleted = projectCompleted + 1;
-                            } else {
-                                projectPending = projectPending + 1;
-                            }
+                       
                         
                     })
                 );

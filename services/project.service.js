@@ -18,6 +18,8 @@ var mongoose = require('../node_modules/mongoose');
 var asyncforEach = require('async-foreach').forEach;
 var commonHandler = require('../helpers/common-handler');
 
+var httpRequest = require('../helpers/http-request');
+
 
 
 /**
@@ -56,6 +58,8 @@ api.getSubTaskDetails = getSubTaskDetails;
 api.getProjectPdf = getProjectPdf;
 api.syncLocalDataOnUpgradeOfApp = syncLocalDataOnUpgradeOfApp;
 api.getProjectPdfWithSyc = getProjectPdfWithSyc;
+api.getPresignedUrls = getPresignedUrls;
+api.getDownloadableUrls = getDownloadableUrls;
 module.exports = api;
 
 /**
@@ -1953,4 +1957,60 @@ function getProjectPdfWithSyc(req) {
             reject({ status: "failed", mesage: ex });
         }
     });
+}
+
+
+/**to get Presigned Urls
+ * @name getPresignedUrls
+ * @param {*} req 
+ *  api is to get presigned Urls of files
+ */
+function getPresignedUrls(req) {
+    return new Promise(async function (resolve, reject) {
+        try {
+
+           
+            let headers = {
+                'X-authenticated-user-token': req.headers['x-auth-token'],
+                'Content-Type': 'application/json'
+            }
+            let url = config.kendraService.base + config.kendraService.preSignedUrls;
+            let response = await httpRequest.httpsPost(headers,req.body, url);
+
+            resolve(response);
+
+        } catch (ex) {
+            console.log("ex", ex);
+            winston.error("error in getProjectPdfWithSyc", ex);
+            reject({ status: "failed", mesage: ex });
+        }
+    });
+}
+
+
+/**to downloadable Urls
+ * @name getPresignedUrls
+ * @param {*} req 
+ *  api is to get downloadable Urls of files
+ */
+function getDownloadableUrls(req) {
+    return new Promise(async function (resolve, reject) {
+        try {
+
+           
+            let headers = {
+                'X-authenticated-user-token': req.headers['x-auth-token'],
+                'Content-Type': 'application/json'
+            }
+            let url = config.kendraService.base + config.kendraService.getDownloadableUrl;
+            let response = await httpRequest.httpsPost(headers,req.body, url);
+
+            resolve(response);
+
+        } catch (ex) {
+            winston.error("error in getProjectPdfWithSyc", ex);
+            reject({ status: "failed", mesage: ex });
+        }
+  });
+
 }

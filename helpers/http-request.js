@@ -30,7 +30,6 @@ module.exports = api;
 async function httpsPost(headers,postData,url){
     return  new Promise( async(resolve,reject)=>{
         try {
-            console.log(postData,"url",url)
             request({
                 url: url,
                 method: "POST",

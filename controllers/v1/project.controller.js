@@ -31,6 +31,10 @@ router.get('/getSubTaskDetails/:subTaskId/:taskId',getSubTaskDetails);
 router.post('/getProjectPdf',getProjectPdf);
 router.post('/projects/syncLocalDataOnUpgradeOfApp',syncLocalDataOnUpgradeOfApp);
 router.post('/projects/getProjectPdfWithSyc',getProjectPdfWithSyc);
+
+router.post('/projects/getPresignedUrls',getPresignedUrls);
+router.post('/projects/getDownloadableUrls',getDownloadableUrls);
+
 module.exports = router;
 
 function createProject(req, res) {
@@ -159,8 +163,7 @@ function getProjectPdf(req,res){
 
 function syncLocalDataOnUpgradeOfApp(req,res){
 
-    console.log("req");
-
+    
     projectServe.syncLocalDataOnUpgradeOfApp(req)
     .then(function(result){
         res.send(result);
@@ -172,13 +175,32 @@ function syncLocalDataOnUpgradeOfApp(req,res){
 
 function getProjectPdfWithSyc(req,res){
 
-    console.log("req");
-
     projectServe.getProjectPdfWithSyc(req)
     .then(function(result){
         res.send(result);
     }).catch(e => {
         winston.error("erorr while get Project Pdf",e);
+        res.send(e);
+      });
+}
+
+
+function getDownloadableUrls(req,res){
+    projectServe.getDownloadableUrls(req)
+    .then(function(result){
+        res.send(result);
+    }).catch(e => {
+        winston.error("erorr while get getPresignedUrls",e);
+        res.send(e);
+      });
+}
+
+function getPresignedUrls(req,res){
+    projectServe.getPresignedUrls(req)
+    .then(function(result){
+        res.send(result);
+    }).catch(e => {
+        winston.error("erorr while get getPresignedUrls ",e);
         res.send(e);
       });
 }

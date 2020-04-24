@@ -32,5 +32,13 @@
         "pendingSubTaskPriorDays":[14,7,3]
         
     },
+
+    "migrations" : {
+        "MONGODB_URL" : "",
+        "MIGRATION_COLLECTION" : "",
+        "MIGRATION_DIR" : "",
+        "DB" : "",
+        "TRANSFER_FROM_DB" : ""
+    },
     "myProjectMapingProgramId":"5d159cc31a887d21e7e54a9b"
 }

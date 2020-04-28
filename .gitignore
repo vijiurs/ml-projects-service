@@ -31,6 +31,8 @@ loggers/
 #config files
 config/config.json
 
+/tmp
+
 # Dependency directories
 node_modules/
 jspm_packages/

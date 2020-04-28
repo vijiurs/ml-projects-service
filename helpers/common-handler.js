@@ -773,7 +773,7 @@ function sendEmail(body){
             // let response = await httpRequest.httpsPost(headers, reportData, url);
 
             request({
-                url: config.kendraService.base+config.kendraService.sendEmail,
+                url: config.kendra_config.base+config.kendra_config.sendEmail,
                 method: "POST",
                 headers: headers,
                 json: true,   // <--Very important!!!

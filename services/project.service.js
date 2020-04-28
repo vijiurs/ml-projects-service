@@ -1986,9 +1986,8 @@ function getPresignedUrls(req) {
                 bucket:config.gcp.bucketName
             }
 
-            console.log("requestBody",requestBody);
-
-            let url = config.kendraService.base + config.kendraService.preSignedUrls;
+          
+            let url = config.kendra_config.base + config.kendra_config.preSignedUrls;
             let response = await httpRequest.httpsPost(headers,requestBody, url);
 
             
@@ -2023,7 +2022,7 @@ function getDownloadableUrls(req) {
                 bucketName:config.gcp.bucketName
             }
 
-            let url = config.kendraService.base + config.kendraService.getDownloadableUrl;
+            let url = config.kendra_config.base + config.kendra_config.getDownloadableUrl;
             let response = await httpRequest.httpsPost(headers,requestBody, url);
 
             resolve(response);

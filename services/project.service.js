@@ -1974,8 +1974,24 @@ function getPresignedUrls(req) {
                 'X-authenticated-user-token': req.headers['x-auth-token'],
                 'Content-Type': 'application/json'
             }
+
+          
+            let allFileNames= []
+            req.body.fileNames.map(files =>{
+                allFileNames.push(files);
+            })
+            let requestBody ={
+                fileNames:req.body.fileNames,
+                path:req.body.userId,
+                bucket:config.gcp.bucketName
+            }
+
+            console.log("requestBody",requestBody);
+
             let url = config.kendraService.base + config.kendraService.preSignedUrls;
-            let response = await httpRequest.httpsPost(headers,req.body, url);
+            let response = await httpRequest.httpsPost(headers,requestBody, url);
+
+            
 
             resolve(response);
 
@@ -1997,13 +2013,18 @@ function getDownloadableUrls(req) {
     return new Promise(async function (resolve, reject) {
         try {
 
-           
             let headers = {
                 'X-authenticated-user-token': req.headers['x-auth-token'],
                 'Content-Type': 'application/json'
             }
+
+            let requestBody ={
+                filePaths:req.body.filePaths,
+                bucketName:config.gcp.bucketName
+            }
+
             let url = config.kendraService.base + config.kendraService.getDownloadableUrl;
-            let response = await httpRequest.httpsPost(headers,req.body, url);
+            let response = await httpRequest.httpsPost(headers,requestBody, url);
 
             resolve(response);
 

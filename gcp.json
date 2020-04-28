@@ -1,0 +1,12 @@
+{
+    "type": "service_account",
+    "project_id": "shikshalokam",
+    "private_key_id": "b1a4f96c1575b759ad7f8f59b6750f7dd7edf5c7",
+    "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvwIBADANBgkqhkiG9w0BAQEFAASCBKkwggSlAgEAAoIBAQCwhvyFQxN1rPEt\nDlTTdWlx4cm10puhHpljYiMItRXtL3UIzpADtc+0l3/PQRb8X5YSfG7/hbfc5jiC\n2eYFLjWrlwWAQqFJNsLwsKbIez4sleCXMkOxftdGaZASlssclSKipl8m8ct6HLpp\n9+fBf3f6FEGTsgfE/l56uNDa+bLa7rM2bgbFPhRD5Rzhdf3bwrY4FsNMR/k5sDB+\nKVjpbWCdmHcFy7nDH4Orot7lSwhOpJasxL+nWZxgc6uK183uQFxOoY3yruv18K5J\nKwujjdIDSW4t4WWO6EVMBRNnVEONVKE9Kd/+DvuRv6JpRejod7qqqDnf91RjfP+1\nCbQ5lap9AgMBAAECggEAJjuiQzGfLBhAJxBIzoDKTPxIXg1GoEuakLQfXuIrpNKn\nwDfO6MLOwPAkIi0Yj6IbRJc3Sjf5tcoWGL8daudSf/7GVfx4Zr1J1OwJv3ez5F+0\nxEKCd1W/xfQUnHYU+TSSyxQKHUr21VSWCmADTb0wLNWIy3aeaKvoJh/Tum2k73Yx\n/D3uMqb3C3Q7/SnXn1gcb/S0wU3eUupRxc8aWI6Rtoo9yrVt30UQ7hbBcCShNWM7\n3QCSBTYVhi7H5Z41TpSv0ulgWOVgio9V2d8I++gqgc3XtYlSSCLto+DJMVsDGERs\n0a2ygC0pliCHnzjdxsc1C90Ac/edDRR8jGn6bMD3GQKBgQDUrvZ2HilBHwYtI5HU\nU1jrUyBBfomU1fBtQaIeWzKEc8T7P4fPupFYFKoVe90OTts210oQnb5+oFGfF8Fh\n7bQk9v/wHGoRc0EBNfzEfFnhqfr0ioy0BfJPdRBb/MSo9Hbjvrkspx50HHtsX3Al\nPfBr5gugY79yNMfnJFrTUHtU2QKBgQDUeuOKPVPRsrlMKEkaA7VjPko/Fx1CzEez\nnYsUvcgvhFC+LW7noGkfLtvUkGhUYjUM9OcZXE5CILUbwk1PR6qMjuJGB+hVLOXy\nSEZV2mRAwGQYTYEE2cKqvSvJWHDM2jnzE08qNGTpa+m31vUIiVbMyPwE/+9FuvIw\nVU0EOEasRQKBgQCXYKi/TZxjY2eL/UMwctpZNGNC+oOGUfe8a/itzo9YQuYzRfau\nXcZRgPPGMtEV+/5/PCDVTtFlY0p1B/12bC/KF5v3FOJR5UyhRgHRAAkhW1DpeSvI\nfmsHLvUj4/c9ojJ0yy0VoSVF03ftnMg/WaSjx6sCz7xV10dpNzEGMsR1kQKBgQCx\nuWxTd8KBVu2YnuWuRcXVkgeGR+4orjeXLEJmAevMmu7yc4wdX9YtyAMGBBfP5Skc\ngkg+tS+cLkFuS5JgqsAju2vWSczyWZCom/2A2CAc7Q+MKF+vT/l82KgkTL5lCm+I\nOvFvis2RVLr0E293SXD5726lO/HGMH1dIiw+SFgMxQKBgQCF9VukiMjBr2wQbsd+\noM668+cBfQdagWSX0dAEzN5pRSNM6xpM3J/1E5hbbnCP1DIL3ZAqc0HoSrpAE7U2\n+LW2ZhKOzoBi6nqkyT98o1lNyOHwsHvDgHmmqHLY63eMPqvJPHQ69BU4S+DQ46yv\nAOF76cgqLVQh/etQZVS/RQXH3g==\n-----END PRIVATE KEY-----\n",
+    "client_email": "sl-dev-storage@shikshalokam.iam.gserviceaccount.com",
+    "client_id": "108093390722998621763",
+    "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+    "token_uri": "https://oauth2.googleapis.com/token",
+    "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+    "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/sl-dev-storage%40shikshalokam.iam.gserviceaccount.com"
+}

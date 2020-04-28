@@ -57,7 +57,7 @@ async function update() {
                     let projectInfo = await db.collection("userProjects").findOne({ _id: tasks.projectId });
                     if (projectInfo) {
 
-                        let folderPath = tasks.projectId + "/" + tasks._id + "/" + projectInfo.userId;
+                        let folderPath = projectInfo.userId;
                         let uploadResponse = await uploadFile(dir + "/" + fileName, folderPath + '/' + fileName);
                         
                         if(uploadResponse && uploadResponse.name) {

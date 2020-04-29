@@ -32,5 +32,20 @@
         "pendingSubTaskPriorDays":[14,7,3]
         
     },
-    "myProjectMapingProgramId":"5d159cc31a887d21e7e54a9b"
+    "myProjectMapingProgramId":"5d159cc31a887d21e7e54a9b",
+    "KAFKA_COMMUNICATIONS_ON_OFF" : "ON",
+    "INTERNAL_ACCESS_TOKEN" : "",
+    "createdFromReferance":"by referance",
+    "createdSelf":"by self",
+    "kendra_config":{
+        "base":"",
+        "sendEmail":"",
+        "channelId":"",
+        "preSignedUrls":"",
+        "getDownloadableUrl":""
+    },
+    "MIGRATION_DIR":"",
+    "gcp":{
+        "bucketName":""
+    }
 }

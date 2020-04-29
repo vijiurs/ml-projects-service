@@ -1,3 +1,4 @@
+require("dotenv").config();
 var https                   = require('https');
 var http                    = require('http');
 var express                 = require('express');
@@ -30,6 +31,14 @@ var authServe               = require('./services/authentication.service');
 var notification            = require('./helpers/notifications');
 
 var cronSchedular           = require('./helpers/cron-schedular');
+
+let environmentData = require("./envVariables")();
+
+
+if(!environmentData.success) {
+  console.log("Server could not start . Not all environment variable is provided");
+  process.exit();
+}
 
 global.kafkaClient = require('./config/kafka-config')();
 require("./helpers/scheduler");

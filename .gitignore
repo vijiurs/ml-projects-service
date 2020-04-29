@@ -27,13 +27,11 @@ build/Release
 
 #logfiles
 loggers/
-loggers/app.log
 
 #config files
 config/config.json
 
-tmp/
-.gcp.json
+temp/
 
 # Dependency directories
 node_modules/

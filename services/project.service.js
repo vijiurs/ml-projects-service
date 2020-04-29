@@ -334,10 +334,10 @@ async function getProjectAndTaskDetails(projectId,token="") {
                     if(taskList.attachments){
 
 
-                        let requestBOdy  = {
+                        let requestBody  = {
                             filePaths : taskList.attachments
                         }
-                       let downloadData = await getDownloadableUrls(requestBOdy,token);
+                       let downloadData = await getDownloadableUrls(requestBody,token);
 
                        if(downloadData && downloadData.status && downloadData.status ==200){
 
@@ -2010,7 +2010,7 @@ function getFileUploadUrl(req) {
             req.body.fileNames.map(file =>{
 
                 
-                var fileName =  req.body.userId+"/"+Math.floor(new Date() / 1000) +"_"+file;
+                var fileName =  Math.floor(new Date() / 1000) +"_"+file;
                 fileName = (fileName.replace(/\s+/g, '')).trim();
                 requestFileNames[fileName] = file;
                 allFileNames.push(fileName);
@@ -2022,6 +2022,8 @@ function getFileUploadUrl(req) {
                 path:req.body.userId,
                 bucket:config.gcp.bucketName
             }
+
+            // console.log("--",requestBody);
 
             
             let url = config.kendra_config.base + config.kendra_config.preSignedUrls;

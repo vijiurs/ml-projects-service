@@ -33,7 +33,7 @@ router.post('/projects/syncLocalDataOnUpgradeOfApp',syncLocalDataOnUpgradeOfApp)
 router.post('/projects/getProjectPdfWithSyc',getProjectPdfWithSyc);
 
 router.post('/projects/getFileUploadUrl',getFileUploadUrl);
-router.post('/projects/getDownloadableUrls',getDownloadableUrls);
+
 
 module.exports = router;
 
@@ -184,16 +184,6 @@ function getProjectPdfWithSyc(req,res){
       });
 }
 
-
-function getDownloadableUrls(req,res){
-    projectServe.getDownloadableUrls(req)
-    .then(function(result){
-        res.send(result);
-    }).catch(e => {
-        winston.error("erorr while get getPresignedUrls",e);
-        res.send(e);
-      });
-}
 
 function getFileUploadUrl(req,res){
     projectServe.getFileUploadUrl(req)

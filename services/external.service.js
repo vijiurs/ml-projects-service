@@ -80,7 +80,7 @@ async function createImpTemplates(req) {
                                 } 
                             }
                         }));
-                        resolve({ status:"succes" });
+                        resolve({ status:"success" });
                     });    
                 }
 

@@ -44,10 +44,9 @@ async function update() {
 
             if (fileInfo) {
 
-                var timestamp = new Date().getUTCMilliseconds();
-                let randomNumber = Math.floor((Math.random() * 10000) + 1);
-
-                let fileName = timestamp + "_" + randomNumber + "_uploadImage." + fileInfo.ext;
+                var timestamp =  Math.floor(new Date() / 1000);
+               
+                let fileName = timestamp  + "_uploadImage." + fileInfo.ext;
                 var dir = './' + tempFolder;
                 if (!fs.existsSync(dir)) {
                     fs.mkdirSync(dir);
@@ -63,9 +62,7 @@ async function update() {
                         if(uploadResponse && uploadResponse.name) {
                             await db.collection("userProjectsTasks").findOneAndUpdate({ _id: tasks._id }, { $push: { attachments: uploadResponse.name } });
                         }
-                        
                    
-
                     }
 
                 }

@@ -32,7 +32,7 @@ router.post('/getProjectPdf',getProjectPdf);
 router.post('/projects/syncLocalDataOnUpgradeOfApp',syncLocalDataOnUpgradeOfApp);
 router.post('/projects/getProjectPdfWithSyc',getProjectPdfWithSyc);
 
-router.post('/projects/getPresignedUrls',getPresignedUrls);
+router.post('/projects/getFileUploadUrl',getFileUploadUrl);
 router.post('/projects/getDownloadableUrls',getDownloadableUrls);
 
 module.exports = router;
@@ -195,8 +195,8 @@ function getDownloadableUrls(req,res){
       });
 }
 
-function getPresignedUrls(req,res){
-    projectServe.getPresignedUrls(req)
+function getFileUploadUrl(req,res){
+    projectServe.getFileUploadUrl(req)
     .then(function(result){
         res.send(result);
     }).catch(e => {

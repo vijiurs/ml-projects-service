@@ -42,7 +42,7 @@ async function httpsPost(headers,postData,url){
                     winston.error("Error at httpPost()" + error);
                     reject(body);
                 } else {
-                    console.log(response.statusCode,"body",body);
+                    console.log(" api rtesponse ",response.statusCode);
                     resolve(body);
                 }
             });

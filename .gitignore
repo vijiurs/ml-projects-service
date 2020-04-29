@@ -27,11 +27,12 @@ build/Release
 
 #logfiles
 loggers/
+loggers/app.log
 
 #config files
 config/config.json
 
-/tmp
+tmp/
 .gcp.json
 
 # Dependency directories

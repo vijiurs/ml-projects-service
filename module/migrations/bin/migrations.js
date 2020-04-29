@@ -5,7 +5,6 @@ global._ = require("lodash");
 const Table = require("cli-table");
 const migrateMongo = require("../lib/migrate");
 const pkgjson = require("../../../package.json");
-global.configuration = require("../../../config/config.json")
 
 function printMigrated(migrated = []) {
   migrated.forEach(migratedItem => {

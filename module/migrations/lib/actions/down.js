@@ -22,7 +22,7 @@ module.exports = async db => {
       );
     }
   
-    const collectionName = configuration.migrations.MIGRATION_COLLECTION || "migrations";
+    const collectionName = process.env.MIGRATIONS_COLLECTION || "migrations";
     const collection = db.collection(collectionName);
     try {
       await collection.deleteOne({ fileName: lastAppliedItem.fileName });

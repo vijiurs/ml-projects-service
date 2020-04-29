@@ -4,6 +4,7 @@ const up = require("./actions/up");
 const down = require("./actions/down");
 const status = require("./actions/status");
 const database = require("./env/database");
+require('dotenv').config();
 
 module.exports = {
   init,

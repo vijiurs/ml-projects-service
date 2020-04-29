@@ -14,7 +14,7 @@ module.exports = async db => {
   }else{
     fileValue = fileNames
   }
-  const collectionName = configuration.migrations.MIGRATION_COLLECTION || "migrations"
+  const collectionName = process.env.MIGRATIONS_COLLECTION || "migrations"
 
   const collection = db.collection(collectionName);
   const changelog = await collection.find({}).toArray();

@@ -4,8 +4,10 @@ global.ObjectID = require('mongodb').ObjectID
 module.exports = {
   async connect() {
 
-    const url = configuration.migrations.MONGODB_URL
-    const databaseName = configuration.migrations.DB
+
+    let url = process.env.MONGODB_HOST_URL + ":" + process.env.MONGODB_PORT;
+    let databaseName = process.env.MONGODB_DATABASE_NAME;
+
     const options = { useNewUrlParser: true }
 
     if (!url) {
@@ -29,8 +31,8 @@ module.exports = {
   },
   async connectToTransferFromDB() {
 
-    const url = configuration.migrations.MONGODB_URL
-    const databaseName = configuration.migrations.TRANSFER_FROM_DB || configuration.migrations.DB
+    const url = process.env.MONGODB_HOST_URL + ":" + process.env.MONGODB_PORT;
+    const databaseName = process.env.TRANSFER_FROM_DB || process.env.MONGODB_DATABASE_NAME
     const options = {useNewUrlParser: true}
 
     if (!url) {

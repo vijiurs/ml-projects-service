@@ -27,7 +27,7 @@ module.exports = async db => {
       throw error;
     }
 
-    const collectionName = configuration.migrations.MIGRATION_COLLECTION || "migrations";
+    const collectionName = process.env.MIGRATIONS_COLLECTION || "migrations";
     const collection = db.collection(collectionName);
 
     const { fileName } = item;

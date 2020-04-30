@@ -25,6 +25,7 @@ var commonHandler = require('../helpers/common-handler');
 var _this = this;
 var api = {};
 api.getTemplates = getTemplates;
+api.getImprovementProjects = getImprovementProjects;
 module.exports = api;
 
 
@@ -35,7 +36,7 @@ module.exports = api;
 function getTemplates(req) {
     return new Promise(async function (resolve, reject) {
         try {
-            let templateInfo = await templateModel.find({});
+            let templateInfo = await templateModel.find({   creationType :{ $ne : config.createdSelf } });
             let array = [];
             let data = {};
             if (templateInfo.length > 0) {
@@ -54,6 +55,32 @@ function getTemplates(req) {
             } else {
                 resolve({ status: "failed", "data": [], "message": "no template found" });
             }
+            
+        } catch (error) {
+            winston.error(error);
+            reject({ status: "failed", message: error })
+        }
+    })
+}
+
+/**
+ * @name getImprovementProjects the function used to specific the templates
+ * @return array of templates
+ */
+function getImprovementProjects(req) {
+    return new Promise(async function (resolve, reject) {
+        try {
+
+            let templateInfo = await templateModel.find({ externalId : { $in:req.body.externalIds } },
+                { _id:1,title:1,goal:1,externalId:1 }
+            );
+            if(templateInfo && templateInfo.length > 0){
+                resolve({ status: 200, "result": templateInfo, "message": " Improvement project data" });
+            }else{
+                resolve({ status: 500, "result": templateInfo, "message": " No improvement project found" });
+            }
+
+
         } catch (error) {
             winston.error(error);
             reject({ status: "failed", message: error })

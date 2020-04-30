@@ -18,6 +18,8 @@ var mongoose = require('../node_modules/mongoose');
 var asyncforEach = require('async-foreach').forEach;
 var commonHandler = require('../helpers/common-handler');
 
+var httpRequest = require('../helpers/http-request');
+
 
 
 /**
@@ -56,6 +58,8 @@ api.getSubTaskDetails = getSubTaskDetails;
 api.getProjectPdf = getProjectPdf;
 api.syncLocalDataOnUpgradeOfApp = syncLocalDataOnUpgradeOfApp;
 api.getProjectPdfWithSyc = getProjectPdfWithSyc;
+api.getFileUploadUrl = getFileUploadUrl;
+api.getDownloadableUrls = getDownloadableUrls;
 module.exports = api;
 
 /**
@@ -173,6 +177,9 @@ function getAllProjects(req) {
     let dataObj = [];
     // console.log("req", req.body.userId);
     if (req.body.userId) {
+
+
+        let token =req.headers['x-auth-token'];
         let query = {};
         // if (req.query && req.query.type && req.query.type == "quarter") {
         //     var dateFrom = moment().subtract(3, 'months').format('YYYY-MM-DD');
@@ -190,7 +197,6 @@ function getAllProjects(req) {
         query = { 'projects.userId': req.body.userId }
 
 
-        console.log("query", query);
         async function getUserProjects(resolve, reject) {
             try {
                 let programsData = await programsModel.aggregate([
@@ -252,7 +258,7 @@ function getAllProjects(req) {
                             await Promise.all(
                                 projectList.projects.map(async function (element) {
                                     // projectList.projects.forEach(function (element, index) {
-                                    await getProjectAndTaskDetails(element._id).then(function (resp) {
+                                    await getProjectAndTaskDetails(element._id,token).then(function (resp) {
                                         // console.log("resp======", resp);
                                         lp = lp + 1;
 
@@ -262,7 +268,6 @@ function getAllProjects(req) {
                                         resp.isEdited = false;
                                         resp.share = false;
 
-                                        console.log(resp.title, "resp.createdType", resp.createdType);
                                         resp.createdType = resp.createdType ? resp.createdType : "";
                                         resp.isDeleted = resp.isDeleted ? resp.isDeleted : false;
                                         resp.isStarted = resp.isStarted ? resp.isStarted : false;
@@ -308,7 +313,7 @@ function getAllProjects(req) {
  * @param {*} projectId 
  * 
  */
-async function getProjectAndTaskDetails(projectId) {
+async function getProjectAndTaskDetails(projectId,token="") {
     return new Promise(async (resolve, reject) => {
         try {
             let projectData = await projectsModel.findOne({ '_id': projectId }).lean();
@@ -323,8 +328,26 @@ async function getProjectAndTaskDetails(projectId) {
                 // projectData.tasks  = "";
                 let tasksData = [];
 
+                
                 await Promise.all(tasks.map(async function (taskList) {
 
+                    if(taskList.attachments){
+
+
+                        let requestBody  = {
+                            filePaths : taskList.attachments
+                        }
+                       let downloadData = await getDownloadableUrls(requestBody,token);
+
+                       if(downloadData && downloadData.status && downloadData.status ==200){
+
+                            let taskImageUrls = [];
+                            downloadData.result.map(fileInfo=>{
+                                taskImageUrls.push(fileInfo.url);
+                            });
+                            taskList['attachments'] =taskImageUrls;
+                       }
+                    }
                     taskList['isNew'] = false;
                     tasksData.push(taskList);
                 }));
@@ -376,7 +399,7 @@ async function syncProject(req) {
                         'isStarted': projectDocument.isStarted ? projectDocument.isStarted : false
                     };
 
-                    console.log("projectDocument._id",projectDocument._id);
+                    // console.log("projectDocument._id",projectDocument._id);
 
                      if (projectDocument && projectDocument._id && projectDocument.isEdited == true) {
 
@@ -763,7 +786,8 @@ async function syncOldAPPData(req) {
                         taskData.save(taskData, function (err, taskDt) {
                             loop = loop + 1;
                             if (loop == taskUpdateData.length) {
-                                getProjectAndTaskDetails(req.body._id).then(function (response) {
+                                var token = req.headers['x-auth-token'];
+                                getProjectAndTaskDetails(req.body._id,token).then(function (response) {
                                     commonHandler.projectCompletedNotificationPoint(req.body._id);
                                     deferred.resolve({ status: "succes", message: "sync successfully done", data: response });
                                 });
@@ -795,7 +819,8 @@ async function syncOldAPPData(req) {
                             }
                             loop = loop + 1;
                             if (loop == taskUpdateData.length) {
-                                getProjectAndTaskDetails(req.body._id).then(function (response) {
+                                var token = req.headers['x-auth-token'];
+                                getProjectAndTaskDetails(req.body._id,token).then(function (response) {
                                     commonHandler.projectCompletedNotificationPoint(req.body._id);
                                     deferred.resolve({ status: "succes", message: "sync successfully done", data: response, allProjects: allProjectData });
                                 });
@@ -1148,7 +1173,8 @@ function taskSync(req) {
                     taskData.save(taskData, function (err, taskDt) {
                         loop = loop + 1;
                         if (loop == taskUpdateData.length) {
-                            getProjectAndTaskDetails(req.body._id).then(function (response) {
+                            var token = req.headers['x-auth-token'];
+                            getProjectAndTaskDetails(req.body._id,token).then(function (response) {
 
                                 commonHandler.projectCompletedNotificationPoint(req.body._id);
                                 deferred.resolve({ status: "succes", message: "sync successfully done", data: response });
@@ -1181,7 +1207,8 @@ function taskSync(req) {
                         }
                         if (loop == taskUpdateData.length) {
 
-                            getProjectAndTaskDetails(req.body._id).then(function (response) {
+                            var token = req.headers['x-auth-token'];
+                            getProjectAndTaskDetails(req.body._id,token).then(function (response) {
                                 commonHandler.projectCompletedNotificationPoint(req.body._id);
 
                                 deferred.resolve({ status: "succes", message: "sync successfully done", data: response });
@@ -1347,7 +1374,9 @@ async function projectsDetailsById(req) {
         try {
             if (req.body.projectId) {
 
-                let projectData = await getProjectAndTaskDetails(req.body.projectId);
+                let token = req.headers['x-auth-token'];
+
+                let projectData = await getProjectAndTaskDetails(req.body.projectId,token);
 
                 if (projectData) {
 
@@ -1465,7 +1494,10 @@ function getProjectPdf(req) {
     return new Promise(async function (resolve, reject) {
         try {
             // console.log("req.body.projectId",req.body.projectId)
-            let projectData = await getProjectAndTaskDetails(req.body.projectId);
+
+            var token = req.headers['x-auth-token'];
+
+            let projectData = await getProjectAndTaskDetails(req.body.projectId,token);
             if (projectData) {
 
                 if (projectData.tasks) {
@@ -1953,4 +1985,94 @@ function getProjectPdfWithSyc(req) {
             reject({ status: "failed", mesage: ex });
         }
     });
+}
+
+
+/**to get Presigned Urls
+ * @name getFileUploadUrl
+ * @param {*} req 
+ *  api is to get presigned Urls of files
+ */
+function getFileUploadUrl(req) {
+    return new Promise(async function (resolve, reject) {
+        try {
+
+           
+            let headers = {
+                'X-authenticated-user-token': req.headers['x-auth-token'],
+                'Content-Type': 'application/json'
+            }
+
+          
+            let allFileNames= [];
+
+            var requestFileNames =  { }
+            req.body.fileNames.map(file =>{
+
+                
+                var fileName =  req.body.userId+"/"+Math.floor(new Date() / 1000) +"_"+file;
+                fileName = (fileName.replace(/\s+/g, '')).trim();
+                requestFileNames[fileName] = file;
+                allFileNames.push(fileName);
+            })
+
+
+            let requestBody ={
+                fileNames:allFileNames,
+                bucket:config.gcp.bucketName
+            }
+
+            
+            let url = config.kendra_config.base + config.kendra_config.preSignedUrls;
+            let response = await httpRequest.httpsPost(headers,requestBody, url);
+
+            if(response.result && response.result.length  > 0){
+
+                response.result =  response.result.map(element=>{
+                    element.file = requestFileNames[element.file];
+                    return element;
+                })
+            }
+
+            resolve(response);
+
+        } catch (ex) {
+            console.log("ex", ex);
+            winston.error("error in getProjectPdfWithSyc", ex);
+            reject({ status: "failed", mesage: ex });
+        }
+    });
+}
+
+
+/**to downloadable Urls
+ * @name getPresignedUrls
+ * @param {*} req 
+ *  api is to get downloadable Urls of files
+ */
+function getDownloadableUrls(inputData,token) {
+    return new Promise(async function (resolve, reject) {
+        try {
+
+            let headers = {
+                'X-authenticated-user-token': token,
+                'Content-Type': 'application/json'
+            }
+
+            let requestBody ={
+                filePaths:inputData.filePaths,
+                bucketName:config.gcp.bucketName
+            }
+
+            let url = config.kendra_config.base + config.kendra_config.getDownloadableUrl;
+            let response = await httpRequest.httpsPost(headers,requestBody, url);
+
+            resolve(response);
+
+        } catch (ex) {
+            winston.error("error in getProjectPdfWithSyc", ex);
+            reject({ status: "failed", mesage: ex });
+        }
+  });
+
 }

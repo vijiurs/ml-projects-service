@@ -2,6 +2,11 @@ var mongoose = require('mongoose');
 var Schema = mongoose.Schema, ObjectId = Schema.ObjectId;
 var impTemplatesModel = mongoose.model('impTemplates', new mongoose.Schema({
     title: String,
+    externalId:{ 
+        type : String ,
+         unique : true, 
+         required : true
+    },
     organisation: String,
     duration: String,
     difficultyLevel: String,

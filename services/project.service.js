@@ -2010,7 +2010,7 @@ function getFileUploadUrl(req) {
             req.body.fileNames.map(file =>{
 
                 
-                var fileName =  Math.floor(new Date() / 1000) +"_"+file;
+                var fileName =  req.body.userId+"/"+Math.floor(new Date() / 1000) +"_"+file;
                 fileName = (fileName.replace(/\s+/g, '')).trim();
                 requestFileNames[fileName] = file;
                 allFileNames.push(fileName);
@@ -2019,11 +2019,8 @@ function getFileUploadUrl(req) {
 
             let requestBody ={
                 fileNames:allFileNames,
-                path:req.body.userId,
                 bucket:config.gcp.bucketName
             }
-
-            // console.log("--",requestBody);
 
             
             let url = config.kendra_config.base + config.kendra_config.preSignedUrls;

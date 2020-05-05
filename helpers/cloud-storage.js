@@ -129,6 +129,8 @@ async function uploadFileToGcp(fileData,userId,token) {
                                     headers: headers,
                                     body: fs.createReadStream("temp/"+fileResponseData.file),
                                 }, function (error, response, body){
+                                  
+                                   fs.unlink("temp/"+fileResponseData.file);
                                    if (error) {
                                        console.log("error",error);
                                         winston.error("Error at httpPost()" + error);

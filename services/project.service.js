@@ -18,6 +18,9 @@ var mongoose = require('../node_modules/mongoose');
 var asyncforEach = require('async-foreach').forEach;
 var commonHandler = require('../helpers/common-handler');
 
+var httpRequest = require('../helpers/http-request');
+var cloudStorage = require('../helpers/cloud-storage');
+
 
 
 /**
@@ -56,6 +59,8 @@ api.getSubTaskDetails = getSubTaskDetails;
 api.getProjectPdf = getProjectPdf;
 api.syncLocalDataOnUpgradeOfApp = syncLocalDataOnUpgradeOfApp;
 api.getProjectPdfWithSyc = getProjectPdfWithSyc;
+api.getFileUploadUrl = getFileUploadUrl;
+api.getDownloadableUrls = getDownloadableUrls;
 module.exports = api;
 
 /**
@@ -168,139 +173,143 @@ function getAllProjectsOld(req) {
     return deferred.promise;
 }
 
-function getAllProjects(req) {
-    var deferred = Q.defer();
-    let dataObj = [];
-    // console.log("req", req.body.userId);
-    if (req.body.userId) {
-        let query = {};
-        // if (req.query && req.query.type && req.query.type == "quarter") {
-        //     var dateFrom = moment().subtract(3, 'months').format('YYYY-MM-DD');
-        //     let dt = new Date(dateFrom);
-        //     query = { 'projects.userId': req.body.userId, 'projects.createdAt': { $gte: dt }, 'isDeleted': false }
-        // } else if (req.query && req.query.type && req.query.type == "month") {
-        //     var dateFrom = moment().subtract(1, 'months').format('YYYY-MM-DD');
-        //     let dt = new Date(dateFrom);
-        //     query = { 'projects.userId': req.body.userId, 'projects.createdAt': { $gte: dt }, 'isDeleted': false }
-        // } else {
+async function getAllProjects(req) {
+    // var deferred = Q.defer();
+    return new Promise(async (resolve, reject) => {
 
-        //     query = { 'projects.userId': req.body.userId, 'isDeleted': false }
-        // }
-
-        query = { 'projects.userId': req.body.userId }
+        let dataObj = [];
+        // console.log("req", req.body.userId);
+        if (req.body.userId) {
 
 
-        console.log("query", query);
-        async function getUserProjects(resolve, reject) {
-            try {
-                let programsData = await programsModel.aggregate([
-                    // { $match: { 'roles.programManagers': req.body.userId, type: "improvmentproject" } },
+            let token = req.token ? req.token : req.headers['x-auth-token'];
 
-                    // { "$unwind": "$components" },
-                    {
-                        $lookup: {
-                            from: "userProjects",
-                            localField: "_id",
-                            foreignField: "programId",
-                            as: "projects"
+            let query = {};
+            // if (req.query && req.query.type && req.query.type == "quarter") {
+            //     var dateFrom = moment().subtract(3, 'months').format('YYYY-MM-DD');
+            //     let dt = new Date(dateFrom);
+            //     query = { 'projects.userId': req.body.userId, 'projects.createdAt': { $gte: dt }, 'isDeleted': false }
+            // } else if (req.query && req.query.type && req.query.type == "month") {
+            //     var dateFrom = moment().subtract(1, 'months').format('YYYY-MM-DD');
+            //     let dt = new Date(dateFrom);
+            //     query = { 'projects.userId': req.body.userId, 'projects.createdAt': { $gte: dt }, 'isDeleted': false }
+            // } else {
 
+            //     query = { 'projects.userId': req.body.userId, 'isDeleted': false }
+            // }
+
+            query = { 'projects.userId': req.body.userId }
+
+
+            async function getUserProjects() {
+                try {
+                    let programsData = await programsModel.aggregate([
+                        // { $match: { 'roles.programManagers': req.body.userId, type: "improvmentproject" } },
+
+                        // { "$unwind": "$components" },
+                        {
+                            $lookup: {
+                                from: "userProjects",
+                                localField: "_id",
+                                foreignField: "programId",
+                                as: "projects"
+
+                            }
+                        },
+
+                        { "$unwind": "$projects" },
+                        { "$match": query },
+
+                        {
+                            $group: {
+                                _id: "$_id",
+                                resourceType: { $first: "$resourceType" },
+                                language: { $first: "$language" },
+                                keywords: { $first: "$keywords" },
+                                concepts: { $first: "$concepts" },
+                                createdFor: { $first: "$createdFor" },
+                                imageCompression: { $first: "$imageCompression" },
+                                // components: { $first: "$components" },
+                                externalId: { $first: "$externalId" },
+                                name: { $first: "$name" },
+                                description: { $first: "$description" },
+                                owner: { $first: "$owner" },
+                                createdBy: { $first: "$createdBy" },
+                                updatedBy: { $first: "$updatedBy" },
+                                isDeleted: { $first: "$isDeleted" },
+                                status: { $first: "$status" },
+                                startDate: { $first: "$startDate" },
+                                endDate: { $first: "$endDate" },
+                                createdAt: { $first: "$createdAt" },
+                                projects: { $push: "$projects" }
+                                // total: { $sum: "$projects" }
+                            }
                         }
-                    },
 
-                    { "$unwind": "$projects" },
-                    { "$match": query },
+                    ]);
+                    if (programsData && programsData.length > 0) {
+                        // console.log("programsData.length === ",programsData.length);
+                        var Allprojects = [];
+                        let i = 0;
+                        await Promise.all(
+                            programsData.map(async projectList => {
+                                // asyncforEach(programsData, function (projectList, i) {
+                                let projectsOfProgram = [];
+                                var prLn = projectList.projects.length;
+                                // var pr = projectList;
+                                var lp = 0;
+                                console.log("projectList.projects", projectList.projects.length);
+                                await Promise.all(
+                                    projectList.projects.map(async function (element) {
+                                        // projectList.projects.forEach(function (element, index) {
+                                        await getProjectAndTaskDetails(element._id, token).then(function (resp) {
+                                            // console.log("resp======", resp);
+                                            lp = lp + 1;
 
-                    {
-                        $group: {
-                            _id: "$_id",
-                            resourceType: { $first: "$resourceType" },
-                            language: { $first: "$language" },
-                            keywords: { $first: "$keywords" },
-                            concepts: { $first: "$concepts" },
-                            createdFor: { $first: "$createdFor" },
-                            imageCompression: { $first: "$imageCompression" },
-                            // components: { $first: "$components" },
-                            externalId: { $first: "$externalId" },
-                            name: { $first: "$name" },
-                            description: { $first: "$description" },
-                            owner: { $first: "$owner" },
-                            createdBy: { $first: "$createdBy" },
-                            updatedBy: { $first: "$updatedBy" },
-                            isDeleted: { $first: "$isDeleted" },
-                            status: { $first: "$status" },
-                            startDate: { $first: "$startDate" },
-                            endDate: { $first: "$endDate" },
-                            createdAt: { $first: "$createdAt" },
-                            projects: { $push: "$projects" }
-                            // total: { $sum: "$projects" }
-                        }
+
+                                            resp.isNew = false;
+                                            resp.isSync = true;
+                                            resp.isEdited = false;
+                                            resp.share = false;
+
+                                            resp.createdType = resp.createdType ? resp.createdType : "";
+                                            resp.isDeleted = resp.isDeleted ? resp.isDeleted : false;
+                                            resp.isStarted = resp.isStarted ? resp.isStarted : false;
+
+                                            projectsOfProgram.push(resp);
+
+                                            if (prLn == lp) {
+
+                                                var prList = projectList;
+                                                delete projectList.projects;
+
+                                                var dt = {
+                                                    "programs": prList,
+                                                    "projects": projectsOfProgram
+                                                }
+                                                Allprojects.push(dt);
+                                                if (Allprojects.length == programsData.length) {
+                                                    resolve({ status: "success", message: "user data", data: Allprojects });
+                                                }
+                                            }
+                                        });
+                                        i = i + 1;
+                                    }));
+                            }));
+                    } else {
+                        resolve({ status: "failed", message: "No Data Available", });
                     }
-
-                ]);
-                if (programsData && programsData.length > 0) {
-                    // console.log("programsData.length === ",programsData.length);
-                    var Allprojects = [];
-                    let i = 0;
-                    await Promise.all(
-                        programsData.map(async projectList => {
-                            // asyncforEach(programsData, function (projectList, i) {
-                            let projectsOfProgram = [];
-                            var prLn = projectList.projects.length;
-                            // var pr = projectList;
-                            var lp = 0;
-                            console.log("projectList.projects", projectList.projects.length);
-                            await Promise.all(
-                                projectList.projects.map(async function (element) {
-                                    // projectList.projects.forEach(function (element, index) {
-                                    await getProjectAndTaskDetails(element._id).then(function (resp) {
-                                        // console.log("resp======", resp);
-                                        lp = lp + 1;
-
-
-                                        resp.isNew = false;
-                                        resp.isSync = true;
-                                        resp.isEdited = false;
-                                        resp.share = false;
-
-                                        console.log(resp.title, "resp.createdType", resp.createdType);
-                                        resp.createdType = resp.createdType ? resp.createdType : "";
-                                        resp.isDeleted = resp.isDeleted ? resp.isDeleted : false;
-                                        resp.isStarted = resp.isStarted ? resp.isStarted : false;
-
-                                        projectsOfProgram.push(resp);
-
-                                        if (prLn == lp) {
-
-                                            var prList = projectList;
-                                            delete projectList.projects;
-
-                                            var dt = {
-                                                "programs": prList,
-                                                "projects": projectsOfProgram
-                                            }
-                                            Allprojects.push(dt);
-                                            if (Allprojects.length == programsData.length) {
-                                                deferred.resolve({ status: "success", message: "user data", data: Allprojects });
-                                            }
-                                        }
-                                    });
-                                    i = i + 1;
-                                }));
-                        }));
-                } else {
-                    deferred.resolve({ status: "failed", message: "No Data Available", });
+                } catch (err) {
+                    console.log("err", err);
+                    winston.error(err);
                 }
-            } catch (err) {
-                console.log("err", err);
-                winston.error(err);
             }
+            getUserProjects();
+        } else {
+            resolve({ status: "200", message: "user data not found" });
         }
-        getUserProjects();
-    } else {
-        deferred.resolve({ status: "200", message: "user data not found" });
-    }
 
-    return deferred.promise;
+    });
 }
 
 /**
@@ -308,7 +317,7 @@ function getAllProjects(req) {
  * @param {*} projectId 
  * 
  */
-async function getProjectAndTaskDetails(projectId) {
+async function getProjectAndTaskDetails(projectId, token = "") {
     return new Promise(async (resolve, reject) => {
         try {
             let projectData = await projectsModel.findOne({ '_id': projectId }).lean();
@@ -323,8 +332,31 @@ async function getProjectAndTaskDetails(projectId) {
                 // projectData.tasks  = "";
                 let tasksData = [];
 
+
                 await Promise.all(tasks.map(async function (taskList) {
 
+                    if (taskList.attachments && taskList.attachments.length > 0) {
+
+
+                        let requestBody = {
+                            filePaths: taskList.attachments
+                        }
+                        let downloadData = await getDownloadableUrls(requestBody, token);
+
+                        if (downloadData && downloadData.status && downloadData.status == 200) {
+
+                            let taskImageUrls = [];
+
+                            console.log("downloadData.result", downloadData.result);
+
+                            if (downloadData.result) {
+                                downloadData.result.map(fileInfo => {
+                                    taskImageUrls.push(fileInfo.url);
+                                });
+                                taskList['attachments'] = taskImageUrls;
+                            }
+                        }
+                    }
                     taskList['isNew'] = false;
                     tasksData.push(taskList);
                 }));
@@ -350,6 +382,8 @@ async function syncProject(req) {
     return new Promise(async function (resolve, reject) {
         try {
             // console.log("sync api - userId : " + req.body.userId, req.body);
+
+            let token = req.headers['x-auth-token'];
             let shareDocs;
             let failedToSync = [];
             if (req.body && req.body.projects) {
@@ -376,19 +410,15 @@ async function syncProject(req) {
                         'isStarted': projectDocument.isStarted ? projectDocument.isStarted : false
                     };
 
-                    console.log("projectDocument._id",projectDocument._id);
+                    // console.log("projectDocument._id",projectDocument._id);
 
-                     if (projectDocument && projectDocument._id && projectDocument.isEdited == true) {
+                    if (projectDocument && projectDocument._id && projectDocument.isEdited == true) {
 
+                        if (projectDocument.createdType && projectDocument.createdType != config.createdSelf &&
+                            projectDocument.createdType != config.createdFromReferance) {
 
-                        
-                            if(projectDocument.createdType && projectDocument.createdType != config.createdSelf && 
-                                projectDocument.createdType != config.createdFromReferance ){
-
-                                console.log("updating createdType id");
-                                commonHandler.updateCreateTypeByProgramId(projectDocument,req.body.userId);
-                            }
-
+                            commonHandler.updateCreateTypeByProgramId(projectDocument, req.body.userId);
+                        }
 
                         if (projectDocument.share == true) {
                             shareDocs = projectDocument._id;
@@ -421,11 +451,30 @@ async function syncProject(req) {
                                         "imageUrl": element.imageUrl ? element.imageUrl : "",
                                         "file": element.file ? element.file : {},
                                         "remarks": element.remarks ? element.remarks : "",
-                                        "assigneeName":element.assigneeName ? element.assigneeName : "",
-                                        "attachments":element.attachments ? element.attachments : []
+                                        "assigneeName": element.assigneeName ? element.assigneeName : "",
+                                        "attachments": element.attachments ? element.attachments : []
                                     });
 
-                                   
+                                    let fileData = [];
+                                    if (element.imageUrl) {
+                                         fileData.push({ data: element.imageUrl });
+                                    }
+                                    if (element.file && element.file.url) {
+                                        fileData.push({ name: element.file.name, data: element.file.url });
+                                    }
+
+                                    if (fileData.length > 0) {
+                                        let uploadFileResp = await cloudStorage.uploadFileToGcp(fileData, req.body.userId, token);
+
+                                        if (!taskData.attachments) {
+                                            taskData['attachments'] = [];
+                                        }
+
+                                        if (uploadFileResp.status && uploadFileResp.status == "success") {
+                                            taskData['attachments'].push(...uploadFileResp.sourcePath);
+                                        }
+                                    }
+
                                     taskData.save(taskData, function (err, taskDt) {
                                         commonHandler.projectCompletedNotificationPoint(projectDocument._id);
 
@@ -447,6 +496,26 @@ async function syncProject(req) {
                                     } else {
                                         taskData['isDeleted'] = element.isDeleted;
                                     }
+
+                                    let fileData = [];
+                                    if (element.imageUrl) {
+                                         fileData.push({ data: element.imageUrl });
+                                    }
+                                    if (element.file && element.file.url) {
+                                        fileData.push({ name: element.file.name, data: element.file.url });
+                                    }
+
+                                    if (fileData.length > 0) {
+                                        let uploadFileResp = await cloudStorage.uploadFileToGcp(fileData, req.body.userId, token);
+
+                                        if (!taskData.attachments) {
+                                            taskData['attachments'] = [];
+                                        }
+                                        if (uploadFileResp.status && uploadFileResp.status == "success") {
+                                            taskData['attachments'].push(...uploadFileResp.sourcePath);
+                                        }
+                                    }
+                                    
                                     let taskDataUpdate = await taskModel.findOneAndUpdate({ '_id': element._id }, taskData, { new: true });
                                 }
                             }));
@@ -471,7 +540,7 @@ async function syncProject(req) {
 
                             if (projectDocument.templateId) {
                                 let projectMap =
-                                    await commonHandler.updateProjectFromTemplateReferance(projectDocument, req.body.userId);
+                                    await commonHandler.updateProjectFromTemplateReferance(projectDocument, req.body.userId,token);
                                 // console.log("projectMap", projectMap);
                                 if (projectMap.status && projectMap.status == "failed") {
                                     winston.error("error at Sync  userId:" + req.body.userId + " project" + JSON.stringify(projectMap));
@@ -507,7 +576,9 @@ async function syncProject(req) {
                         req.createdType = projectDocument.createdType ? projectDocument.createdType : "";
                         req.isStarted = projectDocument.isStarted ? projectDocument.isStarted : "";
 
-                        let response = await commonHandler.createTemplateAndPrject(projectDocument, req.body.userId);
+                        let response = await commonHandler.createTemplateAndPrject(projectDocument, req.body.userId, token);
+
+                        console.log("after template");
                         if (response.status && response.status != "success") {
                             winston.error("templateId not found at Sync  userId:" + req.body.userId + " project" + JSON.stringify(response));
 
@@ -526,16 +597,16 @@ async function syncProject(req) {
 
                         }
 
-                    } else if(projectDocument && projectDocument._id && projectDocument.isEdited == false &&
-                        projectDocument.isNew == false){
+                    } else if (projectDocument && projectDocument._id && projectDocument.isEdited == false &&
+                        projectDocument.isNew == false) {
 
-                            // if(projectDocument.createdType && projectDocument.createdType =="" ){
-                            //     commonHandler.updateCreateTypeByProgramId(projectDocument,req.body.userId);
-                            // }
-                            
-                            console.log("No nned to  Updated the project isEdited :false",projectDocument._id);
+                        // if(projectDocument.createdType && projectDocument.createdType =="" ){
+                        //     commonHandler.updateCreateTypeByProgramId(projectDocument,req.body.userId);
+                        // }
 
-                    }else{
+                        console.log("No nned to  Updated the project isEdited :false", projectDocument._id);
+
+                    } else {
 
                         winston.error("error at Sync  userId:" + req.body.userId + " project" + JSON.stringify(projectDocument));
                         failedToSync.push(projectDocument);
@@ -544,8 +615,8 @@ async function syncProject(req) {
                 let requestedData = {
                     body: {
                         userId: req.body.userId
-                    }
-
+                    },
+                    token: req.headers['x-auth-token']
                 }
 
                 // if (req.query && req.query.type) {
@@ -554,8 +625,11 @@ async function syncProject(req) {
                 //     }
                 //     requestedData['query'] = query;
                 // }
+                console.log("allProjectData");
 
                 let allProjectData = await getAllProjects(requestedData);
+
+                // console.log("allProjectData",allProjectData);
 
                 if (allProjectData && shareDocs) {
                     if (allProjectData.data && allProjectData.data.length > 0) {
@@ -586,6 +660,8 @@ async function syncProject(req) {
 
                 // console.log("allProjectData",allProjectData);
                 if (failedToSync.length > 0) {
+
+                    console.log("--",failedToSync);
                     return resolve({ status: "failed", message: "failed to sync" })
                 } else {
                     return resolve({ status: "success", allProjects: allProjectData })
@@ -634,7 +710,8 @@ async function syncOldAPPData(req) {
         },
         query: {
             type: req.query.type ? req.query.type : "month"
-        }
+        },
+        token: req.headers['x-auth-token']
     }
     // Get hardcoded value from .env file.
 
@@ -684,7 +761,7 @@ async function syncOldAPPData(req) {
             req.createdBy = req.body.userId;
 
             console.log("req.body.createdType", req.body.createdType);
-            let response = await commonHandler.createTemplateAndPrject(req.body, req.body.userId);
+            let response = await commonHandler.createTemplateAndPrject(req.body, req.body.userId, token);
 
             console.log("response.status", response.status);
             if (response.status) {
@@ -763,7 +840,8 @@ async function syncOldAPPData(req) {
                         taskData.save(taskData, function (err, taskDt) {
                             loop = loop + 1;
                             if (loop == taskUpdateData.length) {
-                                getProjectAndTaskDetails(req.body._id).then(function (response) {
+                                var token = req.headers['x-auth-token'];
+                                getProjectAndTaskDetails(req.body._id, token).then(function (response) {
                                     commonHandler.projectCompletedNotificationPoint(req.body._id);
                                     deferred.resolve({ status: "succes", message: "sync successfully done", data: response });
                                 });
@@ -795,7 +873,8 @@ async function syncOldAPPData(req) {
                             }
                             loop = loop + 1;
                             if (loop == taskUpdateData.length) {
-                                getProjectAndTaskDetails(req.body._id).then(function (response) {
+                                var token = req.headers['x-auth-token'];
+                                getProjectAndTaskDetails(req.body._id, token).then(function (response) {
                                     commonHandler.projectCompletedNotificationPoint(req.body._id);
                                     deferred.resolve({ status: "succes", message: "sync successfully done", data: response, allProjects: allProjectData });
                                 });
@@ -1148,7 +1227,8 @@ function taskSync(req) {
                     taskData.save(taskData, function (err, taskDt) {
                         loop = loop + 1;
                         if (loop == taskUpdateData.length) {
-                            getProjectAndTaskDetails(req.body._id).then(function (response) {
+                            var token = req.headers['x-auth-token'];
+                            getProjectAndTaskDetails(req.body._id, token).then(function (response) {
 
                                 commonHandler.projectCompletedNotificationPoint(req.body._id);
                                 deferred.resolve({ status: "succes", message: "sync successfully done", data: response });
@@ -1181,7 +1261,8 @@ function taskSync(req) {
                         }
                         if (loop == taskUpdateData.length) {
 
-                            getProjectAndTaskDetails(req.body._id).then(function (response) {
+                            var token = req.headers['x-auth-token'];
+                            getProjectAndTaskDetails(req.body._id, token).then(function (response) {
                                 commonHandler.projectCompletedNotificationPoint(req.body._id);
 
                                 deferred.resolve({ status: "succes", message: "sync successfully done", data: response });
@@ -1347,7 +1428,9 @@ async function projectsDetailsById(req) {
         try {
             if (req.body.projectId) {
 
-                let projectData = await getProjectAndTaskDetails(req.body.projectId);
+                let token = req.headers['x-auth-token'];
+
+                let projectData = await getProjectAndTaskDetails(req.body.projectId, token);
 
                 if (projectData) {
 
@@ -1465,7 +1548,10 @@ function getProjectPdf(req) {
     return new Promise(async function (resolve, reject) {
         try {
             // console.log("req.body.projectId",req.body.projectId)
-            let projectData = await getProjectAndTaskDetails(req.body.projectId);
+
+            var token = req.headers['x-auth-token'];
+
+            let projectData = await getProjectAndTaskDetails(req.body.projectId, token);
             if (projectData) {
 
                 if (projectData.tasks) {
@@ -1711,7 +1797,7 @@ function syncLocalDataOnUpgradeOfApp(req) {
                         if (doc) {
                             projectsModel.findOneAndUpdate({ '_id': projectDocument._id },
                                 syncData, { new: true }, (function (err, projectDoc) {
-                                    console.log(":projectDoc",projectDoc);
+                                    console.log(":projectDoc", projectDoc);
                                     if (err) {
                                         failed = failed + 1;
                                         // winston.error("failed while updating to project")/
@@ -1873,64 +1959,64 @@ function getProjectPdfWithSyc(req) {
         try {
 
 
-            console.log("req.body.pdfData",req.body.pdfData);
-            console.log("req.body.projects",req.body.projects);
+            console.log("req.body.pdfData", req.body.pdfData);
+            console.log("req.body.projects", req.body.projects);
 
 
             if (req.body.pdfData && req.body.projects) {
                 try {
                     // let syncAPI = new Promise(async function (resolve, reject) {
-                       
-                    // });
-                 
-                        let projectData = req.body.pdfData;
-                        console.log("project Data for pdfRepoert", projectData);
-                        if (projectData.tasks) {
-                            let tasks = [];
-                            // to remove files from object
-                            await Promise.all(
-                                projectData.tasks.map(async list => {
-                                    let taskList = {};
-                                    taskList = list;
-                                    if (taskList.file) {
-                                        delete taskList.file;
-                                    }
-                                    if (taskList.imageUrl) {
-                                        delete taskList.imageUrl;
-                                    }
-                                    tasks.push(taskList);
-                                })
-                            )
-                            projectData.tasks = tasks;
-                        }
 
-                        let url = config.dhiti_config.api_base_url + config.dhiti_config.getProjectPdf;
-                        request({
-                            url: url,
-                            method: "POST",
-                            headers: {
-                                'x-auth-token': req.headers['x-auth-token'],
-                                'Content-Type': 'application/json'
-                            },
-                            json: true,   // <--Very important!!!
-                            body: projectData
-                        }, async function (error, response, body) {
-                            // console.log(response);
-                            if (error) {
-                                winston.error("Error at getProjectPdf ()" + error);
-                                reject({ status: "failed", mesage: body });
-                            } else {
-                                // console.log("body", body);
-                                let syncData = await syncProject(req);
-                                if(syncData.status=="success" && syncData.allProjects){
-                                    resolve({status:"success",syncData: syncData, pdfResponse: body });
-                                }else{
-                                    resolve({ status:"failed",message:"failed to sync the data" });
+                    // });
+
+                    let projectData = req.body.pdfData;
+                    console.log("project Data for pdfRepoert", projectData);
+                    if (projectData.tasks) {
+                        let tasks = [];
+                        // to remove files from object
+                        await Promise.all(
+                            projectData.tasks.map(async list => {
+                                let taskList = {};
+                                taskList = list;
+                                if (taskList.file) {
+                                    delete taskList.file;
                                 }
-                                
+                                if (taskList.imageUrl) {
+                                    delete taskList.imageUrl;
+                                }
+                                tasks.push(taskList);
+                            })
+                        )
+                        projectData.tasks = tasks;
+                    }
+
+                    let url = config.dhiti_config.api_base_url + config.dhiti_config.getProjectPdf;
+                    request({
+                        url: url,
+                        method: "POST",
+                        headers: {
+                            'x-auth-token': req.headers['x-auth-token'],
+                            'Content-Type': 'application/json'
+                        },
+                        json: true,   // <--Very important!!!
+                        body: projectData
+                    }, async function (error, response, body) {
+                        // console.log(response);
+                        if (error) {
+                            winston.error("Error at getProjectPdf ()" + error);
+                            reject({ status: "failed", mesage: body });
+                        } else {
+                            // console.log("body", body);
+                            let syncData = await syncProject(req);
+                            if (syncData.status == "success" && syncData.allProjects) {
+                                resolve({ status: "success", syncData: syncData, pdfResponse: body });
+                            } else {
+                                resolve({ status: "failed", message: "failed to sync the data" });
                             }
-                        });
-                 
+
+                        }
+                    });
+
                     // Promise.all([syncAPI, callGetProjectApi]).then(function (values) {
                     //     // console.log("completing promise",values[0]);
                     //     if (values[0] && values[0].status && values[0].status == "success") {
@@ -1953,4 +2039,60 @@ function getProjectPdfWithSyc(req) {
             reject({ status: "failed", mesage: ex });
         }
     });
+}
+
+
+/**to get getFileUploadUrl Urls
+ * @name getFileUploadUrl
+ * @param {*} req 
+ *  api is to get getFileUploadUrl Urls of files
+ */
+function getFileUploadUrl(req) {
+    return new Promise(async function (resolve, reject) {
+        try {
+            let requestBody = {
+                fileNames: req.body.fileNames
+            }
+           let response = await cloudStorage.getPreSignedUrl(requestBody, req.body.userId,req.headers['x-auth-token']);
+            resolve(response);
+
+        } catch (ex) {
+            console.log("ex", ex);
+            winston.error("error in getFileUploadUrl", ex);
+            reject({ status: "failed", mesage: ex });
+        }
+    });
+}
+
+
+/**to downloadable Urls
+ * @name getPresignedUrls
+ * @param {*} req 
+ *  api is to get downloadable Urls of files
+ */
+function getDownloadableUrls(inputData, token) {
+    return new Promise(async function (resolve, reject) {
+        try {
+
+            let headers = {
+                'X-authenticated-user-token': token,
+                'Content-Type': 'application/json'
+            }
+
+            let requestBody = {
+                filePaths: inputData.filePaths,
+                bucketName: config.gcp.bucketName
+            }
+
+            let url = config.kendra_config.base + config.kendra_config.getDownloadableUrl;
+            let response = await httpRequest.httpsPost(headers, requestBody, url);
+
+            resolve(response);
+
+        } catch (ex) {
+            winston.error("error in getDownloadableUrls", ex);
+            reject({ status: "failed", mesage: ex });
+        }
+    });
+
 }

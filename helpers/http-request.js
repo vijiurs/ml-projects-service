@@ -30,7 +30,6 @@ module.exports = api;
 async function httpsPost(headers,postData,url){
     return  new Promise( async(resolve,reject)=>{
         try {
-            console.log(postData,"url",url)
             request({
                 url: url,
                 method: "POST",
@@ -43,7 +42,7 @@ async function httpsPost(headers,postData,url){
                     winston.error("Error at httpPost()" + error);
                     reject(body);
                 } else {
-                    console.log(response.statusCode,"body",body);
+                    // console.log(" api response ",response.statusCode);
                     resolve(body);
                 }
             });

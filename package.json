@@ -2,7 +2,7 @@
   "name": "unnati",
   "version": "1.0.0",
   "bin": {
-    "migrations": "module/migrations/bin/migrations.js"
+    "unnati-migrations": "module/migrations/bin/migrations.js"
   },
   "description": "This README would normally document whatever steps are necessary to get your application up and running.",
   "main": "server.js",

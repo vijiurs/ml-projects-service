@@ -279,9 +279,13 @@ function createImprovementTemplate(obj) {
 
         // console.log(" obj.tasks", obj);
 
+        let random = Math.floor(Math.random() * (100000 - 1 + 1)) + 1;
+        let uniqId = Math.floor(new Date() / 1000);
+
+        let exnlId = random+uniqId;
         var impTemplatesData = {
             title: obj.title,
-            externalId:Math.floor(new Date() / 1000),
+            externalId:exnlId,
             organisation: obj.organisation ? obj.organisation : "",
             duration: obj.duration ? obj.duration : '',
             difficultyLevel: obj.difficultyLevel ? obj.difficultyLevel : "",
@@ -571,7 +575,7 @@ function projectCreateAndSolutionMapping(obj) {
                                 projectTaskSchema['attachments'] = [];
                                }
                                if(uploadFileResp.status && uploadFileResp.status=="success"){
-                                projectTaskSchema['attachments'].push(...uploadFileResp.sourcePath); 
+                                projectTaskSchema['attachments'].push(...uploadFileResp.data); 
                                }
                             }
                             

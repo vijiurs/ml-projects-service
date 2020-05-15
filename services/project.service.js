@@ -559,9 +559,9 @@ async function syncProject(req) {
                                     await commonHandler.updateProjectFromTemplateReferance(projectDocument, req.body.userId,token);
                                 // console.log("projectMap", projectMap);
                                 if (projectMap.status && projectMap.status == "failed") {
-                                    winston.error("error at Sync  "+ config.createdFromReferance+"  userId:" + req.body.userId + " project" + JSON.stringify(projectMap));
+                                    winston.error("error at Sync  userId:" + req.body.userId + " project" + JSON.stringify(projectMap));
 
-
+  
                                     let failed = {
                                         message: projectMap.message ? projectMap.message : "",
                                         projectDocument: projectDocument
@@ -624,7 +624,7 @@ async function syncProject(req) {
 
                     } else {
 
-                        winston.error("error at Sync  userId:" + req.body.userId );
+                        winston.error("error at Sync  userId:" + req.body.userId + " project" + JSON.stringify(projectDocument));
                         failedToSync.push(projectDocument);
                     }
                 }));
@@ -1886,7 +1886,6 @@ function syncLocalDataOnUpgradeOfApp(req) {
                         }
                     } else {
 
-                        console.log("-----------")
                         failed = failed + 1;
                         winston.error("Not Passed Any Condition error at Sync  userId:" + req.body.userId + " project" + JSON.stringify(projectDocument));
                         failedToSync.push(projectDocument);

@@ -338,8 +338,15 @@ async function getProjectAndTaskDetails(projectId, token = "") {
                     if (taskList.attachments && taskList.attachments.length > 0) {
 
 
+                        // getDownloadableUrls
+                        let sourcePath = [];
+                        let sourceObj = {}
+                        taskList.attachments.map(fileInfo=>{
+                            sourcePath.push(fileInfo.sourcePath);
+                            sourceObj[fileInfo.sourcePath] = fileInfo;
+                        })
                         let requestBody = {
-                            filePaths: taskList.attachments
+                            filePaths: sourcePath
                         }
                         let downloadData = await getDownloadableUrls(requestBody, token);
 
@@ -351,7 +358,11 @@ async function getProjectAndTaskDetails(projectId, token = "") {
 
                             if (downloadData.result) {
                                 downloadData.result.map(fileInfo => {
-                                    taskImageUrls.push(fileInfo.url);
+
+                                    let data = sourceObj[fileInfo.filePath];
+                                    data['url']= fileInfo.url; 
+                                    taskImageUrls.push(data)
+                                    // taskImageUrls.push(fileInfo.url);
                                 });
                                 taskList['attachments'] = taskImageUrls;
                             }
@@ -471,7 +482,7 @@ async function syncProject(req) {
                                         }
 
                                         if (uploadFileResp.status && uploadFileResp.status == "success") {
-                                            taskData['attachments'].push(...uploadFileResp.sourcePath);
+                                            taskData['attachments'].push(...uploadFileResp.data);
                                         }
                                     }
 
@@ -506,13 +517,18 @@ async function syncProject(req) {
                                     }
 
                                     if (fileData.length > 0) {
-                                        let uploadFileResp = await cloudStorage.uploadFileToGcp(fileData, req.body.userId, token);
 
                                         if (!taskData.attachments) {
                                             taskData['attachments'] = [];
                                         }
+                                        if(element.attachments && element.attachments.length >0){
+                                            taskData['attachments'] = element.attachments;
+                                        }
+
+                                        let uploadFileResp = await cloudStorage.uploadFileToGcp(fileData, req.body.userId, token);
+                                        
                                         if (uploadFileResp.status && uploadFileResp.status == "success") {
-                                            taskData['attachments'].push(...uploadFileResp.sourcePath);
+                                            taskData['attachments'].push(...uploadFileResp.data);
                                         }
                                     }
                                     
@@ -545,7 +561,7 @@ async function syncProject(req) {
                                 if (projectMap.status && projectMap.status == "failed") {
                                     winston.error("error at Sync  userId:" + req.body.userId + " project" + JSON.stringify(projectMap));
 
-
+  
                                     let failed = {
                                         message: projectMap.message ? projectMap.message : "",
                                         projectDocument: projectDocument
@@ -661,7 +677,7 @@ async function syncProject(req) {
                 // console.log("allProjectData",allProjectData);
                 if (failedToSync.length > 0) {
 
-                    console.log("--",failedToSync);
+                    // console.log("--",failedToSync);
                     return resolve({ status: "failed", message: "failed to sync" })
                 } else {
                     return resolve({ status: "success", allProjects: allProjectData })
@@ -1869,6 +1885,7 @@ function syncLocalDataOnUpgradeOfApp(req) {
                             failedToSync.push(failed);
                         }
                     } else {
+
                         failed = failed + 1;
                         winston.error("Not Passed Any Condition error at Sync  userId:" + req.body.userId + " project" + JSON.stringify(projectDocument));
                         failedToSync.push(projectDocument);

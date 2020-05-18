@@ -42,7 +42,9 @@ async function getPreSignedUrl(input ,userId,token) {
             var requestFileNames = {}
             input.fileNames.map(file => {
 
-                var fileName = userId + "/" + Math.floor(new Date() / 1000) + "_" + file;
+                
+                let random = Math.floor(Math.random() * (100000 - 1 + 1)) + 1;
+                var fileName = userId + "/" +random+Math.floor(new Date() / 1000) + "_" + file;
                 fileName = (fileName.replace(/\s+/g, '')).trim();
                 requestFileNames[fileName] = file;
                 allFileNames.push(fileName);
@@ -103,9 +105,12 @@ async function uploadFileToGcp(fileData,userId,token) {
                     fileBase64Data = fileDetails.data;
                 }
                 
-                let fileName =  Math.floor(new Date() / 1000) + "."+fileInfo.ext;
+                let random = Math.floor(Math.random() * (100000 - 1 + 1)) + 1;
+               
+                let fileName = random+"_"+Math.floor(new Date() / 1000) + "."+fileInfo.ext;
                 fileNameDetails.fileNames.push(fileName);
-                filesObj[fileName] =fileBase64Data;
+
+                filesObj[fileName] = { data: fileBase64Data,type:fileInfo.ext,name:fileName } ;
 
             }));
 
@@ -114,9 +119,15 @@ async function uploadFileToGcp(fileData,userId,token) {
             if(response.status ==200){
                 if(response.result){
                     await Promise.all(response.result.map(async function(fileResponseData){
-                        let base64Data = filesObj[fileResponseData.file];
 
-                        storedFilePath.push(fileResponseData.payload.sourcePath);
+                        let fileObj = filesObj[fileResponseData.file];
+                        let base64Data = fileObj.data;
+
+                        storedFilePath.push({ sourcePath:fileResponseData.payload.sourcePath,
+                            type:fileObj.type,
+                            name:fileObj.name,
+                            isUploaded:true
+                        });
                         var headers = {
                             'Content-Type': "multipart/form-data"
                         };
@@ -137,7 +148,9 @@ async function uploadFileToGcp(fileData,userId,token) {
                                         // reject(response.statusCode);
                                         resolve({ status: "failed" , message:"failed while downloading file" });
                                     } else {
-                                         resolve({ status: "success" , sourcePath:storedFilePath });
+
+
+                                         resolve({ status: "success" ,  data:storedFilePath });
                                     }
                                 });
                             }

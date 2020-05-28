@@ -16,8 +16,8 @@ var winston = require('../config/winston');
 var userEntities = require('../helpers/user-entities');
 
 var config = require('../config/config.json');
-
 var fs = require('fs');
+var cloudStorage = require('./cloud-storage');
 
 
 
@@ -279,8 +279,13 @@ function createImprovementTemplate(obj) {
 
         // console.log(" obj.tasks", obj);
 
+        let random = Math.floor(Math.random() * (100000 - 1 + 1)) + 1;
+        let uniqId = Math.floor(new Date() / 1000);
+
+        let exnlId = random+uniqId;
         var impTemplatesData = {
             title: obj.title,
+            externalId:exnlId,
             organisation: obj.organisation ? obj.organisation : "",
             duration: obj.duration ? obj.duration : '',
             difficultyLevel: obj.difficultyLevel ? obj.difficultyLevel : "",
@@ -549,10 +554,32 @@ function projectCreateAndSolutionMapping(obj) {
                                 "createdAt": moment().format(),
                                 "assigneeName":el.assigneeName ? el.assigneeName : ""
                             };
+
                             if(el.attachments){
                                 projectTaskSchema.attachments = el.attachments;
                             }
 
+
+                            let fileData = [];
+                            if(el.imageUrl){
+                                 fileData.push({ data: el.imageUrl });
+                            }   
+                            if(el.file && el.file.url){
+                                fileData.push({ name:el.file.name, data: el.file.url });
+                            }
+
+                            if(fileData.length > 0){
+                               let uploadFileResp = await cloudStorage.uploadFileToGcp(fileData,userId,obj.token);
+
+                               if(!projectTaskSchema.attachments){
+                                projectTaskSchema['attachments'] = [];
+                               }
+                               if(uploadFileResp.status && uploadFileResp.status=="success"){
+                                projectTaskSchema['attachments'].push(...uploadFileResp.data); 
+                               }
+                            }
+                            
+                            
                             let taskDoc = await taskModel.create(projectTaskSchema);
                             if (!taskDoc) {
                                 console.log("err", err);
@@ -600,7 +627,7 @@ function projectCreateAndSolutionMapping(obj) {
  * 
  * @param {*} req    
  */
-function createTemplateAndPrject(projectDocument, userId) {
+function createTemplateAndPrject(projectDocument, userId,token) {
     return new Promise(async function (resolve, reject) {
         try {
             // syncData.tasks = req.body.tasks;
@@ -625,7 +652,7 @@ function createTemplateAndPrject(projectDocument, userId) {
                 // console.log("obj",obj)
                 let response = await mapSolutionsToProgram(obj);
 
-                // console.log("response",response);
+                console.log("response",response);
 
                 if (response && response.solutionDetails._id) {
                     let json = {
@@ -634,7 +661,8 @@ function createTemplateAndPrject(projectDocument, userId) {
                         solutionId: response.solutionDetails._id,
                         isStarted: projectDocument.isStarted ? projectDocument.isStarted : false,
                         createdType: projectDocument.createdType ? projectDocument.createdType : "",
-                        solutionDetails: response.solutionDetails
+                        solutionDetails: response.solutionDetails,
+                        token:token
                     }
                     let projectInfo = await projectCreateAndSolutionMapping(json);
 
@@ -665,7 +693,7 @@ function createTemplateAndPrject(projectDocument, userId) {
  * Project from template for the user 
  * @param {*} req    
  */
-function updateProjectFromTemplateReferance(projectDocument, userId) {
+function updateProjectFromTemplateReferance(projectDocument, userId,token) {
     return new Promise(async function (resolve, reject) {
         try {
             let obj = {
@@ -680,7 +708,8 @@ function updateProjectFromTemplateReferance(projectDocument, userId) {
                     userId: userId,
                     solutionId: response.solutionDetails._id,
                     customBody: projectDocument,
-                    solutionDetails: response.solutionDetails
+                    solutionDetails: response.solutionDetails,
+                    token:token
                 }
                 if (projectDocument.createdType) {
                     json.customBody.createdType = projectDocument.createdType;
@@ -773,7 +802,7 @@ function sendEmail(body){
             // let response = await httpRequest.httpsPost(headers, reportData, url);
 
             request({
-                url: config.kendraService.base+config.kendraService.sendEmail,
+                url: config.kendra_config.base+config.kendra_config.sendEmail,
                 method: "POST",
                 headers: headers,
                 json: true,   // <--Very important!!!
@@ -808,13 +837,11 @@ function updateCreateTypeByProgramId(projectInfo,userId){
         try {
             if(projectInfo.programId && projectInfo._id){
 
-                console.log("program update function ");
                 let programsData = await programsModel.findOne({ "_id":projectInfo.programId }).lean();
                 if(programsData){
 
                     console.log("program found");
                     if(programId==config.myProjectMapingProgramId){
-                        console.log("program id matching");
                         // if(projectInfo.templateId)
                         // updsting to by referance to project if createdType is empty As disccusion with @sriram
                         let projectUpdate =  await projectsModel.findOneAndUpdate({ "_id":projectInfo._id,"programId":projectInfo.programId,userId:userId,createdType:{ $eq:"" } },{ createdType:config.createdFromReferance })
@@ -836,3 +863,4 @@ function updateCreateTypeByProgramId(projectInfo,userId){
         }
     });
 }
+

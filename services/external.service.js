@@ -21,7 +21,6 @@ var fs = require('fs');
 var winston = require('../config/winston');
 
 var mongoose = require('../node_modules/mongoose');
-var commonHandler = require('../helpers/common-handler');
 var pushNotification = require('../helpers/notifications');
 
 
@@ -31,15 +30,10 @@ var pushNotification = require('../helpers/notifications');
  */
 
 var Q = require('q');
-var async = require('async');
 
 var moment = require('moment');
 const uuidv1 = require('uuid/v1');
-// var fs = require('fs');
-var http = require('http');
-var https = require('https');
 
-var request = require('request');
 const csv = require('csvtojson')
 
 
@@ -66,10 +60,43 @@ async function createImpTemplates(req) {
             let jsonArrayOfProjects = await readCSVTemplates("./temp/" + req.files.projectsTemplate[0].filename);
             var jsonArrayOfTasks = await readCSVTemplates("./temp/" + req.files.taskDetails[0].filename);
             var projectsTemp = [];
+
+            let externalIds = [];
+            async function validateExternalId(){
+                return new Promise(async function(resolve,reject){
+                    await Promise.all(
+                        jsonArrayOfProjects.map(async function (field) {
+                            if (!field.externalId) {
+                                resolve({ status: "failed", message: "externalId is missing" });
+                            } else {
+                                if (!externalIds.includes(field.externalId)) {
+                                    externalIds.push(field.externalId);
+                                } else {
+                                    resolve({ status: "failed", message: "externalId is duplicate" });
+                                }
+                                let templateDocs = await impTemplatesModel.findOne({ externalId: field.externalId }, { externalId: 1, _id: 1 });
+                                if (templateDocs) {
+                                    resolve({ status: "failed", message: "externalId is exist" });
+                                } 
+                            }
+                        }));
+                        resolve({ status:"success" });
+                    });    
+                }
+
+             let res =  await validateExternalId();
+          
+             if(res.status=="failed"){
+                 return resolve(res);
+             }
+
+
             await Promise.all(
                 jsonArrayOfProjects.map(async ele => {
                     var raw = jsonArrayOfTasks;
                     console.log(ele.ProjectTitle, "ele.projectId==", ele.projectId);
+
+
                     // if(ele.ProjectTitle)
                     if (ele.ProjectTitle == undefined || ele.ProjectGoal == undefined) {
                         return resolve({
@@ -102,9 +129,9 @@ async function createImpTemplates(req) {
                     }));
 
 
-                    let category  = "";
+                    let category = "";
 
-                    if(ele.category){
+                    if (ele.category) {
                         category = ele.category.split(';');
                     }
 
@@ -128,8 +155,12 @@ async function createImpTemplates(req) {
                     } else {
                         primaryAudience = ele.primaryAudience;
                     }
+
+
+       
                     var impTemplatesData = {
                         title: ele.ProjectTitle,
+                        externalId: ele.externalId,
                         organisation: ele.Organisation,
                         duration: ele.ApproximateDuration,
                         difficultyLevel: ele.DifficultyLevel,
@@ -154,20 +185,21 @@ async function createImpTemplates(req) {
                         approaches: ele.PossibleApproaches,
                         successIndicators: ele.SuccessIndicators,
                         suggestedProject: ele.SuggestedNextImprovementProject,
-                        category:category
+                        category: category
 
                     }
-                    var dat = await impTemplatesModel.create(impTemplatesData);
-                    if (dat._id) {
-                        var projectData = {
-                            impTemplateId: dat._id,
-                            name: dat.title,
+
+                        var dat = await impTemplatesModel.create(impTemplatesData);
+                        console.log("template created");
+                        if (dat._id) {
+                            var projectData = {
+                                impTemplateId: dat._id,
+                                name: dat.title,
+                            }
+                            projectsTemp.push(projectData);
+                        } else {
+                            throw "Some error while creating impTemplate"
                         }
-                        projectsTemp.push(projectData);
-                    } else {
-                        throw "Some error while creating impTemplate"
-                    }
-                    // console.log("SubTaskComplete", dat);
                 })
             )
 
@@ -405,7 +437,7 @@ function mapUsersToSolution(req) {
                                         // "lastSync": { type : Date, default: Date.now },
                                         "lastSync": moment().format(),
                                         "primaryAudience": "",
-                                         "concepts": docInfo.concepts,
+                                        "concepts": docInfo.concepts,
                                         "keywords": docInfo.keywords,
                                         "vision": docInfo.vision,
                                         "problemDefinition": docInfo.problemDefinition,
@@ -416,27 +448,27 @@ function mapUsersToSolution(req) {
                                         "approaches": docInfo.approaches,
                                         "successIndicators": docInfo.successIndicators,
                                         "suggestedProject": docInfo.suggestedProject,
-                                        "category":docInfo.category
+                                        "category": docInfo.category
                                     });
-                                    var projectIDs = [];
+                                var projectIDs = [];
                                 projectData.save(function (err, projectDoc) {
                                     if (err) {
                                         console.log("err", err);
                                         deferred.resolve(err);
                                     }
                                     let messageObject = {
-                                        type:"projectAdded",
-                                        title:"New Project",
-                                        action:"added",
-                                        internal:false,
+                                        type: "projectAdded",
+                                        title: "New Project",
+                                        action: "added",
+                                        internal: false,
                                         text: "A New Project has been assigned to you",
-                                        payload:{
-                                            projectID:projectDoc._id
+                                        payload: {
+                                            projectID: projectDoc._id
                                         },
-                                        user_id:userId,
-                                        created_at:moment().format()                                    
+                                        user_id: userId,
+                                        created_at: moment().format()
                                     }
-                                     pushNotification.pushToKafka(userId,messageObject);
+                                    pushNotification.pushToKafka(userId, messageObject);
                                     if (projectDoc) {
                                         projectIDs.push(projectDoc._id);
                                         // console.log("projectDoc",projectDoc);
@@ -487,7 +519,7 @@ function mapUsersToSolution(req) {
                                     status: "success",
                                     solutionId: element.solutionId,
                                     userId: element.userId,
-                                    projectIds:projectIDs,
+                                    projectIds: projectIDs,
                                     message: "updated to db"
                                 }
                                 errJson.push(resp);
@@ -552,7 +584,7 @@ async function mapSchoolsToProjects(req) {
             // var jsonArrayOfTasks = await readCSVTemplates("./temp/" + req.files.taskDetails[0].filename);
 
             console.log("jsonArrayOfProjects", jsonArrayOfProjects);
-            
+
             await Promise.all(
                 jsonArrayOfProjects.map(async ele => {
                     if (ele.entityType && ele.entityId && ele.projectId) {

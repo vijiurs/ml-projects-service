@@ -33,8 +33,7 @@ var Q = require('q');
 
 var moment = require('moment');
 const uuidv1 = require('uuid/v1');
-
-const csv = require('csvtojson')
+const csv = require('csvtojson');
 
 
 var _this = this;
@@ -61,14 +60,20 @@ async function createImpTemplates(req) {
             var jsonArrayOfTasks = await readCSVTemplates("./temp/" + req.files.taskDetails[0].filename);
             var projectsTemp = [];
 
+            let requestType = "create";
+            if (req.body.requestType) {
+                requestType = req.body.requestType
+            }
+
             let externalIds = [];
-            async function validateExternalId(){
-                return new Promise(async function(resolve,reject){
+            async function validateExternalId() {
+                return new Promise(async function (resolve, reject) {
                     await Promise.all(
                         jsonArrayOfProjects.map(async function (field) {
-                            if (!field.externalId) {
+
+                            if (!field.externalId && requestType != "update") {
                                 resolve({ status: "failed", message: "externalId is missing" });
-                            } else {
+                            } else if (field.externalId) {
                                 if (!externalIds.includes(field.externalId)) {
                                     externalIds.push(field.externalId);
                                 } else {
@@ -77,28 +82,22 @@ async function createImpTemplates(req) {
                                 let templateDocs = await impTemplatesModel.findOne({ externalId: field.externalId }, { externalId: 1, _id: 1 });
                                 if (templateDocs) {
                                     resolve({ status: "failed", message: "externalId is exist" });
-                                } 
+                                }
                             }
                         }));
-                        resolve({ status:"success" });
-                    });    
-                }
+                    resolve({ status: "success" });
+                });
+            }
 
-             let res =  await validateExternalId();
-          
-             if(res.status=="failed"){
-                 return resolve(res);
-             }
-
+            let res = await validateExternalId();
+            if (res.status == "failed") {
+                return resolve(res);
+            }
 
             await Promise.all(
                 jsonArrayOfProjects.map(async ele => {
                     var raw = jsonArrayOfTasks;
-                    console.log(ele.ProjectTitle, "ele.projectId==", ele.projectId);
-
-
-                    // if(ele.ProjectTitle)
-                    if (ele.ProjectTitle == undefined || ele.ProjectGoal == undefined) {
+                    if ((ele.ProjectTitle == undefined || ele.ProjectGoal == undefined) && requestType != "update") {
                         return resolve({
                             status: 500,
                             error: "ProjectTitle or ProjectGoal found in  projectsTemplate csv"
@@ -109,7 +108,6 @@ async function createImpTemplates(req) {
                     var taskList = await jsonArrayOfTasks.filter(obj => {
                         return obj.projectId === ele.projectId
                     })
-                    console.log("taskList", taskList.length);
 
                     await Promise.all(taskList.map(async (indTask) => {
                         var subTasks = indTask.subTasks.split(';');
@@ -130,11 +128,9 @@ async function createImpTemplates(req) {
 
 
                     let category = "";
-
                     if (ele.category) {
                         category = ele.category.split(';');
                     }
-
 
                     var concepts = "";
                     if (ele.concepts && ele.concepts.indexOf(';') > -1) {
@@ -156,41 +152,162 @@ async function createImpTemplates(req) {
                         primaryAudience = ele.primaryAudience;
                     }
 
+                    let resource_name_field = "Resource-name";
+                    let resource_link_field = "Resource-link"
 
-       
-                    var impTemplatesData = {
-                        title: ele.ProjectTitle,
-                        externalId: ele.externalId,
-                        organisation: ele.Organisation,
-                        duration: ele.ApproximateDuration,
-                        difficultyLevel: ele.DifficultyLevel,
-                        goal: ele.ProjectGoal,
-                        concepts: concepts,
-                        keywords: Keywords,
-                        primaryAudience: primaryAudience,
-                        rationale: ele.ProjectRationale,
-                        recommendedFor: ele.RecommendedFor,
-                        risks: ele.AssociatedRisks,
-                        protocols: ele.ProtocolsAndPrinciples,
-                        // originalAuthor:OriginalAuthor,
-                        createdAt: moment().format(),
-                        createdBy: "",
-                        tasks: tasks,
-                        vision: ele.Vision,
-                        problemDefinition: ele.Problemdefinition,
-                        prerequisites: ele.Prerequisites,
-                        assumptions: ele.Assumptions,
-                        resources: ele.ResourcesRequiredToDoThisProject,
-                        supportingDocuments: ele.SupportingDocuments,
-                        approaches: ele.PossibleApproaches,
-                        successIndicators: ele.SuccessIndicators,
-                        suggestedProject: ele.SuggestedNextImprovementProject,
-                        category: category
+                    let resources = [];
 
+                    let lastResourceCount = 2;
+                    for (let i = 1; i < lastResourceCount; i++) {
+                        if (ele[resource_name_field + i]) {
+
+                            resources.push({
+                                name: ele[resource_name_field + i],
+                                link: ele[resource_link_field + i]
+                            });
+                            lastResourceCount = lastResourceCount + 1
+                        }
                     }
 
+                    if (requestType == "update") {
+
+                        let data = await impTemplatesModel.findOne({ _id: ele.templateId });
+                        if (data) {
+                            if (ele.ProjectTitle) {
+                                data["title"] = ele.ProjectTitle;
+                            }
+                            if (ele.externalId) {
+                                data["externalId"] = ele.externalId;
+                            }
+                            if (ele.Organisation) {
+                                data["organisation"] = ele.Organisation;
+                            }
+                            if (ele.ApproximateDuration) {
+                                data["duration"] = ele.ApproximateDuration;
+                            }
+                            if (ele.DifficultyLevel) {
+                                data["difficultyLevel"] = ele.DifficultyLevel;
+                            }
+                            if (ele.ProjectGoal) {
+                                data["goal"] = ele.ProjectGoal;
+                            }
+                            if (concepts) {
+                                data["concepts"] = concepts;
+                            }
+                            if (Keywords && Keywords.length > 0) {
+                                data["keywords"] = Keywords;
+                            }
+                            if (ele.primaryAudience) {
+                                data["primaryAudience"] = primaryAudience;
+                            }
+                            if (ele.ProjectRationale) {
+                                data["rationale"] = ele.ProjectRationale;
+                            }
+                            if (ele.RecommendedFor) {
+                                data["recommendedFor"] = ele.RecommendedFor;
+                            }
+                            if (ele.AssociatedRisks) {
+                                data["risks"] = ele.AssociatedRisks;
+                            }
+                            if (ele.ProtocolsAndPrinciples) {
+                                data["protocols"] = ele.ProtocolsAndPrinciples;
+                            }
+                            if (tasks && tasks.length > 0) {
+                                data["tasks"] = tasks;
+                            }
+                            if (ele.Vision) {
+                                data["vision"] = ele.Vision;
+                            }
+                            if (ele.Problemdefinition) {
+                                data["problemDefinition"] = ele.Problemdefinition;
+                            }
+                            if (ele.Prerequisites) {
+                                data["prerequisites"] = ele.Prerequisites;
+                            }
+                            if (ele.Assumptions) {
+                                data["assumptions"] = ele.Assumptions;
+                            }
+
+                            if (resources && resources.length > 0) {
+                                data["resources"] = resources;
+                            }
+
+                            if (ele.SupportingDocuments) {
+                                data["supportingDocuments"] = ele.SupportingDocuments;
+                            }
+                            if (ele.PossibleApproaches) {
+                                data["approaches"] = ele.PossibleApproaches;
+                            }
+                            if (ele.SuccessIndicators) {
+                                data["successIndicators"] = ele.SuccessIndicators;
+                            }
+                            if (ele.SuggestedNextImprovementProject) {
+                                data["suggestedProject"] = ele.SuggestedNextImprovementProject;
+                            }
+                            if (category) {
+                                data["category"] = category;
+                            }
+                            data['updatedAt'] = moment().format();
+                            delete data._id;
+
+                            var updateData = await impTemplatesModel.findOneAndUpdate({ _id: mongoose.Types.ObjectId(ele.templateId) }, data);
+                            if (updateData._id) {
+                                var projectData = {
+                                    impTemplateId: updateData._id,
+                                    name: updateData.title,
+                                    result: "updated"
+                                }
+                                projectsTemp.push(projectData);
+                            } else {
+                                var projectData = {
+                                    impTemplateId: ele.impTemplateId,
+                                    result: "failed to update"
+                                }
+                                projectsTemp.push(projectData);
+                            }
+
+                        } else {
+                            var projectData = {
+                                impTemplateId: ele.impTemplateId,
+                                result: "impTemplateId not found db"
+                            }
+                            projectsTemp.push(projectData);
+                        }
+
+                    } else {
+
+                        var impTemplatesData = {
+                            title: ele.ProjectTitle,
+                            externalId: ele.externalId,
+                            organisation: ele.Organisation,
+                            duration: ele.ApproximateDuration,
+                            difficultyLevel: ele.DifficultyLevel,
+                            goal: ele.ProjectGoal,
+                            concepts: concepts,
+                            keywords: Keywords,
+                            primaryAudience: primaryAudience,
+                            rationale: ele.ProjectRationale,
+                            recommendedFor: ele.RecommendedFor,
+                            risks: ele.AssociatedRisks,
+                            protocols: ele.ProtocolsAndPrinciples,
+                            // originalAuthor:OriginalAuthor,
+                            createdAt: moment().format(),
+                            createdBy: "",
+                            tasks: tasks,
+                            vision: ele.Vision,
+                            problemDefinition: ele.Problemdefinition,
+                            prerequisites: ele.Prerequisites,
+                            assumptions: ele.Assumptions,
+                            resources: resources,
+                            supportingDocuments: ele.SupportingDocuments,
+                            approaches: ele.PossibleApproaches,
+                            successIndicators: ele.SuccessIndicators,
+                            suggestedProject: ele.SuggestedNextImprovementProject,
+                            category: category
+
+                        }
+
                         var dat = await impTemplatesModel.create(impTemplatesData);
-                        console.log("template created");
                         if (dat._id) {
                             var projectData = {
                                 impTemplateId: dat._id,
@@ -200,6 +317,7 @@ async function createImpTemplates(req) {
                         } else {
                             throw "Some error while creating impTemplate"
                         }
+                    }
                 })
             )
 

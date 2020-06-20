@@ -471,16 +471,25 @@ function projectCreateAndSolutionMapping(obj) {
                 var docInfo = "";
 
 
-                if (obj.customBody) {
+                if (obj.customBody ) {
 
-                    console.log("customBody", obj.customBody.endDate)
                     doc = obj.customBody;
                     docInfo = obj.customBody;
+
+                    if(docInfo.templateId){
+                        let templateInfo = await impTemplatesModel.findOne({ _id: mongoose.Types.ObjectId(docInfo.templateId) },{ resources:1 });
+                        if(templateInfo){
+                            docInfo['resources'] = templateInfo.resources;
+                        }
+                    }
+
                 } else {
+                  
                     doc = await solutionsModel.findOneAndUpdate({ '_id': mongoose.Types.ObjectId(obj.solutionId), 'programId': mongoose.Types.ObjectId(obj.programId) }, solDoc);
                     docInfo = doc.baseProjectDetails[0];
                 }
 
+                console.log("docInfo--------------",docInfo)
 
                 if (obj.createdType) {
                     docInfo.createdType = obj.createdType;
@@ -517,7 +526,7 @@ function projectCreateAndSolutionMapping(obj) {
                         "problemDefinition": docInfo.problemDefinition ? docInfo.problemDefinition : "",
                         "prerequisites": docInfo.prerequisites ? docInfo.prerequisites : "",
                         "assumptions": docInfo.prerequisites ? docInfo.prerequisites : "",
-                        "resources": docInfo.resources ? docInfo.resources : "",
+                        "resources": docInfo.resources ? docInfo.resources : [],
                         "supportingDocuments": docInfo.supportingDocuments ? docInfo.supportingDocuments : "",
                         "approaches": docInfo.approaches ? docInfo.approaches : "",
                         "successIndicators": docInfo.successIndicators ? docInfo.successIndicators : "",
@@ -527,6 +536,7 @@ function projectCreateAndSolutionMapping(obj) {
                         "isStarted": docInfo.isStarted ? docInfo.isStarted : false,
                         "startDate": docInfo.startDate ? docInfo.startDate : "",
                         "endDate": docInfo.endDate ? docInfo.endDate : ""
+                        
                     }
                     var projectIDs = [];
                     let projectDoc = await projectsModel.create(projectData);

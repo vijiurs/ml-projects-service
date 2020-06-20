@@ -10,6 +10,7 @@ var projectModel = mongoose.model('userProjects',new mongoose.Schema({
 	"goal": String,
 	"userId": String,
 	"collaborator": Array,
+	"resources":Array,
 	"organisation": String,
 	"duration": String,
 	"difficultyLevel": Object,

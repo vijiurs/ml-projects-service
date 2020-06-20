@@ -2,6 +2,7 @@ var mongoose = require('mongoose');
 var Schema = mongoose.Schema,ObjectId = Schema.ObjectId;
 var solutionsModel = mongoose.model('solutions',new mongoose.Schema({
             "resourceType":Array,
+            "resources":Array,
             "language":Array,
             "keywords":Array,
             "concepts":Array,

@@ -383,8 +383,8 @@ function mapSolutionsToProgram(body) {
                             "projectManagers": [],
                             "programManagers": [],
                             "collaborators": []
-                        }
-
+                        },
+                        "resources" : templateData.resources
                     });
                     let doc = await solutionsModel.create(solutionSchema);
                     if (doc) {
@@ -517,7 +517,7 @@ function projectCreateAndSolutionMapping(obj) {
                         "problemDefinition": docInfo.problemDefinition ? docInfo.problemDefinition : "",
                         "prerequisites": docInfo.prerequisites ? docInfo.prerequisites : "",
                         "assumptions": docInfo.prerequisites ? docInfo.prerequisites : "",
-                        "resources": docInfo.resources ? docInfo.resources : "",
+                        "resources": docInfo.resources ? docInfo.resources : new Array,
                         "supportingDocuments": docInfo.supportingDocuments ? docInfo.supportingDocuments : "",
                         "approaches": docInfo.approaches ? docInfo.approaches : "",
                         "successIndicators": docInfo.successIndicators ? docInfo.successIndicators : "",

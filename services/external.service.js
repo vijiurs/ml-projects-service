@@ -547,7 +547,7 @@ function mapUsersToSolution(req) {
                                         "organisation": docInfo.organisation,
                                         "duration": docInfo.duration,
                                         "difficultyLevel": docInfo.difficultyLevel,
-                                        "status": "not yet started",
+                                        "status": "Not started",
                                         "createdAt": moment().format(),
                                         "programId": solDoc.programId,
                                         "solutionId": solDoc._id,

@@ -13,7 +13,7 @@ var projectModel = mongoose.model('userProjects',new mongoose.Schema({
 	"organisation": String,
 	"duration": String,
 	"difficultyLevel": Object,
-	"status": String,
+	"status": { type: String, default:"Not started" },
 	"createdAt":Date,
 	// "lastSync": { type : Date, default: Date.now },
 	"lastSync": Date,

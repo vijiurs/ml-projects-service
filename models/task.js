@@ -11,7 +11,7 @@ var taskModel = mongoose.model('userProjectsTasks',new mongoose.Schema({
 			"title":String,
 			"startDate": { type:Date, default:dateFormat },
 			"endDate": { type:Date, default:dateFormat },
-			"status": String,
+			"status": { type: String, default:"Not started" },
 			"assignedTo":Array,
 			"lastSync" : Date,
 			"createdAt":Date,

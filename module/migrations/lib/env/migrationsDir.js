@@ -7,7 +7,7 @@ async function resolveMigrationsDirPath() {
   let migrationsDir;
   try {
         
-    migrationsDir = process.env.MIGRATIONS_DIR; 
+    migrationsDir = process.env.MIGRATION_DIR; 
 
     if (!migrationsDir) {
       migrationsDir = DEFAULT_MIGRATIONS_DIR_NAME;

@@ -5,13 +5,16 @@ const { promisify } = require("util");
 const status = require("./status");
 const migrationsDir = require("../env/migrationsDir");
 const database = require("../env/database");
+const elasticsearch = require("../env/elasticsearch");
 
 module.exports = async db => {
   const statusItems = await status(db);
   const pendingItems = _.filter(statusItems, { appliedAt: "PENDING" });
   const migrated = [];
 
-  global.transferFromDb = await database.connectToTransferFromDB()
+  global.transferFromDb = await database.connectToTransferFromDB();
+
+  global.es = await elasticsearch.connect();
 
   const migrateItem = async item => {
     try {
@@ -27,7 +30,7 @@ module.exports = async db => {
       throw error;
     }
 
-    const collectionName = process.env.MIGRATIONS_COLLECTION || "migrations";
+    const collectionName = process.env.MIGRATION_COLLECTION || "migrations";
     const collection = db.collection(collectionName);
 
     const { fileName } = item;

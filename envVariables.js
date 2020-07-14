@@ -1,139 +1,162 @@
+/**
+ * name : envVariables.js.
+ * author : Aman Karki.
+ * created-date : 19-June-2020.
+ * Description : Required Environment variables .
+ */
+
 let table = require("cli-table");
+
 let tableData = new table();
 
 let enviromentVariables = {
-
-  "MONGODB_COMMUNICATIONS_ON_OFF" : {
-    "message" : "Please specify the value for e.g. ON/OFF",
+  "PORT" : {
+    "message" : "Required port no",
+    "optional" : false
+  },
+  "LOG" : {
+    "message" : "Required logger type",
+    "optional" : false
+  },
+  "NODE_ENV" : {
+    "message" : "Required node environment",
+    "optional" : false
+  },
+  "APPLICATION_BASE_URL" : {
+    "message" : "Required Application base url",
+    "optional" : false
+  },
+  "AUTHORIZATION" : {
+    "message" : "Required Server authorization code",
+    "optional" : false
+  },
+  "APPLICATION_BASE_HOST" : {
+    "message" : "Required Base host",
+    "optional" : false
+  },
+  "MONGODB_URL" : {
+    "message" : "Required mongodb url",
+    "optional" : false
+  },
+  "MONGODB_PORT" : {
+    "message" : "Required mongodb port",
+    "optional" : false
+  },
+  "SHIKSHALOKAM_BASE_HOST" : {
+    "message" : "Required shikshalokam base host",
+    "optional" : false
+  },
+  "MONGODB_DATABASE_NAME" : {
+    "message" : "Required database",
+    "optional" : false
+  },
+  "INTERNAL_ACCESS_TOKEN" : {
+    "message" : "Required internal access token",
+    "optional" : false
+  },
+  "sunbird_url" : {
+    "message" : "Required sunbird url",
+    "optional" : false
+  },
+  "sunbird_keycloak_auth_endpoint" : {
+    "message" : "Required sunbird keycloak auth endpoint",
+    "optional" : false
+  },
+  "sunbird_keycloak_realm" : {
+    "message" : "Required sunbird keycloak realm",
+    "optional" : false
+  },
+  "sunbird_keycloak_client_id" : {
+    "message" : "Required sunbird keycloak client id",
+    "optional" : false
+  },
+  "sunbird_keycloak_public" : {
+    "message" : "Required sunbird keycloak public",
+    "optional" : false
+  },
+  "sunbird_cache_store" : {
+    "message" : "Required sunbird cache store",
+    "optional" : false
+  },
+  "sunbird_cache_ttl" : {
+    "message" : "Required sunbird cache ttl",
+    "optional" : false
+  },
+  "MIGRATION_COLLECTION" : {
+    "message" : "Required migrations collection name",
+    "optional" : false
+  },
+  "MIGRATION_DIR" : {
+    "message" : "Required migrations directory name",
+    "optional" : false
+  },
+  "SLACK_COMMUNICATIONS_ON_OFF" : {
+    "message" : "Enable/Disable slack communications",
     "optional" : false,
     "possibleValues" : [
       "ON",
       "OFF"
     ]
   },
-
-  "MONGODB_HOST_URL" : {
-    "message" : "Please specify the value for e.g. localhost",
-    "optional" : false,
-    "requiredIf" : {
-      "key": "MONGODB_COMMUNICATIONS_ON_OFF",
-      "operator" : "EQUALS",
-      "value" : "ON"
-    }
-  },
-
-  "MONGODB_PORT" : {
-    "message" : "Please specify the value for e.g. 27017",
-    "optional" : false,
-    "requiredIf" : {
-      "key": "MONGODB_COMMUNICATIONS_ON_OFF",
-      "operator" : "EQUALS",
-      "value" : "ON"
-    }
-  },
-
-  "MONGODB_DATABASE_NAME" : {
-    "message" : "Please specify the value for e.g. bms",
-    "optional" : false,
-    "requiredIf" : {
-      "key": "MONGODB_COMMUNICATIONS_ON_OFF",
-      "operator" : "EQUALS",
-      "value" : "ON"
-    }
-  },
-
-  "MONGODB_USERNAME" : {
-    "message" : "Please specify the value for username to connect to connect to MongoDB ",
-    "optional" : true,
-    "default" : ""
-  },
-
-  "MONGODB_PASSWORD" : {
-    "message" : "Please specify the value for password to connect to connect to MongoDB ",
-    "optional" : true,
-    "default" : ""
-  },
-
-  "MIGRATIONS_COLLECTION" : {
-    "message" : "Please specify the value for e.g. migrations",
+  "SLACK_EXCEPTION_LOG_URL" : {
+    "message" : "Enable/Disable slack exception log url",
     "optional" : false
   },
-
-  "MIGRATIONS_DIR" : {
-    "message" : "Please specify the value for e.g. migrations",
+  "SLACK_TOKEN" : {
+    "message" : "Required slack token",
     "optional" : false
   },
+  "URL_PREFIX" : {
+    "message" : "Required",
+    "optional" : false
+  }
 }
-const validRequiredIfOperators = [
-  "EQUALS",
-  "NOT_EQUALS"
-];
 
-let environmentVariablesCheckSuccessful = true;
+let success = true;
 
 module.exports = function() {
   Object.keys(enviromentVariables).forEach(eachEnvironmentVariable=>{
+  
     let tableObj = {
-      [eachEnvironmentVariable] : "PASSED"
+      [eachEnvironmentVariable] : ""
     };
-    let keyCheckPass = true;
-    if(enviromentVariables[eachEnvironmentVariable].optional === true
-      && enviromentVariables[eachEnvironmentVariable].requiredIf
-      && enviromentVariables[eachEnvironmentVariable].requiredIf.key
-      && enviromentVariables[eachEnvironmentVariable].requiredIf.key != ""
-      && enviromentVariables[eachEnvironmentVariable].requiredIf.operator
-      && validRequiredIfOperators.includes(enviromentVariables[eachEnvironmentVariable].requiredIf.operator)
-      && enviromentVariables[eachEnvironmentVariable].requiredIf.value
-      && enviromentVariables[eachEnvironmentVariable].requiredIf.value != "") {
-        switch (enviromentVariables[eachEnvironmentVariable].requiredIf.operator) {
-          case "EQUALS":
-            if(process.env[enviromentVariables[eachEnvironmentVariable].requiredIf.key] === enviromentVariables[eachEnvironmentVariable].requiredIf.value) {
-              enviromentVariables[eachEnvironmentVariable].optional = false;
-            }
-            break;
-          case "NOT_EQUALS":
-              if(process.env[enviromentVariables[eachEnvironmentVariable].requiredIf.key] != enviromentVariables[eachEnvironmentVariable].requiredIf.value) {
-                enviromentVariables[eachEnvironmentVariable].optional = false;
-              }
-              break;
-          default:
-            break;
-        }
-    }
+  
+    if( !(process.env[eachEnvironmentVariable]) && !(enviromentVariables[eachEnvironmentVariable].optional)) {
+      success = false;
 
-    if(enviromentVariables[eachEnvironmentVariable].optional === false) {
-      if(!(process.env[eachEnvironmentVariable])
-        || process.env[eachEnvironmentVariable] == "") {
-        environmentVariablesCheckSuccessful = false;
-        keyCheckPass = false;
-      } else if (enviromentVariables[eachEnvironmentVariable].possibleValues
-        && Array.isArray(enviromentVariables[eachEnvironmentVariable].possibleValues)
-        && enviromentVariables[eachEnvironmentVariable].possibleValues.length > 0) {
-        if(!enviromentVariables[eachEnvironmentVariable].possibleValues.includes(process.env[eachEnvironmentVariable])) {
-          environmentVariablesCheckSuccessful = false;
-          keyCheckPass = false;
-          enviromentVariables[eachEnvironmentVariable].message += ` Valid values - ${enviromentVariables[eachEnvironmentVariable].possibleValues.join(", ")}`
-        }
-      }
-    }
-    if((!(process.env[eachEnvironmentVariable])
-      || process.env[eachEnvironmentVariable] == "")
-      && enviromentVariables[eachEnvironmentVariable].default
-      && enviromentVariables[eachEnvironmentVariable].default != "") {
-      process.env[eachEnvironmentVariable] = enviromentVariables[eachEnvironmentVariable].default;
-    }
-    if(!keyCheckPass) {
-      if(enviromentVariables[eachEnvironmentVariable].message !== "") {
+      if(enviromentVariables[eachEnvironmentVariable] && enviromentVariables[eachEnvironmentVariable].message !== "") {
         tableObj[eachEnvironmentVariable] = 
         enviromentVariables[eachEnvironmentVariable].message;
       } else {
-        tableObj[eachEnvironmentVariable] = `FAILED - ${eachEnvironmentVariable} is required`;
+        tableObj[eachEnvironmentVariable] = "required";
       }
+    } else {
+
+      tableObj[eachEnvironmentVariable] = "success";
+
+      if( 
+        enviromentVariables[eachEnvironmentVariable].possibleValues &&
+        !enviromentVariables[eachEnvironmentVariable].possibleValues.includes(process.env[eachEnvironmentVariable])
+      ) {
+        tableObj[eachEnvironmentVariable] += ` Valid values - ${enviromentVariables[eachEnvironmentVariable].possibleValues.join(", ")}`;
+      } else {
+        
+        if(enviromentVariables[eachEnvironmentVariable].optional) {
+          tableObj[eachEnvironmentVariable] = enviromentVariables[eachEnvironmentVariable].message;
+        }
+
+      }
+      
     }
+
     tableData.push(tableObj);
   })
-  console.log(tableData.toString());
+
+  logger.info(tableData.toString());
+
   return {
-    success : environmentVariablesCheckSuccessful
+    success : success
   }
 }
+
+

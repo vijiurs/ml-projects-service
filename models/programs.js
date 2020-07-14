@@ -1,37 +1,72 @@
-// We should get this from samiksha service instead of hardcoding models in unnati
-// and samiksha.
+/**
+ * name : programs.js.
+ * author : Aman Karki.
+ * created-date : 14-July-2020.
+ * Description : Schema for programs.
+ */
 
-var mongoose = require('mongoose');
-var Schema = mongoose.Schema,ObjectId = Schema.ObjectId;
-var programModel = mongoose.model('programs',new mongoose.Schema({
-    "externalId" : String,
-	"name" : String,
-	"solutionId":ObjectId,
-	"description" : String,
-	"owner" : String,
-	"createdBy" : String,
-	"updatedBy" : String,
-	"isDeleted" : Boolean,
-	"status" : String,
-	"resourceType" : Array,
-	"language" : Array,
-	"keywords" : Array,
-	"concepts" : Array,
-	"createdFor" : Array,
-	"imageCompression" : Array,
-	"components" : Array,
-	"updatedAt" : Date,
-	"startDate" : Date,
-	"endDate" : Date,
-	"createdAt" : Date,
-	"vision": String,
-    "problemDefinition":String,
-    "prerequisites":String,
-    "assumptions":String,
-    "resources":Array,
-    "supportingDocuments":Array,
-    "approaches":String,
-    "successIndicators":String,
-    "suggestedProject":String
-}) );
-module.exports = programModel;
+module.exports = {
+  name: "programs",
+  schema: {
+    externalId : {
+      type : String,
+      required : true
+    },
+    name : {
+      type : String,
+      required : true
+    },
+    description : {
+      type : String,
+      required : true
+    },
+    owner: {
+      type : String,
+      required : true
+    },
+    createdBy : {
+      type : String,
+      default : "SYSTEM"
+    },
+    updatedBy : {
+      type : String,
+      default : "SYSTEM"
+    },
+    status : {
+      type : String,
+      default : "active"
+    },
+    resourceType : {  
+      type : Array,
+      default : []
+    },
+    language: {
+      type : Array,
+      default : []
+    },
+    keywords: {
+      type : Array,
+      default : []
+    },
+    concepts : {
+      type : Array,
+      default : []
+    },
+    createdFor: {
+      type : Array,
+      default : []
+    },
+    imageCompression: {
+      type : Object,
+      default : {}
+    },
+    components : {
+      type : Array,
+      default : []
+    },
+    isAPrivateProgram : {
+      type : Boolean,
+      default : false
+    }
+  }
+};

@@ -75,7 +75,7 @@ if (process.env.NODE_ENV == "development" || process.env.NODE_ENV == "local") {
   }
 }
 
-app.all(process.env.ALL_ROUTES, (req, res, next) => {
+app.all('*', (req, res, next) => {
   if(ENABLE_DEBUG_LOGGING === "ON") {
     logger.info("Requests:", {
       method: req.method,

@@ -11,7 +11,7 @@ const mongoose_delete = require("mongoose-delete");
 const mongoose_autopopulate = require("mongoose-autopopulate");
 const mongoose_timestamp = require("mongoose-timestamp");
 const mongoose_ttl = require("mongoose-ttl");
-let ObjectId = mongoose.Types.ObjectId;
+const ObjectId = mongoose.Types.ObjectId;
 
 /**
  * Mongodb setup.
@@ -20,12 +20,12 @@ let ObjectId = mongoose.Types.ObjectId;
  * @param  {Object} config - mongodb configurations information.
 */
 
-var DB = function(config) {
+const DB = function(config) {
   mongoose.set('useCreateIndex', true)
   mongoose.set('useFindAndModify', false)
   mongoose.set('useUnifiedTopology', true)
   
-  var db = mongoose.createConnection(
+  const db = mongoose.createConnection(
     config.host + ":" + config.port + "/" + config.database,
     config.options
   );
@@ -35,7 +35,7 @@ var DB = function(config) {
     logger.debug("Connected to DB");
   });
 
-  var createModel = function(opts) {
+  const createModel = function(opts) {
     if (typeof opts.schema.__proto__.instanceOfSchema === "undefined") {
       var schema = mongoose.Schema(opts.schema, opts.options);
     } else {

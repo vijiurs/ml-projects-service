@@ -23,7 +23,7 @@ module.exports = function () {
   global.GENERIC_HELPERS_PATH = ROOT_PATH + "/generics/helpers";
   global._ = require("lodash");
   gen.utils = require(ROOT_PATH + "/generics/helpers/utils");
-  global.config = require(".");
+  require("./connections");
 
   global.ENABLE_DEBUG_LOGGING = 
   process.env.ENABLE_DEBUG_LOGGING 

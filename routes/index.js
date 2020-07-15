@@ -41,7 +41,10 @@ module.exports = function (app) {
         let validationError = req.validationErrors();
 
         if (validationError.length){
-          throw { status: 400, message: validationError };
+          throw { 
+            status: httpStatusCode.bad_request.status, 
+            message: validationError 
+          };
         }
 
         let result;
@@ -69,8 +72,8 @@ module.exports = function (app) {
             } else {
 
               throw {
-                status: 500,
-                message: "Oops! Something went wrong!"
+                status : httpStatusCode.internal_server_error.status,
+                message : httpStatusCode.internal_server_error.message
               };
 
             }

@@ -5,32 +5,34 @@
  * Description : Root file.
  */
 
-// Dependencies
-
 require("dotenv").config();
-global.config = require("./config");
+
+// Setup application config, establish DB connections and set global constants.
+global.config = require("./config/connections");
 require("./config/globals")();
 
-let router = require("./routes");
+// Check if all environment variables are provided.
+const environmentData = require("./envVariables")();
 
-//express
+if (!environmentData.success) {
+  logger.error("Server could not start . Not all environment variable is provided");
+  process.exit();
+}
+
+// Router module
+const router = require("./routes");
+
+// express
 const express = require("express");
-let app = express();
+const app = express();
 
 //required modules
 const fileUpload = require("express-fileupload");
 const bodyParser = require("body-parser");
 const cors = require("cors");
-var fs = require("fs");
-var path = require("path");
-var expressValidator = require('express-validator');
-
-let environmentData = require("./envVariables")();
-
-if (!environmentData.success) {
-  logger.warning("Server could not start . Not all environment variable is provided");
-  process.exit();
-}
+const fs = require("fs");
+const path = require("path");
+const expressValidator = require('express-validator');
 
 //To enable cors
 app.use(cors());
@@ -90,12 +92,12 @@ app.all(process.env.ALL_ROUTES, (req, res, next) => {
 router(app);
 
 //listen to given port
-app.listen(config.port, () => {
+app.listen(process.env.PORT, () => {
 
   logger.info("Environment: " +
     (process.env.NODE_ENV ? process.env.NODE_ENV : process.env.DEFAULT_NODE_ENV));
 
-  logger.info("Application is running on the port:" + config.port);
+  logger.info("Application is running on the port:" + process.env.PORT);
 
 });
 

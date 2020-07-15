@@ -26,9 +26,10 @@ var DB = function(config) {
   mongoose.set('useUnifiedTopology', true)
   
   var db = mongoose.createConnection(
-    config.host + "/" + config.database,
+    config.host + ":" + config.port + "/" + config.database,
     config.options
   );
+  
   db.on("error", console.error.bind(console, "connection error:"));
   db.once("open", function() {
     logger.debug("Connected to DB");

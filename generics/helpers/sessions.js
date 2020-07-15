@@ -6,7 +6,7 @@
  */
 
  /**
-  * Get app version.
+  * Get session data.
   * @method
   * @name get - Get specific session data
   * @param {String} sessionPath - Path of the session.

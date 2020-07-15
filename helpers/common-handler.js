@@ -306,7 +306,7 @@ function createImprovementTemplate(obj) {
             problemDefinition: obj.Problemdefinition ? obj.Problemdefinition : "",
             prerequisites: obj.prerequisites ? obj.prerequisites : "",
             assumptions: obj.assumptions ? obj.assumptions : "",
-            resources: obj.resources ? obj.resources : "",
+            resources: obj.resources ? obj.resources : [],
             supportingDocuments: obj.supportingDocuments ? obj.supportingDocuments : "",
             approaches: obj.approaches ? obj.approaches : "",
             successIndicators: obj.successIndicators ? obj.successIndicators : "",
@@ -473,12 +473,21 @@ function projectCreateAndSolutionMapping(obj) {
 
                 if (obj.customBody) {
 
-                    console.log("customBody", obj.customBody.endDate)
                     doc = obj.customBody;
                     docInfo = obj.customBody;
+
+                    if(docInfo.templateId){
+                        let templateInfo = await impTemplatesModel.findOne({ _id: mongoose.Types.ObjectId(docInfo.templateId) },{ resources:1 });
+                        if(templateInfo){
+                            docInfo['resources'] = templateInfo.resources;
+                        }
+                    }
+
                 } else {
                     doc = await solutionsModel.findOneAndUpdate({ '_id': mongoose.Types.ObjectId(obj.solutionId), 'programId': mongoose.Types.ObjectId(obj.programId) }, solDoc);
                     docInfo = doc.baseProjectDetails[0];
+
+                    
                 }
 
 
@@ -503,7 +512,7 @@ function projectCreateAndSolutionMapping(obj) {
                         "organisation": docInfo.organisation ? docInfo.organisation : "",
                         "duration": docInfo.duration ? docInfo.duration : "",
                         "difficultyLevel": docInfo.difficultyLevel ? docInfo.difficultyLevel : "",
-                        "status": docInfo.status,
+                        "status": docInfo.status ? docInfo.status : "Not started",
                         "createdAt": moment().format(),
                         "programId": obj.programId,
                         "solutionId": obj.solutionId,
@@ -517,7 +526,7 @@ function projectCreateAndSolutionMapping(obj) {
                         "problemDefinition": docInfo.problemDefinition ? docInfo.problemDefinition : "",
                         "prerequisites": docInfo.prerequisites ? docInfo.prerequisites : "",
                         "assumptions": docInfo.prerequisites ? docInfo.prerequisites : "",
-                        "resources": docInfo.resources ? docInfo.resources : "",
+                        "resources": docInfo.resources ? docInfo.resources : [],
                         "supportingDocuments": docInfo.supportingDocuments ? docInfo.supportingDocuments : "",
                         "approaches": docInfo.approaches ? docInfo.approaches : "",
                         "successIndicators": docInfo.successIndicators ? docInfo.successIndicators : "",

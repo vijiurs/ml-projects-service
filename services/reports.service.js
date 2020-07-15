@@ -375,7 +375,7 @@ async function getDetailViewReport(req) {
                                 }
 
                                 let color = "";
-                                if (status == "not yet started" || status == "not started yet") {
+                                if (status == "not yet started" || status == "not started yet" || status == "Not started") {
                                     color = "#f5f5f5";
                                 } else if (status == "completed") {
                                     color = "#20ba8d";

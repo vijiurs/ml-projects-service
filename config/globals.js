@@ -9,8 +9,8 @@
 
 const fs = require("fs");
 const path = require("path");
-let requireAll = require("require-all");
-var bunyan = require("bunyan"),
+const requireAll = require("require-all");
+const bunyan = require("bunyan"),
   bunyanFormat = require('bunyan-format'),
   formatOut = bunyanFormat({ outputMode: 'short' });
 

@@ -13,7 +13,7 @@ var projectModel = mongoose.model('userProjects',new mongoose.Schema({
 	"organisation": String,
 	"duration": String,
 	"difficultyLevel": Object,
-	"status": String,
+	"status": { type: String, default:"Not started" },
 	"createdAt":Date,
 	// "lastSync": { type : Date, default: Date.now },
 	"lastSync": Date,
@@ -31,6 +31,7 @@ var projectModel = mongoose.model('userProjects',new mongoose.Schema({
 	"createdBy":ObjectId,
 	"isStarted":Boolean,
 	"startDate":{ type:Date, default:dateFormat },
-	"endDate":{ type:Date, default:dateFormat }
+	"endDate":{ type:Date, default:dateFormat },
+	"resources": Array
 },{collection: 'userProjects'} ) );
 module.exports = projectModel;

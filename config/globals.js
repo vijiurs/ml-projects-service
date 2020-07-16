@@ -14,24 +14,20 @@ const bunyan = require("bunyan"),
   bunyanFormat = require('bunyan-format'),
   formatOut = bunyanFormat({ outputMode: 'short' });
 
-gen = Object.assign(global, {});
-
 module.exports = function () {
   global.async = require("async");
   global.ROOT_PATH = path.join(__dirname, '..');
   global.MODULES_BASE_PATH = ROOT_PATH + "/module";
   global.GENERIC_HELPERS_PATH = ROOT_PATH + "/generics/helpers";
   global._ = require("lodash");
-  gen.utils = require(ROOT_PATH + "/generics/helpers/utils");
+  global.UTILS = require(ROOT_PATH + "/generics/helpers/utils");
   require("./connections");
 
   global.ENABLE_DEBUG_LOGGING = 
   process.env.ENABLE_DEBUG_LOGGING 
   || process.env.DEFAULT_ENABLE_DEBUG_LOGGING;
 
-  global.locales = [];
-
-  global.httpStatusCode = 
+  global.HTTP_STATUS_CODE = 
   require(ROOT_PATH + "/generics/http-status-codes");
 
   global.REQUEST_TIMEOUT_FOR_REPORTS = 

@@ -12,7 +12,7 @@
   * @param {Object} configuration - mongodb database configuration.
 */
 
-let mongodb_connect = function (configuration) {
+const mongodb_connect = function (configuration) {
   
   global.database = require("./db/mongodb")(
     configuration

@@ -4,7 +4,7 @@
   "description": "Unnati services",
   "main": "app.js",
   "bin": {
-    "migrations": "module/migrations/bin/migrations.js"
+    "unnati-migrations": "module/migrations/bin/migrations.js"
   },
   "scripts": {
     "test": "mocha --timeout 10000",
@@ -43,6 +43,7 @@
     "keycloak-auth-utils": "^3.3.0",
     "lodash": "^4.17.15",
     "log": "^1.4.0",
+    "moment-timezone": "^0.5.31",
     "mongoose": "^5.9.4",
     "mongoose-autopopulate": "^0.12.0",
     "mongoose-delete": "^0.5.1",
@@ -50,7 +51,9 @@
     "mongoose-ttl": "0.0.3",
     "path": "^0.12.7",
     "require-all": "^3.0.0",
-    "xml-js": "^1.6.11"
+    "xml-js": "^1.6.11",
+    "p-each-series": "^2.1.0",
+    "fn-args": "^4.0.0"
   },
   "devDependencies": {
     "grunt-apidoc": "^0.11.0",

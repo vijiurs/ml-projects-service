@@ -4,8 +4,8 @@ global.ObjectID = require('mongodb').ObjectID
 module.exports = {
   async connect() {
 
-    const url = process.env.MONGODB_URL;
-    const databaseName = process.env.DB;
+    const url = process.env.MONGODB_URL + ":" +process.env.MONGODB_PORT;
+    const databaseName = process.env.MONGODB_DATABASE_NAME;
     const options = {useUnifiedTopology: true, useNewUrlParser: true};
 
     if (!url) {
@@ -29,8 +29,8 @@ module.exports = {
   },
   async connectToTransferFromDB() {
 
-    const url = process.env.MONGODB_URL;
-    const databaseName = process.env.TRANSFER_FROM_DB || process.env.DB;
+    const url = process.env.MONGODB_URL + ":" +process.env.MONGODB_PORT;
+    const databaseName = process.env.TRANSFER_FROM_DB || process.env.MONGODB_DATABASE_NAME;
     const options = {useNewUrlParser: true};
 
     if (!url) {

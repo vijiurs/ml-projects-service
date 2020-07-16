@@ -14,7 +14,7 @@
 */
 
 function get(sessionPath){
-    return global.sessions[sessionPath]
+    return global.SESSIONS[sessionPath]
 }
 
  /**
@@ -27,7 +27,7 @@ function get(sessionPath){
 */
 
 function set(sessionPath,data) {
-    return global.sessions[sessionPath] = data;
+    return global.SESSIONS[sessionPath] = data;
 }
 
 /**
@@ -39,7 +39,7 @@ function set(sessionPath,data) {
 */
 
 function remove(sessionPath) {
-    delete global.sessions[sessionPath];
+    delete global.SESSIONS[sessionPath];
     return;
 }
 

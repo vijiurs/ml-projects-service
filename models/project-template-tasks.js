@@ -47,6 +47,26 @@ module.exports = {
         projectTemplateId : {
             type : "ObjectId",
             required : true
+        },
+        isDeleteable : {
+            type : Boolean,
+            default : false
+        },
+        taskSequence : {
+            type : Array,
+            default : []
+        },
+        children : {
+            type : Array,
+            default : []
+        },
+        contentDetails : {
+            type : Object,
+            default : {}
+        },
+        improvementProjectDetails : {
+            type : Object,
+            default : {}
         }
     }
 };

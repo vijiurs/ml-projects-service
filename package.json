@@ -37,6 +37,7 @@
     "express": "^4.17.1",
     "express-fileupload": "^1.1.6",
     "express-validator": "^5.3.1",
+    "fn-args": "^4.0.0",
     "form-urlencoded": "^4.1.3",
     "fs": "0.0.1-security",
     "jwt-decode": "^2.2.0",
@@ -49,11 +50,11 @@
     "mongoose-delete": "^0.5.1",
     "mongoose-timestamp": "^0.6.0",
     "mongoose-ttl": "0.0.3",
-    "path": "^0.12.7",
-    "require-all": "^3.0.0",
-    "xml-js": "^1.6.11",
     "p-each-series": "^2.1.0",
-    "fn-args": "^4.0.0"
+    "path": "^0.12.7",
+    "request": "^2.88.2",
+    "require-all": "^3.0.0",
+    "xml-js": "^1.6.11"
   },
   "devDependencies": {
     "grunt-apidoc": "^0.11.0",

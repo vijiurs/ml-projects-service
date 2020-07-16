@@ -5,4 +5,6 @@
  * Description : All common messages.
  */
 
-module.exports = {};
+module.exports = {
+    ACTIVE_STATUS : "active"
+};

@@ -6,11 +6,11 @@
  */
 
 // Dependencies
-const authenticator = require(ROOT_PATH + "/generics/middleware/authenticator");
-const slackClient = require(ROOT_PATH + "/generics/helpers/slack-communications");
-const pagination = require(ROOT_PATH + "/generics/middleware/pagination");
+const authenticator = require(PROJECT_ROOT_DIRECTORY + "/generics/middleware/authenticator");
+const slackClient = require(PROJECT_ROOT_DIRECTORY + "/generics/helpers/slack-communications");
+const pagination = require(PROJECT_ROOT_DIRECTORY + "/generics/middleware/pagination");
 const fs = require("fs");
-const inputValidator = require(ROOT_PATH + "/generics/middleware/validator");
+const inputValidator = require(PROJECT_ROOT_DIRECTORY + "/generics/middleware/validator");
 
 module.exports = function (app) {
 
@@ -42,7 +42,7 @@ module.exports = function (app) {
 
         if (validationError.length){
           throw { 
-            status: httpStatusCode.bad_request.status, 
+            status: HTTP_STATUS_CODE.bad_request.status, 
             message: validationError 
           };
         }
@@ -72,8 +72,8 @@ module.exports = function (app) {
             } else {
 
               throw {
-                status : httpStatusCode.internal_server_error.status,
-                message : httpStatusCode.internal_server_error.message
+                status : HTTP_STATUS_CODE.internal_server_error.status,
+                message : HTTP_STATUS_CODE.internal_server_error.message
               };
 
             }
@@ -81,9 +81,9 @@ module.exports = function (app) {
           });
 
         } else {
-          res.status(result.status ? result.status : httpStatusCode["ok"].status).json({
+          res.status(result.status ? result.status : HTTP_STATUS_CODE["ok"].status).json({
             message: result.message,
-            status: result.status ? result.status : httpStatusCode["ok"].status,
+            status: result.status ? result.status : HTTP_STATUS_CODE["ok"].status,
             result: result.data,
             result: result.result,
             additionalDetails: result.additionalDetails,
@@ -95,18 +95,25 @@ module.exports = function (app) {
           });
         }
 
-        if(ENABLE_DEBUG_LOGGING === "ON") {
-          logger.info("Response:", result);
+        if(ENABLE_FILE_LOGGING === "ON") {
+          LOGGER.info("Response:", result);
+        }
+
+        if(ENABLE_CONSOLE_LOGGING === "ON") {
+          console.log('-------------------Response log starts here-------------------');
+          console.log(result);
+          console.log('-------------------Response log ends here-------------------');
         }
 
       }
       catch (error) {
-        res.status(error.status ? error.status : httpStatusCode.bad_request.status).json({
-          status: error.status ? error.status : httpStatusCode.bad_request.status,
-          message: error.message
+        res.status(error.status ? error.status : HTTP_STATUS_CODE.bad_request.status).json({
+          status: error.status ? error.status : HTTP_STATUS_CODE.bad_request.status,
+          message: error.message,
+          result : error.result
         });
 
-        if ( error.status !== httpStatusCode.bad_request.status ) {
+        if ( error.status !== HTTP_STATUS_CODE.bad_request.status ) {
           
           let customFields = {
             appDetails: '',
@@ -138,9 +145,17 @@ module.exports = function (app) {
           }
   
           slackClient.sendMessageToSlack(_.merge(toLogObject, customFields));
-        }
-        if(ENABLE_DEBUG_LOGGING === "ON") {
-          logger.error("Error Response:", error);
+
+          if (ENABLE_FILE_LOGGING === "ON") {
+            EXCEPTION_LOGGER.info(toLogObject);
+          }
+
+          if (ENABLE_CONSOLE_LOGGING === "ON") {
+            console.log('-------------------Response log starts here-------------------');
+            console.log(toLogObject);
+            console.log('-------------------Response log ends here-------------------');
+          }
+          
         }
         
       };
@@ -153,6 +168,6 @@ module.exports = function (app) {
   app.all(APPLICATION_BASE_URL + "api/:version/:controller/:file/:method/:_id", inputValidator, router);
 
   app.use((req, res, next) => {
-    res.status(httpStatusCode["not_found"].status).send(httpStatusCode["not_found"].message);
+    res.status(HTTP_STATUS_CODE["not_found"].status).send(HTTP_STATUS_CODE["not_found"].message);
   });
 };

@@ -15,12 +15,9 @@ require("./config/globals")();
 const environmentData = require("./envVariables")();
 
 if (!environmentData.success) {
-  logger.error("Server could not start . Not all environment variable is provided");
+  LOGGER.error("Server could not start . Not all environment variable is provided");
   process.exit();
 }
-
-// Router module
-const router = require("./routes");
 
 // express
 const express = require("express");
@@ -76,8 +73,9 @@ if (process.env.NODE_ENV == "development" || process.env.NODE_ENV == "local") {
 }
 
 app.all('*', (req, res, next) => {
-  if(ENABLE_DEBUG_LOGGING === "ON") {
-    logger.info("Requests:", {
+  
+  if(ENABLE_FILE_LOGGING === "ON") {
+    LOGGER.info("Requests:", {
       method: req.method,
       url: req.url,
       headers: req.headers,
@@ -85,19 +83,32 @@ app.all('*', (req, res, next) => {
     })
   }
 
+
+  if(process.env.ENABLE_CONSOLE_LOGGING === "ON") {
+    console.log("-------Request log starts here------------------");
+    console.log("Request URL: ", req.url);
+    console.log("Request Headers: ", req.headers);
+    console.log("Request Body: ", req.body);
+    console.log("Request Files: ", req.files);
+    console.log("-------Request log ends here------------------");
+  }
+
   next();
 });
+
+
+// Router module
+const router = require("./routes");
 
 //add routing
 router(app);
 
 //listen to given port
-app.listen(process.env.PORT, () => {
+app.listen(process.env.APPLICATION_PORT, () => {
 
-  logger.info("Environment: " +
-    (process.env.NODE_ENV ? process.env.NODE_ENV : process.env.DEFAULT_NODE_ENV));
+  console.log("Environment : " + process.env.APPLICATION_ENV);
 
-  logger.info("Application is running on the port:" + process.env.PORT);
+  console.log("Application is running on the port : " + process.env.APPLICATION_PORT);
 
 });
 

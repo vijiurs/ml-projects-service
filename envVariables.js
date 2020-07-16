@@ -10,16 +10,12 @@ let table = require("cli-table");
 let tableData = new table();
 
 let enviromentVariables = {
-  "PORT" : {
-    "message" : "Required port no",
+  "APPLICATION_PORT" : {
+    "message" : "Please specify the value for e.g. 4201",
     "optional" : false
   },
-  "LOG" : {
-    "message" : "Required logger type",
-    "optional" : false
-  },
-  "NODE_ENV" : {
-    "message" : "Required node environment",
+  "APPLICATION_ENV" : {
+    "message" : "Please specify the value for e.g. local/development/qa/production",
     "optional" : false
   },
   "APPLICATION_BASE_URL" : {
@@ -109,7 +105,15 @@ let enviromentVariables = {
   "URL_PREFIX" : {
     "message" : "Required",
     "optional" : false
-  }
+  },
+  "ENABLE_CONSOLE_LOGGING" : {
+    "message" : "Please specify the value for e.g. ON/OFF",
+    "optional" : false
+  },
+  "ENABLE_FILE_LOGGING" : {
+    "message" : "Please specify the value for e.g. ON/OFF",
+    "optional" : false
+  },
 }
 
 let success = true;
@@ -152,7 +156,7 @@ module.exports = function() {
     tableData.push(tableObj);
   })
 
-  logger.info(tableData.toString());
+  LOGGER.info(tableData.toString());
 
   return {
     success : success

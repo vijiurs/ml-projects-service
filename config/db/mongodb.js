@@ -32,7 +32,7 @@ const DB = function(config) {
   
   db.on("error", console.error.bind(console, "connection error:"));
   db.once("open", function() {
-    logger.debug("Connected to DB");
+    LOGGER.debug("Connected to DB");
   });
 
   const createModel = function(opts) {

@@ -1,7 +1,7 @@
 module.exports = {
   async up(db) {
     global.migrationMsg = "Create index in project template tasks";
-    await db.collection('projectTemplateTasks').createIndex({ externalId : 1 });
+    await db.collection('projectTemplateTasks').createIndex({ externalId : 1 },{ unique: true });
     await db.collection('projectTemplateTasks').createIndex({ name : 1 });
     return;
   },

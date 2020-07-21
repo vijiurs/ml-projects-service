@@ -24,6 +24,18 @@ module.exports = class ProjectCategories extends Abstract {
         return "projectCategories";
     }
 
+     /**
+     * @apiDefine errorBody
+     * @apiError {String} status 4XX,5XX
+     * @apiError {String} message Error
+     */
+
+    /**
+     * @apiDefine successBody
+     *  @apiSuccess {String} status 200
+     * @apiSuccess {String} result Data
+     */
+
     /**
     * @api {get} /unnati/api/v1/project/categories/list List of projects categories.
     * @apiVersion 1.0.0

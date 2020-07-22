@@ -117,6 +117,14 @@ let enviromentVariables = {
   "KENDRA_APPLICATION_ENDPOINT" : {
     "message" : "Required",
     "optional" : false
+  },
+  "CLOUD_STORAGE" : {
+    "message" : "Required",
+    "optional" : false
+  },
+  "GCP_BUCKET_NAME" : {
+    "message" : "Required",
+    "optional" : false
   }
 }
 

@@ -114,6 +114,10 @@ let enviromentVariables = {
     "message" : "Please specify the value for e.g. ON/OFF",
     "optional" : false
   },
+  "KENDRA_APPLICATION_ENDPOINT" : {
+    "message" : "Required",
+    "optional" : false
+  }
 }
 
 let success = true;

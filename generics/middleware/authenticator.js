@@ -103,7 +103,7 @@ module.exports = async function (req, res, next) {
       rspObj.errCode = reqMsg.TOKEN.MISSING_CODE;
       rspObj.errMsg = reqMsg.TOKEN.MISSING_MESSAGE;
       rspObj.responseCode = responseCode.unauthorized;
-      return res.status(httpStatusCode["unauthorized"].status).send(respUtil(rspObj));
+      return res.status(HTTP_STATUS_CODE["unauthorized"].status).send(respUtil(rspObj));
     } else {
       next();
       return;
@@ -114,7 +114,7 @@ module.exports = async function (req, res, next) {
     rspObj.errCode = reqMsg.TOKEN.MISSING_CODE;
     rspObj.errMsg = reqMsg.TOKEN.MISSING_MESSAGE;
     rspObj.responseCode = responseCode.unauthorized;
-    return res.status(httpStatusCode["unauthorized"].status).send(respUtil(rspObj));
+    return res.status(HTTP_STATUS_CODE["unauthorized"].status).send(respUtil(rspObj));
   }
 
   apiInterceptor.validateToken(token, function (err, tokenData) {
@@ -128,7 +128,7 @@ module.exports = async function (req, res, next) {
         req,
         token, "TOKEN VERIFICATION WITH KEYCLOAK FAILED"
       );
-      return res.status(httpStatusCode["unauthorized"].status).send(respUtil(rspObj));
+      return res.status(HTTP_STATUS_CODE["unauthorized"].status).send(respUtil(rspObj));
     } else {
       req.rspObj.userId = tokenData.userId;
       req.rspObj.userToken = req.headers["x-authenticated-user-token"];
@@ -155,7 +155,7 @@ module.exports = async function (req, res, next) {
             rspObj.errCode = reqMsg.TOKEN.INVALID_CODE;
             rspObj.errMsg = reqMsg.TOKEN.INVALID_MESSAGE;
             rspObj.responseCode = responseCode.UNAUTHORIZED_ACCESS;
-            return res.status(httpStatusCode["unauthorized"].status).send(respUtil(rspObj));
+            return res.status(HTTP_STATUS_CODE["unauthorized"].status).send(respUtil(rspObj));
           }
         })
         .catch(error => {
@@ -165,7 +165,7 @@ module.exports = async function (req, res, next) {
             "TOKEN VERIFICATION - ERROR FETCHING USER DETAIL FROM Kendra SERVICE"
           );
 
-          return res.status(httpStatusCode["unauthorized"].status).send(error);
+          return res.status(HTTP_STATUS_CODE["unauthorized"].status).send(error);
         });
     }
   });

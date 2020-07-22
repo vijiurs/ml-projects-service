@@ -53,9 +53,9 @@ fs.existsSync(process.env.LOGGER_DIRECTORY) ||
 fs.mkdirSync(process.env.LOGGER_DIRECTORY);
 
 //API documentation (apidoc)
-if (process.env.NODE_ENV == "development" || process.env.NODE_ENV == "local") {
+if (process.env.APPLICATION_ENV == "development" || process.env.APPLICATION_ENV == "local") {
   app.use(express.static("apidoc"));
-  if (process.env.NODE_ENV == "local") {
+  if (process.env.APPLICATION_ENV == "local") {
     app.get(process.env.DEFAULT_APIDOC_URL, (req, res) => {
       let apidocPath =  process.env.APIDOC_PATH + "/index.html";
 

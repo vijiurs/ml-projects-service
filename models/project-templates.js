@@ -82,6 +82,11 @@ module.exports = {
         metaInformation : {
             type : Object,
             default : {}
-        }
+        },
+        parentTemplateId : "ObjectId",
+        solutionId : "ObjectId",
+        solutionExternalId : String,
+        programId : "ObjectId",
+        programExternalId : String
     }
 };

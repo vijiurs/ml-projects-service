@@ -82,16 +82,12 @@ module.exports = function (app) {
 
         } else {
           res.status(result.status ? result.status : HTTP_STATUS_CODE["ok"].status).json({
+            success : true,
             message: result.message,
             status: result.status ? result.status : HTTP_STATUS_CODE["ok"].status,
             result: result.data,
             result: result.result,
-            additionalDetails: result.additionalDetails,
-            pagination: result.pagination,
-            totalCount: result.totalCount,
-            total: result.total,
-            count: result.count,
-            failed: result.failed
+            total: result.total
           });
         }
 
@@ -110,7 +106,8 @@ module.exports = function (app) {
         res.status(error.status ? error.status : HTTP_STATUS_CODE.bad_request.status).json({
           status: error.status ? error.status : HTTP_STATUS_CODE.bad_request.status,
           message: error.message,
-          result : error.result
+          result : error.result,
+          success : false
         });
 
         if ( error.status !== HTTP_STATUS_CODE.bad_request.status ) {

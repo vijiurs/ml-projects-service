@@ -22,6 +22,8 @@ module.exports = function () {
   global.GENERIC_HELPERS_PATH = GENERICS_FILES_PATH + "/helpers";
   global._ = require("lodash");
   global.UTILS = require(GENERIC_HELPERS_PATH + "/utils");
+
+  global.CSV_FILE_STREAM = require(PROJECT_ROOT_DIRECTORY + "/generics/file-stream");
   require("./connections");
 
   global.ENABLE_CONSOLE_LOGGING = process.env.ENABLE_CONSOLE_LOGGING || "OFF";

@@ -40,10 +40,7 @@ module.exports = {
             type : Object,
             default : {}
         },
-        parentId : {
-            type : "ObjectId",
-            required : true
-        },
+        parentId : "ObjectId",
         projectTemplateId : {
             type : "ObjectId",
             required : true

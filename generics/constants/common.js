@@ -6,5 +6,11 @@
  */
 
 module.exports = {
-    ACTIVE_STATUS : "active"
+    "ACTIVE_STATUS" : "active",
+    "DRAFT_STATUS" : "draft",
+    "SUCCESS" : "Success",
+    "ASSESSMENT" : "assessment",
+    "CONTENT" : "content",
+    "IMPROVEMENT_PROJECT" : "improvementProject",
+    "MULTIPLE" : "multiple"
 };

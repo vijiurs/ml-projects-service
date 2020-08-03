@@ -87,6 +87,24 @@ module.exports = {
         solutionId : "ObjectId",
         solutionExternalId : String,
         programId : "ObjectId",
-        programExternalId : String
+        programExternalId : String,
+        averageRating : {
+            type : Number,
+            default : 0
+        },
+        noOfRatings : {
+            type : Number,
+            default : 0
+        },
+        ratings : {
+            type : Object,
+            default : {
+                1 : 0,
+                2 : 0,
+                3 : 0,
+                4 : 0,
+                5 : 0
+            }
+        }
     }
 };

@@ -145,6 +145,18 @@ function valueParser(dataToBeParsed) {
     return booleanValues;
   }
 
+   /**
+    * check whether id is mongodbId or not.
+    * @function
+    * @name isValidMongoId
+    * @param {String} id 
+    * @returns {Boolean} returns whether id is valid mongodb id or not.  
+  */
+
+  function isValidMongoId(id) {
+    return ObjectId.isValid(id) && new ObjectId(id).toString() === id;
+  }
+
   /**
   * Get epoch time from current date.
   * @function
@@ -166,5 +178,6 @@ module.exports = {
   valueParser : valueParser,
   convertStringToBoolean : convertStringToBoolean,
   getAllBooleanDataFromModels : getAllBooleanDataFromModels,
-  epochTime : epochTime
+  epochTime : epochTime,
+  isValidMongoId : isValidMongoId
 };

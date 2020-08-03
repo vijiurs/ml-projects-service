@@ -34,19 +34,20 @@ module.exports = class ProjectTemplates extends Abstract {
      */
 
     /**
-    * @api {get} /unnati/api/v1/project/templates/bulkCreate Bulk Create projects templates.
+    * @api {post} /improvement-project/api/v1/project/templates/bulkCreate Bulk Create projects templates.
     * @apiVersion 1.0.0
     * @apiName Bulk Create projects templates
     * @apiGroup Project Templates
     * @apiParam {File} projectTemplates Mandatory project templates file of type CSV.
-    * @apiSampleRequest /unnati/api/v1/project/templates/bulkCreate
+    * @apiSampleRequest /improvement-project/api/v1/project/templates/bulkCreate
     * @apiUse successBody
     * @apiUse errorBody
+    */
 
       /**
       * Bulk Create project templates
       * @method
-      * @name list
+      * @name bulkCreate
       * @returns {JSON} returns uploaded project templates.
      */
 
@@ -68,7 +69,7 @@ module.exports = class ProjectTemplates extends Abstract {
 
                 const projectTemplates = await projectTemplatesHelper.bulkCreate(
                     templatesData,
-                    req.userDetails.userId
+                    req.userDetails.userInformation.userId
                 );
 
                 return resolve(projectTemplates);
@@ -84,19 +85,20 @@ module.exports = class ProjectTemplates extends Abstract {
     }
 
     /**
-    * @api {get} /unnati/api/v1/project/templates/bulkUpdate Bulk Update projects templates.
+    * @api {post} /improvement-project/api/v1/project/templates/bulkUpdate Bulk Update projects templates.
     * @apiVersion 1.0.0
     * @apiName Bulk Update projects templates
     * @apiGroup Project Templates
     * @apiParam {File} projectTemplates Mandatory project templates file of type CSV.
-    * @apiSampleRequest /unnati/api/v1/project/templates/bulkUpdate
+    * @apiSampleRequest /improvement-project/api/v1/project/templates/bulkUpdate
     * @apiUse successBody
     * @apiUse errorBody
+    */
 
       /**
       * Bulk Update project templates
       * @method
-      * @name list
+      * @name bulkUpdate
       * @returns {JSON} returns uploaded project templates.
      */
 
@@ -108,7 +110,7 @@ module.exports = class ProjectTemplates extends Abstract {
                     return resolve(
                       {
                         status : HTTP_STATUS_CODE["bad_request"].status, 
-                        message : constants.apiResponses.PROJECT_TEMPLATES_CSV
+                        message : CONSTANTS.apiResponses.PROJECT_TEMPLATES_CSV
                       }
                     )
                 }
@@ -118,7 +120,7 @@ module.exports = class ProjectTemplates extends Abstract {
 
                 const projectTemplates = await projectTemplatesHelper.bulkUpdate(
                     templatesData,
-                    req.userDetails.userId
+                    req.userDetails.userInformation.userId
                 );
 
                 return resolve(projectTemplates);
@@ -134,11 +136,11 @@ module.exports = class ProjectTemplates extends Abstract {
     }
 
      /**
-    * @api {post} /unnati/api/v1/project/templates/importFromTemplates/:projectTemplateExternalId?solutionId=:solutionExternalId Import templates from existsing project templates.
+    * @api {post} /improvement-project/api/v1/project/templates/importFromTemplates/:projectTemplateExternalId Import templates from existsing project templates.
     * @apiVersion 1.0.0
     * @apiName Import templates from existsing project templates.
     * @apiGroup Project Templates
-    * @apiSampleRequest /unnati/api/v1/project/templates/importFromTemplates/template-1?solutionId=EF-DCPCR-2018-001
+    * @apiSampleRequest /improvement-project/api/v1/project/templates/importFromTemplates/template-1
     * @apiParamExample {json} Request: 
     * {
     * "externalId" : "template1"
@@ -154,11 +156,12 @@ module.exports = class ProjectTemplates extends Abstract {
     },
     "success": true
     }
+    */
 
       /**
       * Import templates from existsing project templates.
       * @method
-      * @name list
+      * @name importFromTemplates
       * @returns {JSON} returns imported project templates.
      */
 
@@ -169,7 +172,9 @@ module.exports = class ProjectTemplates extends Abstract {
                 const projectTemplates = 
                 await projectTemplatesHelper.importFromTemplates(
                     req.params._id,
-                    req.query.solutionId,
+                    req.userDetails.userInformation.userId,
+                    req.userDetails.userToken,
+                    req.query.solutionId ? req.query.solutionId : "",
                     req.body.data
                 );
 

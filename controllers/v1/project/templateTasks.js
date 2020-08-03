@@ -33,19 +33,20 @@ module.exports = class ProjectTemplateTasks extends Abstract {
      */
 
     /**
-    * @api {get} /unnati/api/v1/project/templateTasks/bulkCreate Bulk create project template tasks.
+    * @api {post} /improvement-project/api/v1/project/templateTasks/bulkCreate/:projectTemplateId Bulk create project template tasks.
     * @apiVersion 1.0.0
     * @apiName Bulk create projects templates
     * @apiGroup Project Template Tasks
     * @apiParam {File} projectTemplateTasks Mandatory project template tasks file of type CSV.
-    * @apiSampleRequest /unnati/api/v1/project/templateTasks/bulkCreate
+    * @apiSampleRequest /improvement-project/api/v1/project/templateTasks/bulkCreate/5f2adc57eb351a5a9c68f403
     * @apiUse successBody
     * @apiUse errorBody
+    */
 
       /**
       * Upload project template tasks
       * @method
-      * @name list
+      * @name bulkCreate
       * @returns {JSON} returns uploaded project templates.
      */
 
@@ -67,7 +68,8 @@ module.exports = class ProjectTemplateTasks extends Abstract {
                 const projectTemplateTasks = 
                 await projectTemplateTasksHelper.bulkCreate(
                     templateTasks,
-                    req.userDetails.userId
+                    req.params._id,
+                    req.userDetails.userInformation.userId
                 );
 
                 return resolve(projectTemplateTasks);
@@ -83,19 +85,20 @@ module.exports = class ProjectTemplateTasks extends Abstract {
     }
 
      /**
-    * @api {get} /unnati/api/v1/project/templateTasks/bulkUpdate Bulk update project template tasks.
+    * @api {post} /improvement-project/api/v1/project/templateTasks/bulkUpdate/:projectTemplateId Bulk update project template tasks.
     * @apiVersion 1.0.0
     * @apiName Bulk update projects templates tasks
     * @apiGroup Project Template Tasks
     * @apiParam {File} projectTemplateTasks Mandatory project template tasks file of type CSV.
-    * @apiSampleRequest /unnati/api/v1/project/templateTasks/bulkUpdate
+    * @apiSampleRequest /improvement-project/api/v1/project/templateTasks/bulkUpdate/5f2adc57eb351a5a9c68f403
     * @apiUse successBody
     * @apiUse errorBody
+    */
 
       /**
       * Upload project template tasks
       * @method
-      * @name list
+      * @name bulkUpdate
       * @returns {JSON} returns uploaded project templates.
      */
 
@@ -119,7 +122,8 @@ module.exports = class ProjectTemplateTasks extends Abstract {
                 const projectTemplateTasks = 
                 await projectTemplateTasksHelper.bulkUpdate(
                     templateTasks,
-                    req.userDetails.userId
+                    req.params._id,
+                    req.userDetails.userInformation.userId
                 );
 
                 return resolve(projectTemplateTasks);

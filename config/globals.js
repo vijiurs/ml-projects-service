@@ -136,10 +136,10 @@ module.exports = function () {
 
   global.SESSIONS = {};
 
-  const projectCategoriesHelper = require(MODULES_BASE_PATH+"/project/categories/helper");
+  const libraryCategoriesHelper = require(MODULES_BASE_PATH+"/library/categories/helper");
 
   (async () => {
-    await projectCategoriesHelper.set();
+    await libraryCategoriesHelper.set();
   })();
 
 };

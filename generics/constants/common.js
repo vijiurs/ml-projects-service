@@ -12,5 +12,10 @@ module.exports = {
     "ASSESSMENT" : "assessment",
     "CONTENT" : "content",
     "IMPROVEMENT_PROJECT" : "improvementProject",
-    "MULTIPLE" : "multiple"
+    "MULTIPLE" : "multiple",
+    "OTHERS" : "Others",
+    "SINGLE_TASK_TYPE" : "single",
+    "NOT_STARTED" : "not started",
+    "RECENTLY_ADDED_PROJECT" : "currentlyAdded",
+    "IMPORTANT_PROJECT" : "importantProject"
 };

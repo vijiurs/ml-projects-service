@@ -64,6 +64,10 @@ module.exports = {
         improvementProjectDetails : {
             type : Object,
             default : {}
+        },
+        visibleIf : {
+            type : Array,
+            default : []
         }
     }
 };

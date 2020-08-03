@@ -11,8 +11,10 @@
 */
 
 // Dependencies
-let projectTemplatesHelper = require(MODULES_BASE_PATH + "/project/templates/helper");
-let solutionsHelper = require(MODULES_BASE_PATH + "/solutions/helper");
+const projectTemplatesHelper = require(MODULES_BASE_PATH + "/project/templates/helper");
+const kendraService = require(GENERICS_FILES_PATH + "/services/kendra");
+
+
 module.exports = class ProjectTemplateTasksHelper {
 
     /**
@@ -66,16 +68,19 @@ module.exports = class ProjectTemplateTasksHelper {
      * Extract csv information.
      * @method
      * @name extractCsvInformation
-     * @param csvData - csv data.
+     * @param {Array} csvData - csv data.
+     * @param {String} projectTemplateId - project template id.
      * @returns {Array} Lists of tasks.
      */
     
-    static extractCsvInformation(csvData) {
+    static extractCsvInformation(
+        csvData,
+        projectTemplateId
+    ) {
         return new Promise(async (resolve, reject) => {
             try {
 
                 let taskIds = [];
-                let projectTemplateIds = [];
                 let solutionIds = [];
                 let systemId = false;
 
@@ -93,8 +98,6 @@ module.exports = class ProjectTemplateTasksHelper {
                     if ( parsedData.solutionId && parsedData.solutionId !== "" ) {
                         solutionIds.push(parsedData.solutionId);
                     }
-
-                    projectTemplateIds.push(parsedData.projectTemplateId);
                 });
 
                 let tasks = {};
@@ -115,7 +118,7 @@ module.exports = class ProjectTemplateTasksHelper {
 
                     let tasksData = await this.taskDocuments(
                         filterData,
-                        ["_id","children","externalId","projectTemplateId"]
+                        ["_id","children","externalId","projectTemplateId","parentId"]
                     );
 
                     if( tasksData.length > 0 ) {
@@ -129,38 +132,38 @@ module.exports = class ProjectTemplateTasksHelper {
                     }
                 }
 
-                let templateData = {};
+                let templateId = "";
 
-                let projectTemplates = 
+                let projectTemplate = 
                 await projectTemplatesHelper.templateDocument({
-                    _id : { $in : projectTemplateIds }
+                    _id : projectTemplateId
                 },["_id"]);
 
-                if ( projectTemplates.length > 0 ) {
-                    projectTemplates.forEach(projectTemplate=>{
-                        templateData[projectTemplate._id.toString()] = true;
-                    })
+                if ( projectTemplate.length > 0 ) {
+                    templateId = projectTemplate[0]._id;
+                } else {
+                    throw {
+                        message : CONSTANTS.apiResponses.PROJECT_TEMPLATE_NOT_FOUND
+                    }
                 }
 
                 let solutionData = {};
 
                 if ( solutionIds.length > 0 ) {
                     
-                    let solutions = await solutionsHelper.solutionDocuments({
+                    let solutions = 
+                    await kendraService.solutionDocuments({
                         _id : { $in : solutionIds }
-                    },["_id"]);
+                    },["externalId"]);
 
-                    if ( solutions.length > 0 ) {
-                        
-                        solutions.forEach(solution=>{
-                            solutionData[solution._id.toString()] = true;
-                        })
+                    if ( Object.keys(solutions.result).length > 0 ) {
+                        solutionData = solutions.result;
                     }
                 }
 
                 return resolve({
                     tasks : tasks,
-                    projectTemplates : templateData,
+                    templateId : templateId,
                     solutionData : solutionData
                 });
 
@@ -175,7 +178,7 @@ module.exports = class ProjectTemplateTasksHelper {
      * @method
      * @name createOrUpdateTask
      * @param {Object} data - task data.
-     * @param {Object} projectTemplates - Project templates data
+     * @param {String} templateId - template task id
      * @param {Object} solutionData - solution data
      * @param {String} [update = false]
      * @returns {Array} Create or update a task. 
@@ -183,7 +186,7 @@ module.exports = class ProjectTemplateTasksHelper {
     
     static createOrUpdateTask( 
         data,
-        projectTemplates,
+        templateId,
         solutionData,
         update = false
     ) {
@@ -220,7 +223,7 @@ module.exports = class ProjectTemplateTasksHelper {
                             CONSTANTS.apiResponses.SOLUTION_NOT_FOUND;
                         } else {
                             allValues.assessmentDetails.solutionId = 
-                            ObjectId(parsedData.solutionId);
+                            ObjectId(solutionData[parsedData.solutionId]);
                         }
 
                     } else {
@@ -263,12 +266,7 @@ module.exports = class ProjectTemplateTasksHelper {
                     allValues.children = [];
                 }
 
-                if( !projectTemplates[data.projectTemplateId.toString()] ) {
-                    parsedData.STATUS = 
-                    CONSTANTS.apiResponses.PROJECT_TEMPLATE_NOT_FOUND;
-                } else {
-                    allValues.projectTemplateId = ObjectId(data.projectTemplateId);
-                }
+                allValues.projectTemplateId = templateId;
 
                 let templateTaskSchema = schemas["project-template-tasks"].schema;
 
@@ -306,6 +304,7 @@ module.exports = class ProjectTemplateTasksHelper {
                         }
     
                     } else {
+                        
                         taskData = 
                         await database.models.projectTemplateTasks.findOneAndUpdate({
                             _id :  parsedData._SYSTEM_ID
@@ -327,23 +326,41 @@ module.exports = class ProjectTemplateTasksHelper {
                                 $addToSet : {
                                     children : taskData._id
                                 }  
-                            });
-                            
-                            await database.models.projectTemplateTasks.findOneAndUpdate({
-                                _id : taskData._id
                             },{
-                                $set : {
-                                    parentId : parentTask._id
-                                }
+                                returnOriginal : true
                             });
 
-                            if( update ) {
-                                parsedData.parentTaskSystemId = parentTask._id;
+                            if( parentTask._id ) {
+                                
+                                let visibleIf = [];
+                                
+                                let operator = 
+                                parsedData["parentTaskOperator"] === "EQUALS" ? 
+                                "===" : parsedData["parentQuestionOperator"];
+                                
+                                visibleIf.push({
+                                    operator : operator,
+                                    _id : parentTask._id,
+                                    value : parsedData.parentTaskValue
+                                });
+                                
+                                await database.models.projectTemplateTasks.findOneAndUpdate({
+                                    _id : taskData._id
+                                },{
+                                    $set : {
+                                        parentId : parentTask._id,
+                                        visibleIf : visibleIf
+                                    }
+                                });
+
+                                if( update ) {
+                                    parsedData._parentTaskId = parentTask._id;
+                                }
                             }
                         }
     
                         await database.models.projectTemplates.findOneAndUpdate({
-                            _id : parsedData.projectTemplateId
+                            _id : templateId
                         },{
                             $addToSet : { tasks : ObjectId(taskData._id) }
                         });
@@ -364,12 +381,13 @@ module.exports = class ProjectTemplateTasksHelper {
       * Bulk create project template tasks.
       * @method
       * @name bulkCreate
-      * @param tasks - csv tasks data.
-      * @param userId - logged in user id.
+      * @param {Array} tasks - csv tasks data.
+      * @param {String} projectTemplateId - project template id.
+      * @param {String} userId - user logged in id.
       * @returns {Object} Bulk create project template tasks.
      */
 
-    static bulkCreate(tasks,userId) {
+    static bulkCreate( tasks,projectTemplateId,userId ) {
         return new Promise(async (resolve, reject) => {
             try {
 
@@ -385,7 +403,11 @@ module.exports = class ProjectTemplateTasksHelper {
                     });
                 })();
 
-                let csvData = await this.extractCsvInformation(tasks);
+                let csvData = 
+                await this.extractCsvInformation(
+                    tasks,
+                    projectTemplateId
+                );
 
                 let pendingItems = [];
 
@@ -408,7 +430,7 @@ module.exports = class ProjectTemplateTasksHelper {
                             let createdTask = 
                             await this.createOrUpdateTask(
                                 currentData,
-                                csvData.projectTemplates,
+                                csvData.templateId,
                                 csvData.solutionData  
                             );
 
@@ -431,7 +453,7 @@ module.exports = class ProjectTemplateTasksHelper {
                             
                             let createdTask = await this.createOrUpdateTask(
                                 currentData,
-                                csvData.projectTemplates,
+                                csvData.templateId,
                                 csvData.solutionData
                             );
 
@@ -450,15 +472,16 @@ module.exports = class ProjectTemplateTasksHelper {
     }
 
      /**
-      * Bulk create project template tasks.
+      * Bulk update project template tasks.
       * @method
       * @name bulkUpdate
-      * @param tasks - csv tasks data.
-      * @param userId - logged in user id.
-      * @returns {Object} Bulk create project template tasks.
+      * @param {Array} tasks - csv tasks data.
+      * @param {String} projectTemplateId - project template id.
+      * @param {String} userId - user logged in id.
+      * @returns {Object} Bulk update project template tasks.
      */
 
-    static bulkUpdate(tasks,userId) {
+    static bulkUpdate( tasks,projectTemplateId,userId ) {
         return new Promise(async (resolve, reject) => {
             try {
 
@@ -474,17 +497,18 @@ module.exports = class ProjectTemplateTasksHelper {
                     });
                 })();
 
-                let csvData = await this.extractCsvInformation(tasks);
+                let csvData = 
+                await this.extractCsvInformation(
+                    tasks,
+                    projectTemplateId
+                );
 
                 let tasksData =  Object.values(csvData.tasks);
 
                 if ( csvData.tasks && tasksData.length > 0 ) {
 
                     tasksData.forEach(task=>{
-                        if ( 
-                            task.children && 
-                            task.children.length > 0 
-                        ) {
+                        if ( task.children && task.children.length > 0 ) {
                             task.children.forEach(children=>{
                                 if( csvData.tasks[children.toString()] ) {
                                     csvData.tasks[children.toString()].parentTaskId = task._id.toString();
@@ -513,44 +537,27 @@ module.exports = class ProjectTemplateTasksHelper {
                     
                     let createdTask = 
                     await this.createOrUpdateTask(
-                        currentData,
-                        csvData.projectTemplates,
+                        _.omit(currentData,["STATUS"]),
+                        csvData.templateId,
                         csvData.solutionData,
                         true  
                     );
 
                     if( 
-                        createdTask.parentTaskSystemId && 
-                        csvData.tasks[currentData._SYSTEM_ID].parentTaskId !== createdTask.parentTaskSystemId.toString()
+                        csvData.tasks[currentData._SYSTEM_ID].parentId && 
+                        csvData.tasks[currentData._SYSTEM_ID].parentId.toString() !== createdTask._parentTaskId.toString()
                     ) {
 
                         await database.models.projectTemplateTasks.findOneAndUpdate(
                             {
-                              _id: ObjectId(csvData.tasks[currentData._SYSTEM_ID].parentTaskId)
-                            },
+                              _id: csvData.tasks[currentData._SYSTEM_ID].parentId                            },
                             {
                               $pull: { children : ObjectId(currentData._SYSTEM_ID) }
                             }
                           );
 
-                          delete createdTask.parentTaskSystemId;
-
                     }
 
-                    if ( 
-                        csvData.tasks[currentData._SYSTEM_ID].projectTemplateId !== currentData.projectTemplateId 
-                    ) {
-
-                        await database.models.projectTemplates.findOneAndUpdate(
-                            {
-                              _id: ObjectId(csvData.tasks[currentData._SYSTEM_ID].projectTemplateId)
-                            },
-                            {
-                              $pull: { tasks : ObjectId(currentData._SYSTEM_ID) }
-                            }
-                          );
-
-                    }
                     input.push(createdTask);
                 }
 
@@ -560,6 +567,56 @@ module.exports = class ProjectTemplateTasksHelper {
                 return reject(error);
             }
         })
+    }
+
+    /**
+     * Tasks and sub tasks.
+     * @method
+     * @name tasksAndSubTasks
+     * @param {Array} templateId - Template id.
+     * @returns {Array} Tasks and sub task.
+     */
+    
+    static tasksAndSubTasks(templateId) {
+        return new Promise(async (resolve, reject) => {
+            try {
+
+                const templateDocument = 
+                await projectTemplatesHelper.templateDocument({
+                    _id : templateId
+                },["tasks"]);
+
+                let tasks = [];
+
+                if( templateDocument[0].tasks ) {
+                    
+                    tasks = await this.taskDocuments({
+                        _id : {
+                            $in : templateDocument[0].tasks
+                        }
+                    },"all",["projectTemplateId","__v"]);
+
+                    for( let task = 0 ; task < tasks.length ; task ++ ) {
+
+                        if( tasks[task].children && tasks[task].children.length > 0 ) {
+                            
+                            let subTasks = await this.taskDocuments({
+                                _id : {
+                                    $in : tasks[task].children
+                                }
+                            });
+                            
+                            tasks[task].children = subTasks;
+                        }
+                    }
+                }
+
+                return resolve(tasks);
+
+           } catch (error) {
+               return reject(error);
+           }
+       });
     }
 
 };

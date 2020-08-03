@@ -39,6 +39,10 @@ module.exports = {
         icon : {
             type : String,
             default : ""
+        },
+        projectsCount : {
+            type : Number,
+            default : 0
         }
     }
 };

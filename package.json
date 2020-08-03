@@ -40,6 +40,8 @@
     "fn-args": "^4.0.0",
     "form-urlencoded": "^4.1.3",
     "fs": "0.0.1-security",
+    "fs-extra": "^9.0.1",
+    "json2csv": "^5.0.1",
     "jwt-decode": "^2.2.0",
     "keycloak-auth-utils": "^3.3.0",
     "lodash": "^4.17.15",
@@ -54,7 +56,9 @@
     "path": "^0.12.7",
     "request": "^2.88.2",
     "require-all": "^3.0.0",
-    "xml-js": "^1.6.11"
+    "uuid": "^8.3.0",
+    "xml-js": "^1.6.11",
+    "kafka-node": "^4.1.3"
   },
   "devDependencies": {
     "grunt-apidoc": "^0.11.0",

@@ -8,6 +8,8 @@
 module.exports = {
     name: "projects",
     schema: {
+        name : String,
+        description : String,
         taskReport : {
             type : Object,
             default : {}
@@ -18,7 +20,7 @@ module.exports = {
         },
         userId : {
             type : String,
-            required : true
+            default : "SYSTEM"
         },
         createdFor : {
             type : Array,
@@ -34,7 +36,7 @@ module.exports = {
             type : Boolean,
             default : false
         },
-        category : {
+        categories : {
             type : Array,
             default : []
         },
@@ -42,44 +44,19 @@ module.exports = {
             type : String,
             default : "SYSTEM"
         },
-        startedAt : Date,
         tasks : {
             type : Array,
             default : []
-        },
-        entityId : {
-            type : "ObjectId",
-            required : true
-        },
-        entityExternalId : {
-            type : String,
-            required : true
         },
         entityInformation : {
             type : Object,
             default : {}
         },
-        solutionId : {
-            type : "ObjectId",
-            required : true
-        },
-        solutionExternalId : {
-            type : String,
-            required : true
-        },
-        entityTypeId : {
-            type : "ObjectId",
-            required : true
-        },
-        programId : {
-            type : "ObjectId",
-            required : true
-        },
-        programExternalId : {
-            type : String,
-            required : true
-        },
         programInformation : {
+            type : Object,
+            default : {}
+        },
+        solutionInformation : {
             type : Object,
             default : {}
         },
@@ -87,17 +64,17 @@ module.exports = {
             type : String,
             default : "SYSTEM"
         },
-        externalId : {
-            type : String,
-            required : true
+        projectTemplateId : "ObjectId",
+        projectTemplateExternalId : String,
+        startDate: Date,
+        endDate: Date,
+        rootOrganisations : {
+            type : [String],
+            default : []
         },
-        projectTemplateId : {
-            type : "ObjectId",
-            required : true
-        },
-        projectTemplateExternalId : {
-            type : String,
-            required : true
+        resources : {
+            type : Array,
+            default : []
         }
     }
 };

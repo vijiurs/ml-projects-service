@@ -12,14 +12,9 @@
 
 // Dependencies
 
-const projectCategoriesHelper = 
-require(MODULES_BASE_PATH + "/project/categories/helper");
-
-const userRolesHelper = require(MODULES_BASE_PATH + "/user-roles/helper");
-
-const entityTypesHelper = require(MODULES_BASE_PATH + "/entity-types/helper");
-
-const solutionsHelper = require(MODULES_BASE_PATH + "/solutions/helper");
+const libraryCategoriesHelper = require(MODULES_BASE_PATH + "/library/categories/helper");
+const kendraService = require(GENERICS_FILES_PATH + "/services/kendra");
+const kafkaProducersHelper = require(GENERICS_FILES_PATH + "/kafka/producers");
 
 module.exports = class ProjectTemplatesHelper {
 
@@ -74,7 +69,7 @@ module.exports = class ProjectTemplatesHelper {
       * Extract csv information.
       * @method
       * @name extractCsvInformation
-      * @method csvData {Object} - csv data.
+      * @param {Object} csvData - csv data.
       * @returns {Object} Extra csv information.
      */
 
@@ -120,15 +115,16 @@ module.exports = class ProjectTemplatesHelper {
                 if( categoryIds.length > 0 ) {
 
                     let categories = 
-                    await projectCategoriesHelper.categoryDocuments({
+                    await libraryCategoriesHelper.categoryDocuments({
                         externalId : { $in : categoryIds }
-                    },["externalId"]);
+                    },["externalId","name"]);
 
                     categoriesData = categories.reduce((ac,category)=> ({
                         ...ac,
                         [category.externalId] : {
                             _id : ObjectId(category._id),
-                            externalId : category.externalId
+                            externalId : category.externalId,
+                            name : category.name
                         }
                     }),{});
                 }
@@ -138,11 +134,17 @@ module.exports = class ProjectTemplatesHelper {
                 if( roleIds.length > 0 ) {
 
                     let userRolesData = 
-                    await userRolesHelper.rolesDocuments({
+                    await kendraService.rolesDocuments({
                         code : { $in : roleIds }
                     },["code"]);
 
-                    recommendedFor = userRolesData.reduce((ac,role)=> ({
+                    if( !userRolesData.result.length > 0 ) {
+                        throw {
+                            message : CONSTANTS.apiResponses.USER_ROLES_NOT_FOUND
+                        }
+                    }
+
+                    recommendedFor = userRolesData.result.reduce((ac,role)=> ({
                         ...ac,
                         [role.code] : {
                             roleId : ObjectId(role._id),
@@ -156,11 +158,17 @@ module.exports = class ProjectTemplatesHelper {
                 if( entityTypes.length > 0 ) {
                     
                     let entityTypesDocument = 
-                    await entityTypesHelper.entityTypesDocuments({
+                    await kendraService.entityTypesDocuments({
                         name : { $in : entityTypes }
-                    });
+                    },["name"]);
 
-                    entityTypesData = entityTypesDocument.reduce((ac,entityType)=> ({
+                    if( !entityTypesDocument.result.length > 0 ) {
+                        throw {
+                            message : CONSTANTS.apiResponses.ENTITY_TYPES_NOT_FOUND
+                        }
+                    }
+
+                    entityTypesData = entityTypesDocument.result.reduce((ac,entityType)=> ({
                         ...ac,
                         [entityType.name] : {
                             _id : ObjectId(entityType._id),
@@ -186,8 +194,8 @@ module.exports = class ProjectTemplatesHelper {
       * Template data.
       * @method
       * @name templateData
-      * @method data {Object} - csv data.
-      * @method csvInformation {Object} - csv information.
+      * @param {Object} data  - csv data.
+      * @param {Object} csvInformation - csv information.
       * @returns {Object} Template data.
      */
 
@@ -195,12 +203,21 @@ module.exports = class ProjectTemplatesHelper {
         return new Promise(async (resolve, reject) => {
             try {
 
-                let templatesDataModel = Object.keys(schemas["project-templates"].schema);
+                let templatesDataModel = 
+                Object.keys(schemas["project-templates"].schema);
                 let parsedData = UTILS.valueParser(data);
                 delete parsedData._arrayFields;
 
                 let categories = [];
+
                 if( parsedData.categories && parsedData.categories.length > 0 ) {
+
+                    await database.models.projectCategories.updateMany({
+                        externalId : { $in : parsedData.categories }
+                    },{
+                        $inc : { projectsCount : 1 }
+                    });
+
                     parsedData.categories.forEach(category=>{
                         if( csvInformation.categories[category] ) {
                             return categories.push(
@@ -212,18 +229,6 @@ module.exports = class ProjectTemplatesHelper {
 
                 parsedData.categories = categories;
 
-                let tasks = [];
-
-                if( parsedData.tasks && parsedData.tasks.length > 0 ) {
-                    
-                    parsedData.tasks.forEach(task=>{
-                        if( csvInformation.tasks[task] ) {
-                            tasks.push(csvInformation.tasks[task]);
-                        }
-                    });
-                }
-
-                parsedData.tasks = tasks;
                 let recommendedFor = [];
                 
                 if( parsedData.recommendedFor && parsedData.recommendedFor.length > 0 ) {
@@ -251,30 +256,50 @@ module.exports = class ProjectTemplatesHelper {
 
                 parsedData.resources = [];
 
-                for ( let resourceCount = 1 ; resourceCount < 20 ; resourceCount++ ) {
+                for ( 
+                    let resourceCount = 1 ; 
+                    resourceCount < 20 ; 
+                    resourceCount++ 
+                ) {
                     
-                    let resource = "resources" + resourceCount;
-                    
-                    if( parsedData[resource] ) {
-                        let resourceData = parsedData[resource].split(",");
-                        
-                        parsedData.resources.push({
-                            name : resourceData[0],
-                            link : resourceData[1],
-                            app : resourceData[2]
-                        });
+                    let resource = "resources" + resourceCount + "-";
+                    let resourceName = resource + "name";
+                    let resourceLink = resource + "link";
+                    let resourceApp = resource + "app";
 
-                        delete parsedData[resource];
+                    let resources = {};
+                    
+                    if( parsedData[resourceName] !== undefined ) {
+                        resources["name"] = parsedData[resourceName];
+                        delete parsedData[resourceName];
+                    }
+    
+                    if( parsedData[resourceLink] !== undefined ) {
+                        resources["link"] = parsedData[resourceLink];
+                        delete parsedData[resourceLink];
+                    }
+                    
+                    if( parsedData[resourceApp] !== undefined ) {
+                        resources["app"] = parsedData[resourceApp];
+                        delete parsedData[resourceApp];
                     }
 
+                    if( Object.keys(resources).length > 0 ) {
+                        parsedData.resources.push(resources);
+                    }
+                    
                 }
 
                 parsedData.metaInformation = {};
-                let booleanData = UTILS.getAllBooleanDataFromModels(schemas["project-templates"].schema);
+                let booleanData = 
+                UTILS.getAllBooleanDataFromModels(
+                    schemas["project-templates"].schema
+                );
 
                 Object.keys(parsedData).forEach(eachParsedData=>{
                     if( !templatesDataModel.includes(eachParsedData) ) {
-                        parsedData.metaInformation[eachParsedData] = parsedData[eachParsedData];
+                        parsedData.metaInformation[eachParsedData] = 
+                        parsedData[eachParsedData];
                         delete parsedData[eachParsedData];
                     } else {
                         if( booleanData.includes(eachParsedData) ) {
@@ -298,9 +323,9 @@ module.exports = class ProjectTemplatesHelper {
       * Bulk created project templates.
       * @method
       * @name bulkCreate - bulk create project templates.
-      * @param templates - csv templates data.
-      * @param userId - logged in user id.
-      * @returns {Object} Project templates.
+      * @param {Array} templates - csv templates data.
+      * @param {String} userId - logged in user id.
+      * @returns {Object} Bulk create project templates.
      */
 
     static bulkCreate(templates,userId) {
@@ -332,7 +357,8 @@ module.exports = class ProjectTemplatesHelper {
                     },["_id"]);
 
                     if( templateData.length > 0 && templateData[0]._id ) {
-                        currentData["_SYSTEM_ID"] = CONSTANTS.apiResponses.PROJECT_TEMPLATE_EXISTS;
+                        currentData["_SYSTEM_ID"] = 
+                        CONSTANTS.apiResponses.PROJECT_TEMPLATE_EXISTS;
                     } else {
 
                         let templateData = await this.templateData(
@@ -353,18 +379,32 @@ module.exports = class ProjectTemplatesHelper {
                         if( !createdTemplate._id ) {
                             currentData["_SYSTEM_ID"] = CONSTANTS.apiResponses.PROJECT_TEMPLATE_NOT_FOUND;
                         } else {
-
+                            
                             currentData["_SYSTEM_ID"] = createdTemplate._id;
 
-                            if( createdTemplate.tasks && createdTemplate.tasks.length > 0 ) {
-                                await database.models.projectTemplateTasks.updateMany({
-                                    _id : { 
-                                        $in : createdTemplate.tasks 
-                                    }},{ 
-                                        $set : { projectTemplateId : createdTemplate._id} 
-                                    }
-                                );
+                            const kafkaMessage = 
+                            await kafkaProducersHelper.pushProjectToKafka({
+                                internal: false,
+                                text: 
+                                templateData.categories.length === 1 ?  
+                                `A new project has been added under ${templateData.categories[0].name} category in Unnati library.` : 
+                                `A new project has been added in Unnati library`,
+                                type: "information",
+                                action: "mapping",
+                                payload: {
+                                    project_id: createdTemplate._id
+                                },
+                                is_read : false,
+                                internal : false,
+                                title: "New project Available!",
+                                created_at: new Date(),
+                                type: process.env.IMPROVEMENT_PROJECT_APPLICATION_APP_TYPE
+                            });
+
+                            if (kafkaMessage.status !== CONSTANTS.common.SUCCESS) {
+                                currentData["_SYSTEM_ID"] = CONSTANTS.apiResponses.COULD_NOT_PUSHED_TO_KAFKA;
                             }
+
                         }
 
                     }
@@ -385,8 +425,8 @@ module.exports = class ProjectTemplatesHelper {
       * Bulk update project templates.
       * @method
       * @name bulkUpdate - bulk update project templates.
-      * @param templates - csv templates data.
-      * @param userId - logged in user id.
+      * @param {Array} templates - csv templates data.
+      * @param {String} userId - logged in user id.
       * @returns {Object} Bulk Update Project templates.
      */
 
@@ -410,30 +450,30 @@ module.exports = class ProjectTemplatesHelper {
 
                 for ( let template = 0; template < templates.length ; template ++ ) {
 
-                    let currentData = templates[template];
+                    const currentData = templates[template];
 
                     if ( !currentData._SYSTEM_ID ) {
                         currentData["UPDATE_STATUS"] = CONSTANTS.apiResponses.MISSING_PROJECT_TEMPLATE_ID;
                     } else {
 
-                        let templateData = 
+                        const template = 
                         await this.templateDocument({
                             _id : currentData._SYSTEM_ID
-                        },["_id"]);
+                        },["_id","categories"]);
 
-                        if ( !(templateData.length > 0 && templateData[0]._id) ) {
-                            currentData["UPDATE_STATUS"] = constants.apiResponses.PROJECT_TEMPLATE_NOT_FOUND;
+                        if ( !(template.length > 0 && template[0]._id) ) {
+                            currentData["UPDATE_STATUS"] = 
+                            constants.apiResponses.PROJECT_TEMPLATE_NOT_FOUND;
                         } else {
                                 
                             let templateData = await this.templateData(
-                                currentData,
+                                _.omit(currentData,["_SYSTEM_ID"]),
                                 csvInformation,
                                 userId
                             );
 
                             templateData.updatedBy = userId;
 
-                            let updatedTemplate = 
                             await database.models.projectTemplates.findOneAndUpdate({
                                 _id : currentData._SYSTEM_ID
                             },{
@@ -442,22 +482,24 @@ module.exports = class ProjectTemplatesHelper {
                                     new : true
                             });
 
-                            currentData["UPDATE_STATUS"] = CONSTANTS.common.SUCCESS;
-
                             if( 
-                                updatedTemplate.tasks && 
-                                updatedTemplate.tasks.length > 0 
+                                template[0].categories && 
+                                template[0].categories.length > 0 
                             ) {
                                 
-                                await database.models.projectTemplateTasks.updateMany({
-                                    _id : { 
-                                        $in : updatedTemplate.tasks 
-                                    }},{ 
-                                        $set : { projectTemplateId : updatedTemplate._id} 
-                                    }
-                                );
+                                const categories = 
+                                template[0].categories.map(category=>{
+                                    return category._id;    
+                                });
+
+                                await database.models.projectCategories.updateMany({
+                                    _id : { $in : categories }
+                                },{
+                                    $inc : { projectsCount : -1 }
+                                });
                             }
 
+                            currentData["UPDATE_STATUS"] = CONSTANTS.common.SUCCESS;
                         }
 
                     }
@@ -479,12 +521,14 @@ module.exports = class ProjectTemplatesHelper {
       * @method
       * @name importFromTemplates - import templates from existing project templates.
       * @param {String} templateId - project template id.
+      * @param {String} userId - logged in user id.
+      * @param {String} userToken - logged in user token.
       * @param {String} solutionId - solution id.
       * @param {Object} updateData - template update data.
       * @returns {Object} imported templates data.
      */
 
-    static importFromTemplates( templateId,solutionId,updateData = {} ) {
+    static importFromTemplates( templateId,userId,userToken,solutionId,updateData = {} ) {
         return new Promise(async (resolve, reject) => {
             try {
 
@@ -499,43 +543,47 @@ module.exports = class ProjectTemplatesHelper {
                         message : CONSTANTS.apiResponses.PROJECT_TEMPLATE_NOT_FOUND
                     }
                 }
-
-                let solutionData = 
-                await solutionsHelper.solutionDocuments({
-                    externalId : solutionId
-                },["_id","externalId","programId","programExternalId"]);
-
-                if( !solutionData.length > 0 ) {
-                    throw {
-                        message : CONSTANTS.apiResponses.SOLUTION_NOT_FOUND
-                    }
-                }
-
-                let newProjectTemplates = {...projectTemplateData[0]};
-                newProjectTemplates.externalId = 
+                
+                let newProjectTemplate = {...projectTemplateData[0]};
+                newProjectTemplate.externalId = 
                 projectTemplateData[0].externalId +"-"+ UTILS.epochTime();
+                newProjectTemplate.createdBy = newProjectTemplate.updatedBy = userId;
 
-                newProjectTemplates.solutionId = solutionData[0]._id;
-                newProjectTemplates.solutionExternalId = solutionData[0].externalId;
-                newProjectTemplates.programId = solutionData[0].programId;
-                newProjectTemplates.programExternalId = solutionData[0].programExternalId;
-                newProjectTemplates.parentTemplateId = projectTemplateData[0]._id;
+                if( solutionId !== "" ) {
+                    
+                    let solutionData = 
+                    await kendraService.solutionDocuments({
+                        externalId : solutionId
+                    },["_id","externalId","programId","programExternalId"]);
+    
+                    if( !solutionData.result.length > 0 ) {
+                        throw {
+                            message : CONSTANTS.apiResponses.SOLUTION_NOT_FOUND
+                        }
+                    }
+
+                    newProjectTemplate.solutionId = solutionData.result[0]._id;
+                    newProjectTemplate.solutionExternalId = solutionData.result[0].externalId;
+                    newProjectTemplate.programId = solutionData.result[0].programId;
+                    newProjectTemplate.programExternalId = solutionData.result[0].programExternalId;
+                } 
+
+                newProjectTemplate.parentTemplateId = projectTemplateData[0]._id;
 
                 let updationKeys = Object.keys(updateData);
 
                 if( updationKeys.length > 0 ) {
 
                     updationKeys.forEach(singleKey=>{
-                        if( newProjectTemplates[singleKey] ) {
-                            newProjectTemplates[singleKey] = updateData[singleKey];
+                        if( newProjectTemplate[singleKey] ) {
+                            newProjectTemplate[singleKey] = updateData[singleKey];
                         }
                     })
-
                 }
 
                 let duplicateTemplateDocument = 
                 await database.models.projectTemplates.create(
-                  _.omit(newProjectTemplates, ["_id"])
+                  _.omit(newProjectTemplate, ["_id"])
                 );
 
                 if ( !duplicateTemplateDocument._id ) {
@@ -543,6 +591,12 @@ module.exports = class ProjectTemplatesHelper {
                         message : CONSTANTS.apiResponses.PROJECT_TEMPLATES_NOT_CREATED
                     }
                 }
+
+                await this.ratings(
+                    projectTemplateData[0]._id,
+                    updateData.rating,
+                    userToken
+                );
 
                 return resolve({
                     message : CONSTANTS.apiResponses.DUPLICATE_PROJECT_TEMPLATES_CREATED,
@@ -556,6 +610,135 @@ module.exports = class ProjectTemplatesHelper {
         })
     }
 
+     /**
+      * Create ratings.
+      * @method
+      * @name ratings
+      * @param {String} templateId - project template id.
+      * @param {String} rating - rating for template.
+      * @returns {Object} rating object.
+     */
+
+    static ratings( templateId,rating,userToken ) {
+        return new Promise(async (resolve, reject) => {
+            try {
+                
+                let userProfileData = await kendraService.getProfile(userToken);
+
+                let templateData = 
+                await this.templateDocument({
+                    _id : templateId,
+                    isReusable : true
+                },[
+                    "averageRating",
+                    "noOfRatings",
+                    "ratings"
+                ]);
+
+                let updateRating = {
+                    ratings : {...templateData[0].ratings}
+                };
+
+                updateRating.ratings[rating] += 1;
+
+                let userCurrentRating = 0;
+                let projectIndex = -1;
+
+                if( 
+                    userProfileData.result.ratings && 
+                    userProfileData.result.ratings.length > 0 
+                ) {
+
+                    projectIndex = 
+                    userProfileData.result.ratings.findIndex(
+                        project => project._id.toString() === templateId.toString() 
+                    );
+
+                    if( !(projectIndex < 0) ) {
+                        userCurrentRating = userProfileData.result.ratings[projectIndex].rating;
+                        updateRating.ratings[userCurrentRating] -= 1;
+                    }
+                } else {
+                    userProfileData.result.ratings = [];
+                }
+
+                let ratingUpdated = {};
+
+                if( userCurrentRating === rating ) {
+
+                    ratingUpdated = templateData[0];
+
+                } else {
+
+                    let calculateRating = _calculateRating(updateRating.ratings);
+                    updateRating.averageRating = calculateRating.averageRating;
+                    updateRating.noOfRatings = calculateRating.noOfRatings;
+    
+                    ratingUpdated = 
+                    await database.models.projectTemplates.findOneAndUpdate({
+                        _id : templateId
+                    },{
+                        $set : updateRating
+                    }, {
+                        new : true
+                    });
+
+                    let improvementProjects = [...userProfileData.result.ratings];
+                    if( projectIndex >= 0 ) {
+                        improvementProjects[projectIndex].rating = rating;
+                    } else {
+                        improvementProjects.push({
+                            _id : ObjectId(templateId),
+                            externalId : ratingUpdated.externalId,
+                            rating : rating,
+                            type : CONSTANTS.common.IMPROVEMENT_PROJECT
+                        });
+                    }
+
+                    await kendraService.updateUserProfile(
+                        userToken,
+                        {   
+                            "ratings" : improvementProjects
+                        }
+                    );
+                }
+
+                return resolve(
+                    _.pick(
+                        ratingUpdated,
+                        ["averageRating","noOfRatings","ratings"]
+                    )
+                );
+
+            } catch (error) {
+                return reject(error);
+            }
+        })
+    }
+
 };
+
+/**
+ * Calculate average rating and no of ratings.
+ * @method
+ * @name _calculateRating
+ * @param {Object} ratings - Ratings data.
+ * @returns {Object} rating object.
+*/
+
+function _calculateRating(ratings) {
+    let sum = 0;
+    let noOfRatings = 0;
+
+    Object.keys(ratings).forEach(rating => {
+        sum += rating * ratings[rating];
+        noOfRatings += ratings[rating];
+    });
+
+    return {
+        averageRating : (sum/noOfRatings).toFixed(2),
+        noOfRatings : noOfRatings
+    } 
+}
 
 

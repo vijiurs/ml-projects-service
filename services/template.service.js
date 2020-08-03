@@ -37,7 +37,7 @@ module.exports = api;
 function getTemplates(req) {
     return new Promise(async function (resolve, reject) {
         try {
-            let templateInfo = await templateModel.find({   creationType :{ $ne : config.createdSelf } });
+            let templateInfo = await templateModel.find({ creationType :{ $ne : config.createdSelf } }).sort({ createdAt:-1 });
             let array = [];
             let data = {};
             if (templateInfo.length > 0) {

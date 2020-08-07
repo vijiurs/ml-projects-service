@@ -67,8 +67,6 @@ function authenticate(req,res,next){
 
     authServe.validateToken(req,res)
     .then(function (result) {
-        // res.send(result);
-        // console.log("result",result);
         if(result.status=="success"){
 
             console.log("authnticated successfully");
@@ -76,7 +74,11 @@ function authenticate(req,res,next){
             req.body.userId = result.userId;
             next();
         }else{
-            res.send({ status:"failed",message:result.message })
+            res.status(401);
+            res.send({ 
+                status: result.status,
+                message: result.message
+            })
         }
 
         

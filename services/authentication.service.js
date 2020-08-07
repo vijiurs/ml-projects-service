@@ -69,7 +69,7 @@ function validateToken(req, res) {
 
                         // console.log("err",err);
                         // console.log("tokenData",tokenData);
-                        resolve({ status: "failed", message: err });
+                        resolve({ status: "ERR_TOKEN_INVALID", message: "Access denied" });
                     }
                 });
             } else {

@@ -112,18 +112,25 @@ async function createImpTemplates(req) {
                     await Promise.all(taskList.map(async (indTask) => {
                         var subTasks = indTask.subTasks.split(';');
                         var subTasksArray = [];
-                        await Promise.all(subTasks.map(async (element) => {
-                            let subTaskInfo = {
-                                title: element
-                            }
-                            subTasksArray.push(subTaskInfo);
-                        }))
 
-                        var taskInfo = {
-                            title: indTask.TaskTitle,
-                            subTasks: subTasksArray
+                        if (subTasks && subTasks.length > 0) {
+                            await Promise.all(subTasks.map(async (element) => {
+                                if (element && element != "") {
+                                    let subTaskInfo = {
+                                        title: element
+                                    }
+                                    subTasksArray.push(subTaskInfo);
+                                }
+                            }))
                         }
-                        tasks.push(taskInfo);
+
+                        if(indTask.TaskTitle && indTask.TaskTitle != ""){
+                            var taskInfo = {
+                                title: indTask.TaskTitle,
+                                subTasks: subTasksArray
+                            }
+                            tasks.push(taskInfo);
+                        }
                     }));
 
 

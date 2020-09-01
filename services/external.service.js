@@ -113,6 +113,7 @@ async function createImpTemplates(req) {
                         var subTasks = indTask.subTasks.split(';');
                         var subTasksArray = [];
 
+
                         if (subTasks && subTasks.length > 0) {
                             await Promise.all(subTasks.map(async (element) => {
                                 if (element && element != "") {
@@ -125,9 +126,29 @@ async function createImpTemplates(req) {
                         }
 
                         if(indTask.TaskTitle && indTask.TaskTitle != ""){
+
+                            let resource_name_field = "Resource-name";
+                            let resource_link_field = "Resource-link"
+        
+                            let resources = [];
+        
+                            let lastResourceCount = 2;
+                            for (let i = 1; i < lastResourceCount; i++) {
+                                if (indTask[resource_name_field + i]) {
+        
+                                    resources.push({
+                                        name: indTask[resource_name_field + i],
+                                        link: indTask[resource_link_field + i]
+                                    });
+                                    lastResourceCount = lastResourceCount + 1
+                                }
+                            }
+
+                            console.log("resources",resources);
                             var taskInfo = {
                                 title: indTask.TaskTitle,
-                                subTasks: subTasksArray
+                                subTasks: subTasksArray,
+                                resources: resources
                             }
                             tasks.push(taskInfo);
                         }
@@ -626,7 +647,8 @@ function mapUsersToSolution(req) {
                                                 "subTasks": el.subTasks,
                                                 "programId": solDoc.programId,
                                                 "userId": userId,
-                                                "createdAt": moment().format()
+                                                "createdAt": moment().format(),
+                                                "resources":el.resources
                                             });
                                             projectTaskSchema.save(function (err, taskDoc) {
                                                 if (err) {

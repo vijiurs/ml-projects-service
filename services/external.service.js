@@ -144,7 +144,6 @@ async function createImpTemplates(req) {
                                 }
                             }
 
-                            console.log("resources",resources);
                             var taskInfo = {
                                 title: indTask.TaskTitle,
                                 subTasks: subTasksArray,

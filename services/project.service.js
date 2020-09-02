@@ -463,7 +463,8 @@ async function syncProject(req) {
                                         "file": element.file ? element.file : {},
                                         "remarks": element.remarks ? element.remarks : "",
                                         "assigneeName": element.assigneeName ? element.assigneeName : "",
-                                        "attachments": element.attachments ? element.attachments : []
+                                        "attachments": element.attachments ? element.attachments : [],
+                                        "resources":element.resources ? element.resources : []
                                     });
 
                                     let fileData = [];

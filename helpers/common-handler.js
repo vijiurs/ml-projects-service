@@ -561,7 +561,8 @@ function projectCreateAndSolutionMapping(obj) {
                                 "programId": solDoc.programId,
                                 "userId": userId,
                                 "createdAt": moment().format(),
-                                "assigneeName":el.assigneeName ? el.assigneeName : ""
+                                "assigneeName":el.assigneeName ? el.assigneeName : "",
+                                "resources":el.resources ? el.resources : []
                             };
 
                             if(el.attachments){

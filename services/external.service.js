@@ -624,7 +624,7 @@ function mapUsersToSolution(req) {
                                            
                                             let subTasksArray = [];
                                             el.subTasks.map(subTasks => {
-                                                subTasks['status'] = "not yet started";
+                                                subTasks['status'] = "Not started";
                                                 subTasksArray.push(subTasks)
                                             });
                                             var projectTaskSchema = new taskModel({
@@ -632,7 +632,7 @@ function mapUsersToSolution(req) {
                                                 "title": el.title,
                                                 // "startDate": element.start_date,
                                                 // "endDate": element.end_date,
-                                                "status": "not yet started",
+                                                "status": "Not started",
                                                 "assignedTo": [],
                                                 "lastSync": moment().format(),
                                                 "subTasks": subTasksArray,

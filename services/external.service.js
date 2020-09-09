@@ -621,20 +621,12 @@ function mapUsersToSolution(req) {
                                         var subTasksArray = [];
                                         // console.log(" docInfo.sIPRefActivityList",docInfo.sIPRefActivityList);
                                         docInfo.tasks.forEach(el => {
-                                            // subTasksArray.push(el)
-                                            // element.sub_tasks.forEach(subTasks => {
-
-                                            //     let json = {
-                                            //         "title": subTasks.title,
-                                            //         "startDate": subTasks.start_date,
-                                            //         "endDate": subTasks.end_date,
-                                            //         "status": subTasks.status,
-                                            //         "lastSync": Date.now(),
-                                            //         "assignTo": subTasks.assign_to
-                                            //     }
-                                            //     // console.log(json)
-                                            //     subTasksArray.push(json);
-                                            // });
+                                           
+                                            let subTasksArray = [];
+                                            el.subTasks.map(subTasks => {
+                                                subTasks['status'] = "not yet started";
+                                                subTasksArray.push(subTasks)
+                                            });
                                             var projectTaskSchema = new taskModel({
                                                 "projectId": projectDoc._id,
                                                 "title": el.title,
@@ -643,7 +635,7 @@ function mapUsersToSolution(req) {
                                                 "status": "not yet started",
                                                 "assignedTo": [],
                                                 "lastSync": moment().format(),
-                                                "subTasks": el.subTasks,
+                                                "subTasks": subTasksArray,
                                                 "programId": solDoc.programId,
                                                 "userId": userId,
                                                 "createdAt": moment().format(),

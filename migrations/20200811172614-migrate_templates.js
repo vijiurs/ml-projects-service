@@ -4,8 +4,7 @@ var totalTasks = 0;
 module.exports = {
   async up(db) {
     global.migrationMsg = "Improvement Project Migration"
-    // return await db.collection('albums').updateOne({artist: 'The Beatles'}, {$set: {blacklisted: true}});
-
+   
     let impTemplates = await db.collection('impTemplates').find({}).toArray();
     let templates = [];
     if (impTemplates) {
@@ -15,7 +14,6 @@ module.exports = {
         };
 
     }
-    console.log("totalTasks",totalTasks);
     let temp = await db.collection('projectTemplateNew').insertMany(templates);
 
     
@@ -61,17 +59,10 @@ module.exports = {
         isDeleted: false, // true, false 
         primaryAudience: doc.primaryAudience, // Do we require this ? or can we use recommended for ? ex : headmaster, teachers etc.
         rationale: doc.rationale, // Do we require this ?
-        recommendedFor: [
-          // {
-          //     "roleId" : ObjectId("5d6e521066a9a45df3aa8921"),
-          //     "code" : "DEO"
-          // }
-        ], // old - string
+        recommendedFor: [],
         risks: doc.risks, // Do we require this ?
         protocols: doc.protocols, // Do we require this ?
         tasks: taskIds,
-        // it holds the tasks details
-        // Do we require this ? originalAuthor:OriginalAuthor , 
         createdAt: moment().format('y-m-d:h:i:s'),
         updatedAt: moment().format('y-m-d:h:i:s'), // new field
         createdBy: "SYSTEM",
@@ -127,16 +118,12 @@ module.exports = {
     let taskIds = [];
     async function taskSchema(task, children) {
       let projectTask = {
-        // "projectId": task.templateId, // Reference to project ID, to be an index
         "name": task.title, //  Old - title , title of the task
-        // "description" : task., //  New field
         "createdAt": moment().format('y-m-d:h:i:s'),
         "updatedAt": moment().format('y-m-d:h:i:s'),
         "createdBy": "SYSTEM",
         "updatedBy": "SYSTEM", // new field
         "isDeleted": false
-       
-        // "parentId" : ObjectId("5d84aaf861149a7ad6c8434t") // If it is a child task
       }
       if(children && children.length > 0){
         projectTask["children"] = children;
@@ -148,6 +135,5 @@ module.exports = {
   },
 
   async down(db) {
-    // return await db.collection('albums').updateOne({artist: 'The Beatles'}, {$set: {blacklisted: false}});
   }
 };

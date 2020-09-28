@@ -32,6 +32,7 @@ var projectModel = mongoose.model('userProjects',new mongoose.Schema({
 	"isStarted":Boolean,
 	"startDate":{ type:Date, default:dateFormat },
 	"endDate":{ type:Date, default:dateFormat },
-	"resources": Array
+	"resources": Array,
+	"appReferenceKey":String
 },{collection: 'userProjects'} ) );
 module.exports = projectModel;

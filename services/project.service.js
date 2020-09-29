@@ -22,6 +22,8 @@ var httpRequest = require('../helpers/http-request');
 var cloudStorage = require('../helpers/cloud-storage');
 var impTemplatesModel = require('../models/impTemplates');
 
+var ObjectId = require('mongoose').Types.ObjectId;
+
 
 
 /**
@@ -639,33 +641,30 @@ async function syncProject(req) {
                                     let taskDataUpdate = await taskModel.findOneAndUpdate({ '_id': element._id }, taskData, { new: true });
                                 }
                             }));
-                        } else {
-
-                            // winston.error("error project not found at Sync  userId:" + req.body.userId + " project" + JSON.stringify(projectDocument));
-                            // let failed = {
-                            //     message: "project not found",
-                            //     status: "failed",
-                            //     projectDocument: projectDocument
-                            // }
-                            // failedToSync.push(failed);
-                        }
+                        } 
                     } else if (projectDocument && projectDocument.createdType && projectDocument.createdType == config.createdFromReferance && projectDocument.isNew == true) {
                      
+                      
                         // new data
                         let appReferanceKeyFoundInDb = false;
                         if(projectDocument.appReferenceKey){
 
                            let projectDataFound = await projectsModel.findOne({ 'appReferenceKey': projectDocument.appReferenceKey });
+                           
                            if(projectDataFound){
                               appReferanceKeyFoundInDb = true;
                               let updateResponse = await updateProjectByAppReferenceKey(projectDocument);
                            }
                         
                         } 
-                        
-                       if(appReferanceKeyFoundInDb==false){
 
-                        let templateDoc = await impTemplatesModel.findOne({ "_id":projectDocument.templateId });
+                       if(appReferanceKeyFoundInDb==false){
+                      
+                        let templateDoc ="";
+                        if(ObjectId.isValid(projectDocument.templateId.toString()) == true ){
+                            templateDoc = await impTemplatesModel.findOne({ "_id":projectDocument.templateId });  
+                        }   
+                        
                         if(!templateDoc) {
 
                             req.createdBy = req.body.userId;
@@ -686,48 +685,52 @@ async function syncProject(req) {
                                 }
     
                             }
-                        }
+                        } else{
 
-
-                        async function updateProjectWithReferanceTemplate() {
-                            req.createdBy = req.body.userId;
-                            req.templateId = projectDocument.templateId;
-
-                            // req.createdType = projectDocument.createdType ?  projectDocument.createdType : "";
-                            // req.isStarted = projectDocument.isStarted ?  projectDocument.isStarted : "";
-
-
-
-                            if (projectDocument.templateId) {
-                                let projectMap =
-                                    await commonHandler.updateProjectFromTemplateReferance(projectDocument, req.body.userId, token);
-                                // console.log("projectMap", projectMap);
-                                if (projectMap.status && projectMap.status == "failed") {
-                                    winston.error("error at Sync  userId:" + req.body.userId + " project" + JSON.stringify(projectMap));
-
-
+                            async function updateProjectWithReferanceTemplate() {
+                                req.createdBy = req.body.userId;
+                                req.templateId = projectDocument.templateId;
+    
+                                // req.createdType = projectDocument.createdType ?  projectDocument.createdType : "";
+                                // req.isStarted = projectDocument.isStarted ?  projectDocument.isStarted : "";
+    
+    
+    
+                                if (projectDocument.templateId) {
+                                    let projectMap =
+                                        await commonHandler.updateProjectFromTemplateReferance(projectDocument, req.body.userId, token);
+                                    // console.log("projectMap", projectMap);
+                                    if (projectMap.status && projectMap.status == "failed") {
+                                        winston.error("error at Sync  userId:" + req.body.userId + " project" + JSON.stringify(projectMap));
+    
+    
+                                        let failed = {
+                                            message: projectMap.message ? projectMap.message : "",
+                                            projectDocument: projectDocument
+                                        }
+                                        failedToSync.push(failed);
+                                    } else {
+                                        if (projectMap.response && projectMap.response.projectData && projectMap.response.projectData._id && projectDocument.share) {
+                                            shareDocs = projectMap.response.projectData._id;
+                                            console.log("shareDocs", shareDocs);
+                                        }
+                                    }
+                                } else {
+                                    winston.error("templateId not found at Sync  userId:" + req.body.userId + " project" + JSON.stringify(projectMap));
+    
                                     let failed = {
-                                        message: projectMap.message ? projectMap.message : "",
+                                        message: "templateId not found",
                                         projectDocument: projectDocument
                                     }
                                     failedToSync.push(failed);
-                                } else {
-                                    if (projectMap.response && projectMap.response.projectData && projectMap.response.projectData._id && projectDocument.share) {
-                                        shareDocs = projectMap.response.projectData._id;
-                                        console.log("shareDocs", shareDocs);
-                                    }
                                 }
-                            } else {
-                                winston.error("templateId not found at Sync  userId:" + req.body.userId + " project" + JSON.stringify(projectMap));
-
-                                let failed = {
-                                    message: "templateId not found",
-                                    projectDocument: projectDocument
-                                }
-                                failedToSync.push(failed);
                             }
+                            await updateProjectWithReferanceTemplate()
+
                         }
-                        await updateProjectWithReferanceTemplate()
+
+
+                       
 
                       }
                     }
@@ -739,23 +742,14 @@ async function syncProject(req) {
                         if(projectDocument.appReferenceKey){
 
                            let projectDataFound = await projectsModel.findOne({ 'appReferenceKey': projectDocument.appReferenceKey });
-                         
-                           console.log(projectDocument.appReferenceKey,"----------------projectDataFound",projectDataFound);
                            if(projectDataFound){
                               appReferanceKeyFoundInDb = true;
                               let updateResponse = await updateProjectByAppReferenceKey(projectDocument);
                            }
-
-                        
                         } 
                         
-                        console.log(projectDocument.appReferenceKey,"appReferanceKeyFoundInDb",appReferanceKeyFoundInDb);
-
-                        // return;
 
                        if(appReferanceKeyFoundInDb==false){
-
-                        
                         // create template for project if only createdType is by self
                         req.createdBy = req.body.userId;
 
@@ -764,7 +758,6 @@ async function syncProject(req) {
 
                         let response = await commonHandler.createTemplateAndPrject(projectDocument, req.body.userId, token);
 
-                        console.log("after template");
                         if (response.status && response.status != "success") {
                             winston.error("templateId not found at Sync  userId:" + req.body.userId + " project" + JSON.stringify(response));
 
@@ -775,10 +768,8 @@ async function syncProject(req) {
                             }
                             failedToSync.push(failed);
                         } else {
-                            console.log("response.response.projectData", response.response.projectData);
                             if (response.response && response.response.projectData && response.response.projectData._id && projectDocument.share) {
                                 shareDocs = response.response.projectData._id;
-                                console.log("shareDocs", shareDocs);
                             }
 
                         }
@@ -795,6 +786,8 @@ async function syncProject(req) {
                         console.log("No nned to  Updated the project isEdited :false", projectDocument._id);
 
                     } else {
+
+                        console.log("---------------------------------not ---");
 
                         winston.error("error at Sync  userId:" + req.body.userId + " project" + JSON.stringify(projectDocument));
                         failedToSync.push(projectDocument);

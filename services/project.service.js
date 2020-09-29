@@ -64,6 +64,7 @@ api.syncLocalDataOnUpgradeOfApp = syncLocalDataOnUpgradeOfApp;
 api.getProjectPdfWithSyc = getProjectPdfWithSyc;
 api.getFileUploadUrl = getFileUploadUrl;
 api.getDownloadableUrls = getDownloadableUrls;
+api.forceAppUpdateCheck = forceAppUpdateCheck;
 module.exports = api;
 
 /**
@@ -2278,3 +2279,64 @@ function getDownloadableUrls(inputData, token) {
     });
 
 }
+
+/**
+ * To check force update
+ * @name forceAppUpdateCheck
+ * @param {*} req 
+ *  api is to app version checking
+ */
+async function forceAppUpdateCheck(req) {
+    return new Promise(async (resolve, reject) => {
+        try {
+
+            let compatibleVersion = config.compatibleVersion;
+            if(req.headers.appversion){
+                
+                let versionComp = isNewerVersion(compatibleVersion,req.headers.appversion)
+                let isVersionValid = versionComp;
+                if(compatibleVersion === req.headers.appversion){
+                    isVersionValid = versionComp;
+                }
+
+                return resolve({
+                    status: "success",
+                    result:{
+                        isVersionValid:isVersionValid
+                    },
+                    message: (isVersionValid==false) ? "Please update the application":"Application is in compatible version"
+                })
+            } else{
+
+                return resolve({
+                    status: "failed",
+                    result:{
+                        isVersionValid:false
+                    },
+                    message:"Please update the application"
+                })
+
+            }
+        }catch (err) {
+            return reject({ status:"failed" ,message:err});
+        }
+    });
+}
+
+/**
+ * To check app version is newer or not
+ * @name isNewerVersion
+ * @param {*} req 
+ *  function returns boolean
+ */
+function isNewerVersion (oldVer, newVer) {
+    const oldParts = oldVer.split('.')
+    const newParts = newVer.split('.')
+    for (var i = 0; i < newParts.length; i++) {
+      const a = parseInt(newParts[i]) || 0
+      const b = parseInt(oldParts[i]) || 0
+      if (a > b) return true
+      if (a < b) return false
+    }
+    return false
+  }

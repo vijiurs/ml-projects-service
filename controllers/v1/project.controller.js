@@ -33,6 +33,7 @@ router.post('/projects/syncLocalDataOnUpgradeOfApp',syncLocalDataOnUpgradeOfApp)
 router.post('/projects/getProjectPdfWithSyc',getProjectPdfWithSyc);
 
 router.post('/projects/getFileUploadUrl',getFileUploadUrl);
+router.get('/forceAppUpdateCheck',forceAppUpdateCheck);
 
 
 module.exports = router;
@@ -193,6 +194,19 @@ function getFileUploadUrl(req,res){
         winston.error("erorr while get getPresignedUrls ",e);
         res.send(e);
       });
+}
+
+
+
+function forceAppUpdateCheck(req, res) {
+
+    projectServe.forceAppUpdateCheck(req, res)
+      .then(function (result) {
+        res.send(result);
+      }).catch(e => {
+        res.send(result);
+      });
+  
 }
 
 

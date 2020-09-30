@@ -329,8 +329,7 @@ function mapSolutionsToProgram(body) {
 
         // console.log("=============",body.isStarted);
         if (requestBody.programId && requestBody.impTemplateId) {
-            console.log("-----",requestBody.programId)
-            let programsDoc = await programsModel.findOne({ '_id': mongoose.Types.ObjectId(requestBody.programId) });
+             let programsDoc = await programsModel.findOne({ '_id': mongoose.Types.ObjectId(requestBody.programId) });
             if (programsDoc) {
                 let templateData = "";
                 if (requestBody.templateData) {
@@ -356,7 +355,6 @@ function mapSolutionsToProgram(body) {
                     templateData['appReferenceKey'] = body.endDate;
                 }
 
-                console.log("templateData--------------------",templateData);
                 if (templateData) {
                     var solutionSchema = new solutionsModel({
 

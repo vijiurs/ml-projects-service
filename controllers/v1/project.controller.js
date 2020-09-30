@@ -204,7 +204,7 @@ function forceAppUpdateCheck(req, res) {
       .then(function (result) {
         res.send(result);
       }).catch(e => {
-        res.send(result);
+        res.send(e);
       });
   
 }

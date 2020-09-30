@@ -669,7 +669,7 @@ async function syncProject(req) {
                         if(!templateDoc) {
 
                             req.createdBy = req.body.userId;
-                            req.createdType = projectDocument.createdType ? projectDocument.createdType : "";
+                            req.createdType = config.createdSelf;
                             req.isStarted = projectDocument.isStarted ? projectDocument.isStarted : "";
                             let response = await commonHandler.createTemplateAndPrject(projectDocument, req.body.userId, token);
     
@@ -787,8 +787,6 @@ async function syncProject(req) {
                         console.log("No nned to  Updated the project isEdited :false", projectDocument._id);
 
                     } else {
-
-                        console.log("---------------------------------not ---");
 
                         winston.error("error at Sync  userId:" + req.body.userId + " project" + JSON.stringify(projectDocument));
                         failedToSync.push(projectDocument);
@@ -2311,7 +2309,7 @@ async function forceAppUpdateCheck(req) {
                                 "action": "versionUpdate",
                                 "appName": "unnati",
                                 "created_at":moment().format(),
-                                "text": (isVersionValid==false) ? "Please update the application":"Application is in compatible version",
+                                "text": config.forceUpdateMessage,
                                 "title": "New update available!!",
                                 "type": "Information",
                                 "payload": {

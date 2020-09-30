@@ -2300,25 +2300,45 @@ async function forceAppUpdateCheck(req) {
                 }
 
                 return resolve({
-                    status: "success",
+                    status: 200,
                     result:{
-                        isVersionValid:isVersionValid
+                        isVersionValid:isVersionValid,
+                        "count": 0,
+                        "data":
+                            {
+                                "is_read": false,
+                                "internal": true,
+                                "action": "versionUpdate",
+                                "appName": "unnati",
+                                "created_at":moment().format(),
+                                "text": (isVersionValid==false) ? "Please update the application":"Application is in compatible version",
+                                "title": "New update available!!",
+                                "type": "Information",
+                                "payload": {
+                                    "appVersion": compatibleVersion,
+                                    "updateType": "minor",
+                                    "type": "appUpdate",
+                                    "releaseNotes": "new feature added",
+                                    "os": "android"
+                                },
+                                "appType": "unnati"
+                            }
                     },
-                    message: (isVersionValid==false) ? "Please update the application":"Application is in compatible version"
+                    message: "Unread Notification"
                 })
             } else{
 
                 return resolve({
-                    status: "failed",
+                    status: 400,
                     result:{
                         isVersionValid:false
                     },
-                    message:"Please update the application"
+                    message:"app version not found in header"
                 })
 
             }
         }catch (err) {
-            return reject({ status:"failed" ,message:err});
+            return reject({ status:500 ,message:err});
         }
     });
 }

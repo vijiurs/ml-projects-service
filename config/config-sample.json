@@ -47,5 +47,7 @@
     "MIGRATION_DIR":"",
     "gcp":{
         "bucketName":""
-    }
+    },
+    "compatibleVersion":"2.1.7",
+    "forceAppUpdateMessage":"Please update the app"
 }

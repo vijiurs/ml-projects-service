@@ -2309,7 +2309,7 @@ async function forceAppUpdateCheck(req) {
                                 "action": "versionUpdate",
                                 "appName": "unnati",
                                 "created_at":moment().format(),
-                                "text": config.forceUpdateMessage,
+                                "text": config.forceAppUpdateMessage,
                                 "title": "New update available!!",
                                 "type": "Information",
                                 "payload": {

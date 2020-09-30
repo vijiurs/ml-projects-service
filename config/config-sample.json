@@ -48,5 +48,6 @@
     "gcp":{
         "bucketName":""
     },
-    "compatibleVersion":"2.1.7"
+    "compatibleVersion":"2.1.7",
+    "forceAppUpdateMessage":"Please update the app"
 }

@@ -2294,7 +2294,7 @@ async function forceAppUpdateCheck(req) {
                 let versionComp = isNewerVersion(compatibleVersion,req.headers.appversion)
                 let isVersionValid = versionComp;
                 if(compatibleVersion === req.headers.appversion){
-                    isVersionValid = versionComp;
+                    isVersionValid = true;
                 }
 
                 return resolve({

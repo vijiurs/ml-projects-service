@@ -418,6 +418,9 @@ async function updateProjectByAppReferenceKey(projectDocument) {
                 'appReferenceKey': projectDocument.appReferenceKey
 
             };
+            if(projectDocument.lastUpdate){
+                syncData['lastUpdate'] = projectDocument.lastUpdate;
+            }
 
            
 
@@ -499,8 +502,11 @@ async function syncProject(req) {
             let token = req.headers['x-auth-token'];
             let shareDocs;
             let failedToSync = [];
+
             if (req.body && req.body.projects) {
+
                 await Promise.all(req.body.projects.map(async function (projectDocument) {
+
                     var syncData = {
                         // "id": "String",
                         "title": projectDocument.title,
@@ -520,11 +526,14 @@ async function syncProject(req) {
                         "startDate": projectDocument.startDate ? projectDocument.startDate : "",
                         'endDate': projectDocument.endDate ? projectDocument.endDate : "",
                         'createdType': projectDocument.createdType ? projectDocument.createdType : "",
-                        'isStarted': projectDocument.isStarted ? projectDocument.isStarted : false
+                        'isStarted': projectDocument.isStarted ? projectDocument.isStarted : false,
                     };
 
                     if( projectDocument.appReferenceKey){
                         syncData['appReferenceKey'] = projectDocument.appReferenceKey;
+                    }
+                    if(projectDocument.lastUpdate){
+                        syncData['lastUpdate'] = projectDocument.lastUpdate;
                     }
                     
                     // console.log("projectDocument._id",projectDocument._id);

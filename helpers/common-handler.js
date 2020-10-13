@@ -329,7 +329,7 @@ function mapSolutionsToProgram(body) {
 
         // console.log("=============",body.isStarted);
         if (requestBody.programId && requestBody.impTemplateId) {
-            let programsDoc = await programsModel.findOne({ '_id': mongoose.Types.ObjectId(requestBody.programId) });
+             let programsDoc = await programsModel.findOne({ '_id': mongoose.Types.ObjectId(requestBody.programId) });
             if (programsDoc) {
                 let templateData = "";
                 if (requestBody.templateData) {
@@ -350,6 +350,12 @@ function mapSolutionsToProgram(body) {
                 }
                 if (body.endDate) {
                     templateData['endDate'] = body.endDate;
+                }
+                if (body.appReferenceKey) {
+                    templateData['appReferenceKey'] = body.appReferenceKey;
+                }
+                if (body.lastUpdate) {
+                    templateData['lastUpdate'] = body.lastUpdate;
                 }
 
                 if (templateData) {
@@ -498,6 +504,13 @@ function projectCreateAndSolutionMapping(obj) {
                     docInfo.isStarted = obj.isStarted;
                 }
 
+                if (obj.appReferenceKey) {
+                    docInfo.appReferenceKey = obj.appReferenceKey;
+                }
+                if (obj.lastUpdate) {
+                    docInfo.lastUpdate = obj.lastUpdate;
+                }
+
                 console.log("-----------docInfo-------------",docInfo);
                 if (doc) {
                     var splidata = docInfo.difficultyLevel;
@@ -536,6 +549,13 @@ function projectCreateAndSolutionMapping(obj) {
                         "isStarted": docInfo.isStarted ? docInfo.isStarted : false,
                         "startDate": docInfo.startDate ? docInfo.startDate : "",
                         "endDate": docInfo.endDate ? docInfo.endDate : ""
+                    }
+
+                    if(docInfo.appReferenceKey){
+                        projectData['appReferenceKey'] = docInfo.appReferenceKey;
+                    }
+                    if(docInfo.lastUpdate){
+                        projectData['lastUpdate'] = docInfo.lastUpdate;
                     }
                     var projectIDs = [];
                     let projectDoc = await projectsModel.create(projectData);
@@ -656,14 +676,14 @@ function createTemplateAndPrject(projectDocument, userId,token) {
                     createdType: projectDocument.createdType ? projectDocument.createdType : "",
                     startDate: projectDocument.startDate ? projectDocument.startDate : "",
                     endDate: projectDocument.endDate ? projectDocument.endDate : "",
-                    templateData: data
+                    templateData: data,
+                    appReferenceKey:projectDocument.appReferenceKey ? projectDocument.appReferenceKey : "",
+                    lastUpdate:projectDocument.lastUpdate ? projectDocument.lastUpdate : ""
                 }
 
-                // console.log("obj",obj)
                 let response = await mapSolutionsToProgram(obj);
 
-                console.log("response",response);
-
+               
                 if (response && response.solutionDetails._id) {
                     let json = {
                         programId: config.myProjectMapingProgramId,
@@ -672,7 +692,9 @@ function createTemplateAndPrject(projectDocument, userId,token) {
                         isStarted: projectDocument.isStarted ? projectDocument.isStarted : false,
                         createdType: projectDocument.createdType ? projectDocument.createdType : "",
                         solutionDetails: response.solutionDetails,
-                        token:token
+                        token:token,
+                        appReferenceKey:projectDocument.appReferenceKey ? projectDocument.appReferenceKey : "",
+                        lastUpdate:projectDocument.lastUpdate ? projectDocument.lastUpdate : ""
                     }
                     let projectInfo = await projectCreateAndSolutionMapping(json);
 
@@ -719,7 +741,10 @@ function updateProjectFromTemplateReferance(projectDocument, userId,token) {
                     solutionId: response.solutionDetails._id,
                     customBody: projectDocument,
                     solutionDetails: response.solutionDetails,
-                    token:token
+                    token:token,
+                    appReferenceKey:projectDocument.appReferenceKey?projectDocument.appReferenceKey:"",
+                    lastUpdate:projectDocument.lastUpdate ? projectDocument.lastUpdate:"",
+    
                 }
                 if (projectDocument.createdType) {
                     json.customBody.createdType = projectDocument.createdType;

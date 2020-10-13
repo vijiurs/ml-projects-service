@@ -86,11 +86,16 @@ function authenticate(req,res,next){
 
 }
 
-app.use('/unnati/api/v1/',authenticate,projectV1);
-app.use('/unnati/api/external/',authenticate,external);
-app.use('/unnati/api/v1/reports/',authenticate,reports);
-app.use('/unnati/api/v1/template/',authenticate,template);
-app.use('/unnati/api/v1/user-profile/',authenticate,userProfile);
+let app_base_path = "unnati";
+if(config.app_base_path){
+    app_base_path = config.app_base_path;
+}
+
+app.use('/'+app_base_path+'/api/v1/',authenticate,projectV1);
+app.use('/'+app_base_path+'/api/external/',authenticate,external);
+app.use('/'+app_base_path+'/api/v1/reports/',authenticate,reports);
+app.use('/'+app_base_path+'/api/v1/template/',authenticate,template);
+app.use('/'+app_base_path+'/api/v1/user-profile/',authenticate,userProfile);
 
 var httpServer = http.createServer( app);
 httpServer.listen(port, function () {

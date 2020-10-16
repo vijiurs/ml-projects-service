@@ -317,7 +317,7 @@ function createImprovementTemplate(obj) {
         }
         var dat = await impTemplatesModel.create(impTemplatesData);
 
-        resolve(dat);
+        resolve(dat.toObject());
 
     })
 

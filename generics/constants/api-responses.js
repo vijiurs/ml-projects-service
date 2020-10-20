@@ -50,5 +50,10 @@ module.exports = {
     "PROGRAM_NOT_FOUND" : "No program found",
     "COULD_NOT_PUSHED_TO_KAFKA" : "Could not pushed to kafka",
     "PROJECT_ALREADY_SYNED" : "Project is already synced for current user",
-    "SOLUTION_PROGRAMS_NOT_CREATED" : "Could not create solution and program"
+    "SOLUTION_PROGRAMS_NOT_CREATED" : "Could not create solution and program",
+    "CREATED_USER_PROJECT" : "Created user project successfully",
+    "USER_PROJECT_NOT_FOUND" : "Could not found user project",
+    "USER_PROJECT_UPDATED" : "Updated user project successfully",
+    "USER_PROJECT_NOT_UPDATED" : "Could not updated user project",
+    "PROJECT_DETAILS_FETCHED" : "Successfully fetched project details"
 };

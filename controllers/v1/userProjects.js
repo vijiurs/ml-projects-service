@@ -1,8 +1,8 @@
 /**
- * name : projects.js
+ * name : userProjects.js
  * author : Aman
  * created-date : 20-July-2020
- * Description : Projects categories related information.
+ * Description : User Projects related information.
  */
 
 // Dependencies
@@ -10,21 +10,13 @@ const csv = require('csvtojson');
 const userProjectsHelper = require(MODULES_BASE_PATH + "/userProjects/helper");
 
  /**
-    * Projects
+    * UserProjects
     * @class
 */
 
-module.exports = class Projects extends Abstract {
-    
-    constructor() {
-        super("projects");
-    }
+module.exports = class UserProjects extends Abstract {
 
-    static get name() {
-        return "projects";
-    }
-
-     /**
+    /**
      * @apiDefine errorBody
      * @apiError {String} status 4XX,5XX
      * @apiError {String} message Error
@@ -35,15 +27,21 @@ module.exports = class Projects extends Abstract {
      *  @apiSuccess {String} status 200
      * @apiSuccess {String} result Data
      */
+    
+    constructor() {
+        super("projects");
+    }
+
+    static get name() {
+        return "projects";
+    }
 
     /**
-    * @api {get} /improvement-project/api/v1/userProjects/list List of projects.
+    * @api {get} /improvement-project/api/v1/userProjects/list 
+    * List of projects.
     * @apiVersion 1.0.0
-    * @apiName List of projects
     * @apiGroup User Projects
     * @apiSampleRequest /improvement-project/api/v1/userProjects/list
-    * @apiUse successBody
-    * @apiUse errorBody
     * @apiParamExample {json} Response:
     * {
     "success": true,
@@ -122,7 +120,9 @@ module.exports = class Projects extends Abstract {
             "duration": "1 weeak"
         }
     ]
-} 
+    } 
+    * @apiUse successBody
+    * @apiUse errorBody
     */
 
       /**
@@ -154,19 +154,17 @@ module.exports = class Projects extends Abstract {
     }
 
       /**
-    * @api {get} /improvement-project/api/v1/userProjects/metaForm Projects form.
+    * @api {get} /improvement-project/api/v1/userProjects/metaForm 
+    * Projects metaForm.
     * @apiVersion 1.0.0
-    * @apiName Projects metaForm
     * @apiGroup User Projects
     * @apiSampleRequest /improvement-project/api/v1/userProjects/metaForm
-    * @apiUse successBody
-    * @apiUse errorBody
     * @apiParamExample {json} Response:
     * {
     * "success": true,
     * "message": "Successfully fetched projects form",
-    "status": 200,
-    "result": [
+    * "status": 200,
+    * "result": [
         {
             "field": "title",
             "label": "Title",
@@ -206,7 +204,9 @@ module.exports = class Projects extends Abstract {
             "validation": {
                 "required": false
             }
-        }]} 
+        }]}
+        * @apiUse successBody
+        * @apiUse errorBody 
     */
 
       /**
@@ -236,13 +236,11 @@ module.exports = class Projects extends Abstract {
     }
 
       /**
-    * @api {get} /improvement-project/api/v1/userProjects/tasksMetaForm Projects form.
+    * @api {get} /improvement-project/api/v1/userProjects/tasksMetaForm 
+    * Projects task meta form.
     * @apiVersion 1.0.0
-    * @apiName Projects tasks meta form
     * @apiGroup User Projects
     * @apiSampleRequest /improvement-project/api/v1/userProjects/tasksMetaForm
-    * @apiUse successBody
-    * @apiUse errorBody
     * @apiParamExample {json} Response:
     * {
     "message": "Successfully fetched projects tasks metaform",
@@ -272,6 +270,8 @@ module.exports = class Projects extends Abstract {
         }
     ]
     }
+    * @apiUse successBody
+    * @apiUse errorBody
     */
 
       /**
@@ -299,115 +299,11 @@ module.exports = class Projects extends Abstract {
         })
     }
 
-      /**
-    * @api {post} /improvement-project/api/v1/userProjects/sync/:projectId?lastSync=:lastSyncDate Sync project.
-    * @apiVersion 1.0.0
-    * @apiName Sync project.
-    * @apiGroup User Projects
-    * @apiSampleRequest /improvement-project/api/v1/userProjects/sync
-    * @apiParamExample {json} Request-Body:
-    * {
-    "title" : "Project 1",
-    "description" : "Project 1 description",
-    "tasks" : [
-        {
-            "name" : "Task 1",
-            "description" : "Task 1 description"
-        }
-    ],
-    "programId" : "",
-    "programName" : "New Project Program",
-    "entities" : ["5beaa888af0065f0e0a10515"],
-    "categories" : [
-        "teachers",
-        "others"
-    ],
-    "_id" : "5f44c40a5266e72b0b4a5cf0"
-    }
-    * @apiUse successBody
-    * @apiUse errorBody
-    * @apiParamExample {json} Response:
-    * {
-    "message": "Project created successfully",
-    "status": 200,
-    "result": {
-        "createdFor": [],
-        "isDeleted": false,
-        "categories": [],
-        "createdBy": "01c04166-a65e-4e92-a87b-a9e4194e771d",
-        "tasks": [
-            {
-                "name": "Task 1",
-                "description": "Task 1 description",
-                "externalId": "task 1",
-                "type": "single"
-            }
-        ],
-        "updatedBy": "01c04166-a65e-4e92-a87b-a9e4194e771d",
-        "_id": "5f43d23e09611b1b3ab38146",
-        "deleted": false,
-        "userId": "01c04166-a65e-4e92-a87b-a9e4194e771d",
-        "entityInformation": {
-            "externalId": "9999999999",
-            "name": "Apple School"
-        },
-        "solutionInformation": {
-            "externalId": "Project 1-1598280254937",
-            "name": "Project 1"
-        },
-        "programInformation": {
-            "externalId": "New Project Program-1598280254937",
-            "name": "New Project Program"
-        },
-        "status": "started",
-        "taskReport": {},
-        "updatedAt": "2020-08-24T14:44:14.975Z",
-        "createdAt": "2020-08-24T14:44:14.975Z",
-        "__v": 0,
-        "title": "Project 1",
-        "description": "Project 1 description"
-    }
-    }
-    */
-
-    /**
-      * Create Self projects.
-      * @method
-      * @name sync
-      * @param {Object} req - request data.
-      * @param {String} req.params._id - Project id.
-      * @returns {JSON} Create Self projects.
-     */
-
-    async sync(req) {
-        return new Promise(async (resolve, reject) => {
-            try {
-
-                const createdProject = await userProjectsHelper.sync(
-                    req.body,
-                    req.userDetails.userInformation.userId,
-                    req.userDetails.userToken,
-                    req.params._id,
-                    req.query.lastSync
-                );
-
-                return resolve(createdProject);
-
-            } catch (error) {
-                return reject({
-                    status: error.status || HTTP_STATUS_CODE.internal_server_error.status,
-                    message: error.message || HTTP_STATUS_CODE.internal_server_error.message,
-                    errorObject: error
-                });
-            }
-        })
-    }
-
      /**
-    * @api {post} /improvement-project/api/v1/userProjects/bulkCreate Bulk create user projects.
+    * @api {post} /improvement-project/api/v1/userProjects/bulkCreate 
+    * Bulk create user projects.
     * @apiVersion 1.0.0
-    * @apiName Bulk create user projects.
-    * @apiGroup Projects
+    * @apiGroup User Projects
     * @apiParam {File} projects Mandatory project file of type CSV.
     * @apiSampleRequest /improvement-project/api/v1/userProjects/bulkCreate
     * @apiUse successBody
@@ -458,18 +354,18 @@ module.exports = class Projects extends Abstract {
     }
 
      /**
-    * @api {post} /improvement-project/api/v1/userProjects/importFromLibrary/:projectTemplateId Import project from library.
+    * @api {post} /improvement-project/api/v1/userProjects/importFromLibrary/:projectTemplateId 
+    * Import project from library.
     * @apiVersion 1.0.0
-    * @apiName Import project from library.
     * @apiGroup User Projects
     * @apiSampleRequest /improvement-project/api/v1/userProjects/importFromLibrary/5f5b32cef16777642d51aaf0
-    * @apiParamExample {json} Request-Body:
+    * @apiParamExample {json} Request:
     * {
     * "programId" : "",
     * "programName" : "My Program",
     * "rating" : 2
     * }
-    * @apiParamExample {json} Response : 
+    * @apiParamExample {json} Response:
     * {
     "message": "Successfully fetched projects",
     "status": 200,
@@ -488,16 +384,12 @@ module.exports = class Projects extends Abstract {
         "tasks": [
             {
                 "_id": "61d6690d-82cb-4db2-8191-8dd945c5e742",
-                "createdBy": "01c04166-a65e-4e92-a87b-a9e4194e771d",
-                "updatedBy": "01c04166-a65e-4e92-a87b-a9e4194e771d",
                 "isDeleted": false,
                 "isDeleteable": false,
                 "taskSequence": [],
                 "children": [
                     {
                         "_id": "b5068cef-eefc-4f43-8a29-ab9c2268f451",
-                        "createdBy": "01c04166-a65e-4e92-a87b-a9e4194e771d",
-                        "updatedBy": "01c04166-a65e-4e92-a87b-a9e4194e771d",
                         "isDeleted": false,
                         "isDeleteable": false,
                         "taskSequence": [],
@@ -518,12 +410,10 @@ module.exports = class Projects extends Abstract {
                         "updatedAt": "2020-09-29T09:08:41.681Z",
                         "createdAt": "2020-09-29T09:08:41.675Z",
                         "__v": 0,
-                        "status": "not started"
+                        "status": "notStarted"
                     },
                     {
                         "_id": "988ef20f-267f-4bed-9a38-9d7dc6a320e9",
-                        "createdBy": "01c04166-a65e-4e92-a87b-a9e4194e771d",
-                        "updatedBy": "01c04166-a65e-4e92-a87b-a9e4194e771d",
                         "isDeleted": false,
                         "isDeleteable": false,
                         "taskSequence": [],
@@ -544,7 +434,7 @@ module.exports = class Projects extends Abstract {
                         "updatedAt": "2020-09-29T09:08:41.693Z",
                         "createdAt": "2020-09-29T09:08:41.689Z",
                         "__v": 0,
-                        "status": "not started"
+                        "status": "notStarted"
                     }
                 ],
                 "visibleIf": [],
@@ -557,12 +447,10 @@ module.exports = class Projects extends Abstract {
                 "updatedAt": "2020-09-29T09:08:41.691Z",
                 "createdAt": "2020-09-29T09:08:41.612Z",
                 "__v": 0,
-                "status": "not started"
+                "status": "notStarted"
             },
             {
                 "_id": "289d9558-b98f-41cf-81d3-92486f114a49",
-                "createdBy": "01c04166-a65e-4e92-a87b-a9e4194e771d",
-                "updatedBy": "01c04166-a65e-4e92-a87b-a9e4194e771d",
                 "isDeleted": false,
                 "isDeleteable": false,
                 "taskSequence": [],
@@ -629,6 +517,277 @@ module.exports = class Projects extends Abstract {
                 );
 
                 return resolve(createdProject);
+
+            } catch (error) {
+                return reject({
+                    status: error.status || HTTP_STATUS_CODE.internal_server_error.status,
+                    message: error.message || HTTP_STATUS_CODE.internal_server_error.message,
+                    errorObject: error
+                });
+            }
+        })
+    }
+
+       /**
+    * @api {get} /improvement-project/api/v1/userProjects/create
+    * Create project.
+    * @apiVersion 1.0.0
+    * @apiGroup User Projects
+    * @apiSampleRequest /improvement-project/api/v1/userProjects/create
+    * @apiParamExample {json} Response:
+    * {
+    "message": "Created user project successfully",
+    "status": 200,
+    "result": {
+        "_id": "5f97d2f6bf3a3b1c0116c80a",
+        "lastDownloadedAt": "2020-10-27T07:57:41.003Z"
+    }}
+    * @apiUse successBody
+    * @apiUse errorBody
+    */
+
+    /**
+      * Create project.
+      * @method
+      * @name sync
+      * @param {Object} req - request data.
+      * @param {String} req.params._id - Project id.
+      * @returns {JSON} Create project.
+     */
+
+    async create(req) {
+        return new Promise(async (resolve, reject) => {
+            try {
+
+                const createdProject = await userProjectsHelper.create(
+                    req.userDetails.userInformation.userId,
+                    req.userDetails.userToken
+                );
+
+                return resolve(createdProject);
+
+            } catch (error) {
+                return reject({
+                    status: error.status || HTTP_STATUS_CODE.internal_server_error.status,
+                    message: error.message || HTTP_STATUS_CODE.internal_server_error.message,
+                    errorObject: error
+                });
+            }
+        })
+    }
+
+     /**
+    * @api {post} /improvement-project/api/v1/userProjects/sync/:projectId?lastDownloadedAt=:epochTime 
+    * Sync project.
+    * @apiVersion 1.0.0
+    * @apiGroup User Projects
+    * @apiSampleRequest /improvement-project/api/v1/userProjects/sync/5f731631e8d7cd3b88ac0659?lastDownloadedAt=0125747659358699520
+    * @apiParamExample {json} Request:
+    * {
+    "title": "Project 1",
+    "description": "Project 1 description",
+    "tasks": [
+        {
+            "_id": "289d9558-b98f-41cf-81d3-92486f114a49",
+            "name": "Task 1",
+            "description": "Task 1 description",
+            "status": "notStarted/inProgress/completed",
+            "isACustomTask": false,
+            "startDate": "2020-09-29T09:08:41.667Z",
+            "endDate": "2020-09-29T09:08:41.667Z",
+            "lastModifiedAt": "2020-09-29T09:08:41.667Z",
+            "type": "single/multiple",
+            “isDeleted” : false,
+             “attachments” : [
+               {
+                 "name" : "download(2).jpeg",
+                 "type" : "image/jpeg",
+                  "sourcePath" : "projectId/userId/imageName"
+               }
+             ],
+             “remarks” : “Tasks completed”,
+             “assignee” : “Aman”,
+            "children": [
+                {
+                    "_id": "289d9558-b98f-41cf-81d3-92486f114a50",
+                    "name": "Task 2",
+                    "description": "Task 2 description",
+                    "status": "notStarted/inProgress/completed",
+                    "children": [],
+                    "isACustomTask": false,
+                    "startDate": "2020-09-29T09:08:41.667Z",
+                    "endDate": "2020-09-29T09:08:41.667Z",
+                    "lastModifiedAt": "2020-09-29T09:08:41.667Z",
+                    "type": "single/multiple”,
+                    “isDeleted” : false
+                }
+            ]
+        }
+    ],
+    "programId": "",
+    "programName": "New Project Program",
+    "entityId" : “5beaa888af0065f0e0a10515”,
+    "categories": [
+        {
+            "value": "5f102331665bee6a740714e8",
+            "label": "teacher"
+        },
+        {
+            "value": "",
+            "label": "other"
+        }
+    ],
+    "status": "notStarted/inProgress/completed",
+    “lastDownloadedAt” : "2020-09-29T09:08:41.667Z",
+    "payload": {
+        "_id": "289d9558-b98f-41cf-81d3-92486f114a51"
+    }}
+    * @apiParamExample {json} Response:
+    * {
+    * "message": "Project updated successfully",
+    * "status": 200
+    * }
+    * @apiUse successBody
+    * @apiUse errorBody
+    */
+
+    /**
+      * Sync projects.
+      * @method
+      * @name sync
+      * @param {Object} req - request data.
+      * @param {String} req.params._id - Project id.
+      * @returns {JSON} Create Self projects.
+     */
+
+    async sync(req) {
+        return new Promise(async (resolve, reject) => {
+            try {
+
+                const createdProject = await userProjectsHelper.sync(
+                    req.params._id,
+                    req.query.lastDownloadedAt,
+                    req.body,
+                    req.userDetails.userInformation.userId,
+                    req.userDetails.userToken
+                );
+
+                return resolve(createdProject);
+
+            } catch (error) {
+                return reject({
+                    status: error.status || HTTP_STATUS_CODE.internal_server_error.status,
+                    message: error.message || HTTP_STATUS_CODE.internal_server_error.message,
+                    errorObject: error
+                });
+            }
+        })
+    }
+
+      /**
+    * @api {get} /improvement-project/api/v1/userProjects/details/:projectId
+    * Project Details.
+    * @apiVersion 1.0.0
+    * @apiGroup User Projects
+    * @apiSampleRequest /improvement-project/api/v1/userProjects/details/5f731631e8d7cd3b88ac0659
+    * @apiParamExample {json} Response:
+    * {
+    "message": "Successfully fetched project details",
+    "status": 200,
+    "result": {
+        "_id": "5f97d2f6bf3a3b1c0116c80a",
+        "status": "notStarted",
+        "isDeleted": false,
+        "categories": [
+            {
+                "_id": "5f102331665bee6a740714e8",
+                "name": "Teachers",
+                "externalId": "teachers"
+            },
+            {
+                "name": "newCategory",
+                "externalId": "",
+                "_id": ""
+            }
+        ],
+        "tasks": [
+            {
+                "_id": "289d9558-b98f-41cf-81d3-92486f114a49",
+                "name": "Task 1",
+                "description": "Task 1 description",
+                "status": "notStarted",
+                "isACustomTask": false,
+                "startDate": "2020-09-29T09:08:41.667Z",
+                "endDate": "2020-09-29T09:08:41.667Z",
+                "lastModifiedAt": "2020-09-29T09:08:41.667Z",
+                "type": "single",
+                "isDeleted": false,
+                "attachments": [
+                    {
+                        "name": "download(2).jpeg",
+                        "type": "image/jpeg",
+                        "sourcePath": "projectId/userId/imageName"
+                    }
+                ],
+                "remarks": "Tasks completed",
+                "assignee": "Aman",
+                "children": [
+                    {
+                        "_id": "289d9558-b98f-41cf-81d3-92486f114a50",
+                        "name": "Task 2",
+                        "description": "Task 2 description",
+                        "status": "notStarted",
+                        "children": [],
+                        "isACustomTask": false,
+                        "startDate": "2020-09-29T09:08:41.667Z",
+                        "endDate": "2020-09-29T09:08:41.667Z",
+                        "lastModifiedAt": "2020-09-29T09:08:41.667Z",
+                        "type": "single",
+                        "isDeleted": false,
+                        "externalId": "task 2",
+                        "isDeleteable": false,
+                        "createdAt": "2020-10-28T05:58:24.907Z",
+                        "updatedAt": "2020-10-28T05:58:24.907Z",
+                        "isImportedFromLibrary": false
+                    }
+                ],
+                "externalId": "task 1",
+                "isDeleteable": false,
+                "createdAt": "2020-10-28T05:58:24.907Z",
+                "updatedAt": "2020-10-28T05:58:24.907Z",
+                "isImportedFromLibrary": false
+            }
+        ],
+        "resources": [],
+        "deleted": false,
+        "lastDownloadedAt": "2020-09-29T09:08:41.667Z",
+        "__v": 0,
+        "description": "Project 1 description"
+    }
+    }
+    * @apiUse successBody
+    * @apiUse errorBody
+    */
+
+    /**
+      * Project details
+      * @method
+      * @name details
+      * @param {Object} req - request data.
+      * @param {String} req.params._id - Project id.
+      * @returns {JSON} Create Self projects.
+     */
+
+    async details(req) {
+        return new Promise(async (resolve, reject) => {
+            try {
+
+                const projectDetails = await userProjectsHelper.details(
+                    req.params._id,
+                    req.userDetails.userInformation.userId
+                );
+
+                return resolve(projectDetails);
 
             } catch (error) {
                 return reject({

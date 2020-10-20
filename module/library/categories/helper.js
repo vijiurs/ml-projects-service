@@ -131,11 +131,10 @@ module.exports = class LibraryCategoriesHelper {
                 );
                 
                 if( !projectCategoriesData.length > 0 ) {
-                    throw {
-                        status : HTTP_STATUS_CODE.bad_request.status,
+                    return resolve({
                         message : CONSTANTS.apiResponses.LIBRARY_CATEGORIES_NOT_FOUND,
                         result : []
-                    }
+                    });
                 }
     
                 let categories = {};
@@ -167,21 +166,21 @@ module.exports = class LibraryCategoriesHelper {
                         }
                     );
                     
-                    if( projectCategories.status !== HTTP_STATUS_CODE.ok.status) {
-                        throw {
-                            status : HTTP_STATUS_CODE.bad_request.status,
+                    if( !projectCategories.success) {
+                        return resolve({
                             message : CONSTANTS.apiResponses.URL_COULD_NOT_BE_FOUND,
                             result : []
-                        }
+                        })
                     }
 
                     projectCategories = 
-                    projectCategories.result.map(downloadableImage=>{
+                    projectCategories.data.map(downloadableImage=>{
                         return _.merge(
                             categories[downloadableImage.filePath],
                             { url : downloadableImage.url }
                         )
                     });
+                    
                 } else {
                     projectCategories = Object.values(categories);
                 }
@@ -320,6 +319,8 @@ module.exports = class LibraryCategoriesHelper {
                 await database.models.projectTemplates.find(
                     {
                         "_id" : projectId
+                    },{
+                       "__v" : 0
                     }
                 ).lean();
                 
@@ -384,19 +385,21 @@ module.exports = class LibraryCategoriesHelper {
                     let userProfileData = await kendraService.getProfile(userToken);
 
                     if( 
-                        userProfileData.result.ratings && 
-                        userProfileData.result.ratings.length > 0 
+                        userProfileData.success &&
+                        userProfileData.data &&
+                        userProfileData.data.ratings && 
+                        userProfileData.data.ratings.length > 0 
                     ) {
     
                         let projectIndex = 
-                        userProfileData.result.ratings.findIndex(   
+                        userProfileData.data.ratings.findIndex(   
                             project => project._id.toString() === projectId.toString() 
                         );
     
                         if( projectIndex < 0 ) {
                             projectsData[0].userRating = 0;
                         } else {
-                            projectsData[0].userRating = userProfileData.result.ratings[projectIndex].rating;
+                            projectsData[0].userRating = userProfileData.data.ratings[projectIndex].rating;
                         }
                     } 
                 }

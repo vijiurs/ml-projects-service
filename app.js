@@ -53,23 +53,16 @@ fs.existsSync(process.env.LOGGER_DIRECTORY) ||
 fs.mkdirSync(process.env.LOGGER_DIRECTORY);
 
 //API documentation (apidoc)
-if (process.env.APPLICATION_ENV == "development" || process.env.APPLICATION_ENV == "local") {
+if ( process.env.APPLICATION_ENV == "development" ) {
   app.use(express.static("apidoc"));
-  if (process.env.APPLICATION_ENV == "local") {
-    app.get(process.env.DEFAULT_APIDOC_URL, (req, res) => {
-      let apidocPath =  process.env.APIDOC_PATH + "/index.html";
+  app.get(process.env.APIDOC_URL, (req, res) => {
+    
+    let urlArray = req.path.split("/");
+    urlArray.splice(0, 3);
+    let apidocPath = process.env.APIDOC_PATH + urlArray.join("/");
 
-      res.sendFile(path.join(__dirname, apidocPath));
-    });
-  } else {
-    app.get(process.env.APIDOC_URL, (req, res) => {
-      let urlArray = req.path.split("/");
-      urlArray.splice(0, 3);
-      let apidocPath = process.env.APIDOC_PATH + urlArray.join("/");
-
-      res.sendFile(path.join(__dirname, apidocPath));
-    });
-  }
+    res.sendFile(path.join(__dirname, apidocPath));
+  });
 }
 
 app.all('*', (req, res, next) => {

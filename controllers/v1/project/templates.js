@@ -16,12 +16,8 @@ const projectTemplatesHelper = require(MODULES_BASE_PATH + "/project/templates/h
 */
 
 module.exports = class ProjectTemplates extends Abstract {
-    
-    constructor() {
-        super("project-templates");
-    }
 
-     /**
+    /**
      * @apiDefine errorBody
      * @apiError {String} status 4XX,5XX
      * @apiError {String} message Error
@@ -29,14 +25,18 @@ module.exports = class ProjectTemplates extends Abstract {
 
     /**
      * @apiDefine successBody
-     *  @apiSuccess {String} status 200
+     * @apiSuccess {String} status 200
      * @apiSuccess {String} result Data
      */
+    
+    constructor() {
+        super("project-templates");
+    }
 
     /**
-    * @api {post} /improvement-project/api/v1/project/templates/bulkCreate Bulk Create projects templates.
+    * @api {post} /improvement-project/api/v1/project/templates/bulkCreate 
+    * Bulk Create projects templates.
     * @apiVersion 1.0.0
-    * @apiName Bulk Create projects templates
     * @apiGroup Project Templates
     * @apiParam {File} projectTemplates Mandatory project templates file of type CSV.
     * @apiSampleRequest /improvement-project/api/v1/project/templates/bulkCreate
@@ -85,9 +85,9 @@ module.exports = class ProjectTemplates extends Abstract {
     }
 
     /**
-    * @api {post} /improvement-project/api/v1/project/templates/bulkUpdate Bulk Update projects templates.
+    * @api {post} /improvement-project/api/v1/project/templates/bulkUpdate 
+    * Bulk Update projects templates.
     * @apiVersion 1.0.0
-    * @apiName Bulk Update projects templates
     * @apiGroup Project Templates
     * @apiParam {File} projectTemplates Mandatory project templates file of type CSV.
     * @apiSampleRequest /improvement-project/api/v1/project/templates/bulkUpdate
@@ -136,17 +136,15 @@ module.exports = class ProjectTemplates extends Abstract {
     }
 
      /**
-    * @api {post} /improvement-project/api/v1/project/templates/importFromTemplates/:projectTemplateExternalId Import templates from existsing project templates.
+    * @api {post} /improvement-project/api/v1/project/templates/importFromTemplates/:projectTemplateExternalId 
+    * Import templates from existsing project templates.
     * @apiVersion 1.0.0
-    * @apiName Import templates from existsing project templates.
     * @apiGroup Project Templates
     * @apiSampleRequest /improvement-project/api/v1/project/templates/importFromTemplates/template-1
     * @apiParamExample {json} Request: 
     * {
     * "externalId" : "template1"
     * }
-    * @apiUse successBody
-    * @apiUse errorBody
     * @apiParamExample {json} Response:
     * {
     "message": "Successfully created duplicate project templates",
@@ -156,6 +154,8 @@ module.exports = class ProjectTemplates extends Abstract {
     },
     "success": true
     }
+    * @apiUse successBody
+    * @apiUse errorBody
     */
 
       /**

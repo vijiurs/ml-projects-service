@@ -15,12 +15,8 @@ const projectTemplateTasksHelper = require(MODULES_BASE_PATH + "/project/templat
 */
 
 module.exports = class ProjectTemplateTasks extends Abstract {
-    
-    constructor() {
-        super("project-template-tasks");
-    }
 
-     /**
+    /**
      * @apiDefine errorBody
      * @apiError {String} status 4XX,5XX
      * @apiError {String} message Error
@@ -31,11 +27,15 @@ module.exports = class ProjectTemplateTasks extends Abstract {
      *  @apiSuccess {String} status 200
      * @apiSuccess {String} result Data
      */
+    
+    constructor() {
+        super("project-template-tasks");
+    }
 
     /**
-    * @api {post} /improvement-project/api/v1/project/templateTasks/bulkCreate/:projectTemplateId Bulk create project template tasks.
+    * @api {post} /improvement-project/api/v1/project/templateTasks/bulkCreate/:projectTemplateId 
+    * Bulk create project template tasks.
     * @apiVersion 1.0.0
-    * @apiName Bulk create projects templates
     * @apiGroup Project Template Tasks
     * @apiParam {File} projectTemplateTasks Mandatory project template tasks file of type CSV.
     * @apiSampleRequest /improvement-project/api/v1/project/templateTasks/bulkCreate/5f2adc57eb351a5a9c68f403
@@ -85,9 +85,9 @@ module.exports = class ProjectTemplateTasks extends Abstract {
     }
 
      /**
-    * @api {post} /improvement-project/api/v1/project/templateTasks/bulkUpdate/:projectTemplateId Bulk update project template tasks.
+    * @api {post} /improvement-project/api/v1/project/templateTasks/bulkUpdate/:projectTemplateId 
+    * Bulk update project template tasks.
     * @apiVersion 1.0.0
-    * @apiName Bulk update projects templates tasks
     * @apiGroup Project Template Tasks
     * @apiParam {File} projectTemplateTasks Mandatory project template tasks file of type CSV.
     * @apiSampleRequest /improvement-project/api/v1/project/templateTasks/bulkUpdate/5f2adc57eb351a5a9c68f403

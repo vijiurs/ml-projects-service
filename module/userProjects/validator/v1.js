@@ -15,6 +15,13 @@ module.exports = (req) => {
         },
         importFromLibrary : function () {
             req.checkParams('_id').exists().withMessage("required project template id");
+        },
+        sync : function () {
+            req.checkParams('_id').exists().withMessage("required project id");
+            req.checkQuery('lastDownloadedAt').exists().withMessage("required last downloaded at");
+        },
+        details : function () {
+            req.checkParams('_id').exists().withMessage("required project id");
         }
     }
 

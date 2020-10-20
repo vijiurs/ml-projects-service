@@ -15,16 +15,8 @@ const libraryCategoriesHelper = require(MODULES_BASE_PATH + "/library/categories
 */
 
 module.exports = class LibraryCategories extends Abstract {
-    
-    constructor() {
-        super("project-categories");
-    }
 
-    static get name() {
-        return "libraryCategories";
-    }
-
-     /**
+    /**
      * @apiDefine errorBody
      * @apiError {String} status 4XX,5XX
      * @apiError {String} message Error
@@ -35,15 +27,21 @@ module.exports = class LibraryCategories extends Abstract {
      * @apiSuccess {String} status 200
      * @apiSuccess {String} result Data
      */
+    
+    constructor() {
+        super("project-categories");
+    }
+
+    static get name() {
+        return "projectCategories";
+    }
 
     /**
-    * @api {get} /improvement-project/api/v1/library/categories/list List of library categories.
+    * @api {get} /improvement-project/api/v1/library/categories/list 
+    * List of library categories.
     * @apiVersion 1.0.0
-    * @apiName List of library categories
     * @apiGroup Library Categories
     * @apiSampleRequest /improvement-project/api/v1/library/categories/list
-    * @apiUse successBody
-    * @apiUse errorBody
     * @apiParamExample {json} Response:
     * {
     * "message": "Library categories fetched successfully",
@@ -74,6 +72,8 @@ module.exports = class LibraryCategories extends Abstract {
             "url": "https://storage.googleapis.com/download/storage/v1/b/sl-dev-storage/o/static%2FprojectCategories%2FindividualAssessments.png?generation=1594893104067373&alt=media"
         }
     ]}
+    * @apiUse successBody
+    * @apiUse errorBody
     */
 
       /**
@@ -102,13 +102,11 @@ module.exports = class LibraryCategories extends Abstract {
 
 
     /**
-    * @api {get} /improvement-project/api/v1/library/categories/projects/:categoryExternalId?page=:page&limit=:limit&search=:search&sort=:sort List of library projects.
+    * @api {get} /improvement-project/api/v1/library/categories/projects/:categoryExternalId?page=:page&limit=:limit&search=:search&sort=:sort 
+    * List of library projects.
     * @apiVersion 1.0.0
-    * @apiName List of library projects
     * @apiGroup Library Categories
     * @apiSampleRequest /improvement-project/api/v1/library/categories/projects/community?page=1&limit=1&search=t&sort=importantProject
-    * @apiUse successBody
-    * @apiUse errorBody
     * @apiParamExample {json} Response:
     * {
     "message": "Successfully fetched projects",
@@ -126,6 +124,8 @@ module.exports = class LibraryCategories extends Abstract {
     ],
     "count": 7
     }
+    * @apiUse successBody
+    * @apiUse errorBody
     */
 
       /**
@@ -158,13 +158,11 @@ module.exports = class LibraryCategories extends Abstract {
     }
 
       /**
-    * @api {get} /improvement-project/api/v1/library/categories/projectDetails/:projectId Library projects details.
+    * @api {get} /improvement-project/api/v1/library/categories/projectDetails/:projectId 
+    * Library projects details.
     * @apiVersion 1.0.0
-    * @apiName Library projects details.
     * @apiGroup Library Categories
     * @apiSampleRequest /improvement-project/api/v1/library/categories/projectDetails/5f2ab0a33f623cb3b25c846a
-    * @apiUse successBody
-    * @apiUse errorBody
     * @apiParamExample {json} Response:
     * {
     "message": "Successfully fetched projects",
@@ -245,6 +243,8 @@ module.exports = class LibraryCategories extends Abstract {
             "duration": "1 weeak"
         }
     }
+    * @apiUse successBody
+    * @apiUse errorBody
     */
 
       /**

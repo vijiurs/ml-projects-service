@@ -7,7 +7,7 @@
 module.exports = {
     name: "projectTemplates",
     schema: {
-        name : {
+        title : {
             type : String,
             required : true
         },

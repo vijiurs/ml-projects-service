@@ -8,7 +8,7 @@
 module.exports = {
     name: "projects",
     schema: {
-        name : String,
+        title : String,
         description : String,
         taskReport : {
             type : Object,
@@ -28,7 +28,7 @@ module.exports = {
         },
         status : {
             type : String,
-            required : true
+            default : "notStarted"
         },
         lastDownloadedAt : Date,
         syncedAt : Date,

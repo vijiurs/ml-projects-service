@@ -28,7 +28,7 @@ module.exports = {
         },
         status : {
             type : String,
-            required : true
+            default : "notStarted"
         },
         lastDownloadedAt : Date,
         syncedAt : Date,

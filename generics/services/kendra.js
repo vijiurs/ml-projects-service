@@ -677,6 +677,53 @@ const updateSolution = function ( token,updateData,solutionExternalId ) {
     })
 }
 
+/**
+  * Update solution
+  * @function
+  * @name getUserOrganisationsAndRootOrganisations
+  * @param {String} token - Logged in user token.
+  * @returns {JSON} - Update solutions.
+*/
+
+const getUserOrganisationsAndRootOrganisations = function ( token ) {
+    return new Promise(async (resolve, reject) => {
+        try {
+            
+            const url = 
+            process.env.KENDRA_APPLICATION_ENDPOINT + process.env.URL_PREFIX + 
+            CONSTANTS.endpoints.GET_USER_ORGANISATIONS;
+
+            const options = {
+                headers : {
+                    "content-type": "application/json",
+                    AUTHORIZATION : process.env.AUTHORIZATION,
+                    "internal-access-token": process.env.INTERNAL_ACCESS_TOKEN,
+                    "x-authenticated-user-token" : token
+                }
+            };
+
+            request.post(url,options,samikshaCallback);
+
+            function samikshaCallback(err, data) {
+
+                if (err) {
+                    return resolve({
+                        success : false
+                    });
+                } else {
+                    return resolve({
+                        success : true,
+                        data : JSON.parse(data.body).result
+                    });
+                }
+            }
+
+        } catch (error) {
+            return reject(error);
+        }
+    })
+}
+
 module.exports = {
     getDownloadableUrl : getDownloadableUrl,
     upload : upload,
@@ -690,6 +737,7 @@ module.exports = {
     getProfile : getProfile,
     updateUserProfile : updateUserProfile,
     userPrivatePrograms : userPrivatePrograms,
-    updateSolution : updateSolution 
+    updateSolution : updateSolution,
+    getUserOrganisationsAndRootOrganisations : getUserOrganisationsAndRootOrganisations 
 };
 

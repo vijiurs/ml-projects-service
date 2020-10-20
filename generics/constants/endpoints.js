@@ -22,5 +22,6 @@ module.exports = {
     USER_EXTENSION_UPDATE_USER_PROFILE : "/user-extension/update",
     USER_PRIVATE_PROGRAMS : "/users/privatePrograms",
     UPDATE_SOLUTIONS : "/solutions/updateSolutions",
-    LIST_PROGRAMS : "/programs/list"
+    LIST_PROGRAMS : "/programs/list",
+    GET_USER_ORGANISATIONS : "/users/getUserOrganisationsAndRootOrganisations"
 };

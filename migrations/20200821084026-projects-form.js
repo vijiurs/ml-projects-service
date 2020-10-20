@@ -4,8 +4,8 @@ module.exports = {
 
     let forms = [
       {
-        field: "name",
-        label: "Name",
+        field: "title",
+        label: "Title",
         value: "",
         visible: true,
         editable: true,
@@ -13,7 +13,8 @@ module.exports = {
         validation: {
           required: true
         },
-        max : 50
+        max : 50,
+        hint : "Name your project"
       },{
         field: "description",
         label: "Description",
@@ -24,7 +25,8 @@ module.exports = {
         validation: {
           required: true
         },
-        max : 120 
+        max : 120,
+        hint : "What is the Objective of your Project"
       },{
         field: "categories",
         label: "Categories",
@@ -35,7 +37,8 @@ module.exports = {
         options: [],
         validation: {
           required: false
-        }
+        },
+        hint : "What does your project aim to improve?"
       } 
     ];
     

@@ -84,23 +84,25 @@ module.exports = class UserProjectsHelper {
                     {
                         userId : userId
                     },"all",[
+                        "createdBy",
+                        "updatedBy",
+                        "rootOrganisations",
                         "taskReport",
                         "createdFor",
-                        "solutionId",
-                        "solutionExternalId",
-                        "programId",
-                        "programExternalId",
                         "projectTemplateId",
                         "projectTemplateExternalId"
                     ]
                 );
 
                 if( !projects.length > 0 ) {
+                    
                     return resolve({
                         message : CONSTANTS.apiResponses.PROJECT_NOT_FOUND,
                         result : []
                     })
                 }
+
+                let projectIds = [];
 
                 for( let project = 0 ; project < projects.length ; project ++) {
                     let currentProject = projects[project];
@@ -121,8 +123,18 @@ module.exports = class UserProjectsHelper {
                         ["externalId","name","description","_id"]
                     );
 
+                    projectIds.push(currentProject._id);
+
                     delete currentProject.metaInformation;
                 }
+
+                await database.models.projects.updateMany({
+                    _id : { $in : projectIds }
+                },{
+                    $set : {
+                        lastDownloadedAt : new Date()
+                    }
+                })
 
                 return resolve({
                     message : CONSTANTS.apiResponses.PROJECTS_FETCHED,
@@ -231,205 +243,6 @@ module.exports = class UserProjectsHelper {
                 return resolve({
                     message : CONSTANTS.apiResponses.PROJECT_TASKS_METAFORM_FETCHED,
                     result : forms.result[0].value
-                });
-
-            } catch (error) {
-                return reject(error);
-            }
-        })
-    }
-
-    /**
-      * Sync project.
-      * @method
-      * @name sync 
-      * @param {Object} data - body data.
-      * @param {String} userId - Logged in user id.
-      * @param {String} userToken - User token.
-      * @returns {Object} Project created information.
-     */
-
-    static sync( data,userId,userToken,projectId = "",lastSync = "" ) {
-        return new Promise(async (resolve, reject) => {
-            try {
-
-                let projectData = 
-                await this.createOrUpdateProject(
-                    data,
-                    userId,
-                    userToken,
-                    projectId,
-                    lastSync
-                );
-
-                return resolve(projectData);
-
-            } catch (error) {
-                return reject(error);
-            }
-        })
-    }
-
-    /**
-      * Project creation or updation.
-      * @method
-      * @name createOrUpdateProject 
-      * @param {Object} data - body data.
-      * @param {String} userId - Logged in user id.
-      * @param {String} userToken - User token.
-      * @param {String} projectId - Project id.
-      * @returns {Object} Project created or updated information.
-     */
-
-    static createOrUpdateProject(data,userId,userToken,projectId,lastSync) {
-        return new Promise(async (resolve, reject) => {
-            try {
-
-                const projectsModel = Object.keys(schemas["projects"].schema);
-
-                let createOrUpdateObject = {};
-
-                if( data.categories ) {
-                    createOrUpdateObject.categories = 
-                    await _projectCategories(data.categories);
-                }
-
-                if( data.startDate ) {
-                    createOrUpdateObject["startDate"] = data.startDate;
-                }
-
-                if( data.endDate ) {
-                    createOrUpdateObject["endDate"] = data.endDate;
-                }
-
-                let programAndSolutionInformation = 
-                await this.createProgramAndSolution(
-                    data.entityId,
-                    data.programId,
-                    data.programName,
-                    userToken
-                );
-
-                if( !programAndSolutionInformation.success ) {
-                    return resolve(programAndSolutionInformation);
-                }
-
-                let booleanData = this.booleanData(schemas["projects"].schema);
-                let mongooseIdData = this.mongooseIdData(schemas["projects"].schema);
-
-                if( data.tasks ) {  
-                    createOrUpdateObject.tasks = await _projectTask(
-                        data.tasks,
-                        userId
-                    );
-                }
-
-                Object.keys(data).forEach(updateData => {
-                    if ( 
-                        !createOrUpdateObject[updateData] && 
-                        projectsModel.includes(updateData) 
-                    ) {
-                        
-                        if ( booleanData.includes(updateData) ) {
-                
-                            createOrUpdateObject[updateData] = 
-                            UTILS.convertStringToBoolean(data[updateData]);
-            
-                        } else if( mongooseIdData.includes(updateData) ) {
-                            createOrUpdateObject[updateData] = ObjectId(data[updateData]);
-                        } else {
-                            createOrUpdateObject[updateData] = data[updateData];
-                        } 
-                    }
-                });
-
-                let projectCreation = "";
-                createOrUpdateObject.updatedBy = userId;
-
-                createOrUpdateObject.createdBy = userId;
-                createOrUpdateObject.userId = userId;
-
-                if( data.resources ) {
-                    createOrUpdateObject.resources = data.resources;
-                }
-
-                // <- Dirty fix. Currently not required.
-
-                // if( projectId !== "" ) {
-
-                //     const projects = await this.projectDocument(
-                //         {
-                //             _id : projectId
-                //         }
-                //     );
-
-                //     createOrUpdateObject.tasks.forEach(task => {
-                //         task.updatedBy = userId;
-                //         task.updatedAt = new Date();
-                        
-                //         let taskIndex = 
-                //         projects[0].tasks.findIndex(projectTask=>projectTask._id === task._id );
-                        
-                //         if( taskIndex < 0 ) {
-                //             projects[0].tasks.push(
-                //                 task
-                //             );
-                //         } else {
-                //             projects[0].tasks[taskIndex] = task;
-                //         }
-                //     });
-
-                //     createOrUpdateObject.tasks = projects[0].tasks;
-                //     createOrUpdateObject.updatedAt = new Date();
-
-                //     let updateQuery = {
-                //         _id : projectId
-                //     }
-
-                //     if( lastSync !== "" ) {
-                //         updateQuery["updatedAt"] = lastSync;
-                //     }
-
-                //     projectCreation = 
-                //     await database.models.projects.findOneAndUpdate(
-                //         updateQuery,
-                //         {
-                //             $set : createOrUpdateObject
-                //         },{
-                //             new : true
-                //     });
-
-                //     if( !projectCreation ) {
-                //         return resolve({
-                //             message : CONSTANTS.apiResponses.PROJECT_ALREADY_SYNED,
-                //             result : _projectInformation(projects[0])
-                //         });
-                //     }
-
-                // } else {
-
-                //     createOrUpdateObject.createdBy = userId;
-                //     createOrUpdateObject.userId = userId;
-
-                //     projectCreation = await database.models.projects.create(
-                //         _.merge(createOrUpdateObject,programAndSolutionInformation.result)
-                //     );
-
-                // }
-
-                projectCreation = await database.models.projects.create(
-                    _.merge(createOrUpdateObject,programAndSolutionInformation.result)
-                );
-
-                projectCreation = _projectInformation(projectCreation._doc);
-
-                if( data.payload ) {
-                    projectCreation.payload = data.payload;
-                }
-
-                return resolve({
-                    message : CONSTANTS.apiResponses.PROJECTS_FETCHED,
-                    result :projectCreation
                 });
 
             } catch (error) {
@@ -782,9 +595,11 @@ module.exports = class UserProjectsHelper {
                 }
 
                 if( libraryProjects.result.tasks && libraryProjects.result.tasks.length > 0 ) {
+                    
                     libraryProjects.result.tasks = await _projectTask(
                         libraryProjects.result.tasks,
-                        true
+                        true,
+                        {}
                     );
                 }
 
@@ -830,7 +645,226 @@ module.exports = class UserProjectsHelper {
         })
     }
 
-      /**
+    /**
+      * Create user projects.
+      * @method
+      * @name create 
+      * @param userId - Logged in user id.
+      * @param userToken - Logged in user token.
+      * @returns {Object} Return _id and lastDownloadedAt 
+     */
+
+    static create( userId,userToken ) {
+        return new Promise(async (resolve, reject) => {
+            try {
+
+                let creationData = {
+                    lastDownloadedAt : new Date(),
+                    createdFor : [],
+                    rootOrganisations : []
+                }
+
+                creationData["userId"] = creationData["createdBy"] = creationData["updatedBy"] = userId;
+
+                let userOrganisations = 
+                await kendraService.getUserOrganisationsAndRootOrganisations(
+                    userToken
+                );
+
+                if( userOrganisations.success ) {
+                    creationData.createdFor = userOrganisations.data.createdFor;
+                    creationData.rootOrganisations = userOrganisations.data.rootOrganisations;
+                }
+
+                let userProject = await database.models.projects.create(
+                    creationData
+                );
+
+                return resolve({
+                    message : CONSTANTS.apiResponses.CREATED_USER_PROJECT,
+                    result : _.pick(userProject,["_id","lastDownloadedAt"])
+                });
+
+            } catch (error) {
+                return reject(error);
+            }
+        })
+    }
+
+    /**
+      * Sync project.
+      * @method
+      * @name sync 
+      * @param {String} projectId - id of the project.
+      * @param {String} lastDownloadedAt - last downloaded at time.
+      * @param {Object} data - body data.
+      * @param {String} userId - Logged in user id.
+      * @param {String} userToken - User token.
+      * @returns {Object} Project created information.
+    */
+
+    static sync( projectId,lastDownloadedAt,data,userId,userToken ) {
+        return new Promise(async (resolve, reject) => {
+            try {
+
+                const userProject = await this.projectDocument({
+                    _id : projectId,
+                    userId : userId,
+                    lastDownloadedAt : lastDownloadedAt
+                },["_id","tasks"]);
+
+                if ( !userProject.length > 0 ) {
+                    
+                    return resolve({
+                        message : CONSTANTS.apiResponses.USER_PROJECT_NOT_FOUND,
+                        result : {}
+                    });
+                }
+
+                const projectsModel = Object.keys(schemas["projects"].schema);
+
+                let updateProject = {};
+
+                if( data.categories && data.categories.length > 0 ) {
+                    updateProject.categories = 
+                    await _projectCategories(data.categories);
+                }
+
+                if( data.startDate ) {
+                    updateProject["startDate"] = data.startDate;
+                }
+
+                if( data.endDate ) {
+                    updateProject["endDate"] = data.endDate;
+                }
+
+                if( 
+                    (data.programId && data.programId !== "") || 
+                    ( data.programName && data.programName !== "" ) 
+                ) {
+
+                    let programAndSolutionInformation = 
+                    await this.createProgramAndSolution(
+                        data.entityId,
+                        data.programId,
+                        data.programName,
+                        userToken
+                    );
+    
+                    if( !programAndSolutionInformation.success ) {
+                        return resolve(programAndSolutionInformation);
+                    }
+
+                    updateProject = 
+                    _.merge(updateProject,programAndSolutionInformation.result);
+                }
+
+                let booleanData = this.booleanData(schemas["projects"].schema);
+                let mongooseIdData = this.mongooseIdData(schemas["projects"].schema);
+
+                if( data.tasks ) {  
+
+                    let taskReport = {};
+                    
+                    updateProject.tasks = await _projectTask(
+                        data.tasks,
+                        userId
+                    );
+
+                    if( 
+                        userProject[0].tasks && 
+                        userProject[0].tasks.length > 0 
+                    ) {
+
+                        updateProject.tasks.forEach(task => {
+    
+                            task.updatedBy = userId;
+                            task.updatedAt = new Date();
+                            
+                            let taskIndex = 
+                            userProject[0].tasks.findIndex(
+                                projectTask => projectTask._id === task._id 
+                            );
+                            
+                            if( taskIndex < 0 ) {
+                                userProject[0].tasks.push(
+                                    task
+                                );
+                            } else {
+                                userProject[0].tasks[taskIndex] = task;
+                            }
+                        });
+    
+                        updateProject.tasks = userProject[0].tasks;
+                    }
+
+                    taskReport.total = updateProject.tasks.length;
+
+                    updateProject.tasks.forEach(task => {
+                        if( !taskReport[task.status] ) {
+                            taskReport[task.status] = 1; 
+                        } else {
+                            taskReport[task.status] += 1; 
+                        }
+                    });
+
+                    updateProject["taskReport"] = taskReport;
+                }
+
+                Object.keys(data).forEach(updateData => {
+                    if ( 
+                        !updateProject[updateData] && 
+                        projectsModel.includes(updateData) 
+                    ) {
+                        
+                        if ( booleanData.includes(updateData) ) {
+                
+                            updateProject[updateData] = 
+                            UTILS.convertStringToBoolean(data[updateData]);
+            
+                        } else if( mongooseIdData.includes(updateData) ) {
+                            updateProject[updateData] = ObjectId(data[updateData]);
+                        } else {
+                            updateProject[updateData] = data[updateData];
+                        } 
+                    }
+                });
+
+                updateProject.updatedBy = userId;
+
+                if( data.resources ) {
+                    updateProject.resources = data.resources;
+                }
+
+                let projectUpdated = 
+                await database.models.projects.findOneAndUpdate(
+                    {
+                        _id : userProject[0]._id
+                    },
+                    {
+                        $set : updateProject
+                    },{
+                        new : true
+                    }
+                );
+
+                if( !projectUpdated._id ) {
+                    return resolve({
+                        message : CONSTANTS.apiResponses.USER_PROJECT_NOT_UPDATED
+                    })
+                }
+
+                return resolve({
+                    message : CONSTANTS.apiResponses.USER_PROJECT_UPDATED
+                });
+
+            } catch (error) {
+                return reject(error);
+            }
+        })
+    }
+
+     /**
       * Program and solution information
       * @method
       * @name createProgramAndSolution 
@@ -841,7 +875,12 @@ module.exports = class UserProjectsHelper {
       * @returns {Object} Created program and solution data.
      */
 
-    static createProgramAndSolution( entityId = "",programId = "", programName = "",userToken) {
+    static createProgramAndSolution( 
+        entityId = "",
+        programId = "", 
+        programName = "",
+        userToken
+    ) {
         return new Promise(async (resolve, reject) => {
             try {
 
@@ -860,35 +899,46 @@ module.exports = class UserProjectsHelper {
                     subType : CONSTANTS.common.IMPROVEMENT_PROJECT
                 };
 
-                if( programId == "" && programName == "" ) {
-                    
-                    let privatePrograms = 
-                    await kendraService.userPrivatePrograms(userToken);
+                // <- Dirty fix not required currently
 
-                    if( !privatePrograms.success ) {
-                        return resolve({
-                            success : false,
-                            message : CONSTANTS.apiResponses.SOLUTION_PROGRAMS_NOT_CREATED,
-                            result : {}
-                        })
-                    }
-
-                    if( privatePrograms.data[0] && privatePrograms.data[0]._id ) {
-                        programAndSolutionData["programId"] = privatePrograms.data[0]._id;
-                    } else {
-                        programAndSolutionData["programName"] = "My Program"
-                    }
-                } else {
+                // if( programId == "" && programName == "" ) {
                     
-                    if( programName !== "" ) {
+                //     let privatePrograms = 
+                //     await kendraService.userPrivatePrograms(userToken);
 
-                        programAndSolutionData["programName"] = programName;
-                    } 
+                //     if( !privatePrograms.success ) {
+                //         return resolve({
+                //             success : false,
+                //             message : CONSTANTS.apiResponses.SOLUTION_PROGRAMS_NOT_CREATED,
+                //             result : {}
+                //         })
+                //     }
+
+                //     if( privatePrograms.data[0] && privatePrograms.data[0]._id ) {
+                //         programAndSolutionData["programId"] = privatePrograms.data[0]._id;
+                //     } else {
+                //         programAndSolutionData["programName"] = "My Program"
+                //     }
+                // } else {
                     
-                    if( programId !== "" ) {
-                        programAndSolutionData["programId"] = programId;
-                    } 
-                }
+                //     if( programName !== "" ) {
+
+                //         programAndSolutionData["programName"] = programName;
+                //     } 
+                    
+                //     if( programId !== "" ) {
+                //         programAndSolutionData["programId"] = programId;
+                //     } 
+                // }
+
+
+                if( programName !== "" ) {
+                    programAndSolutionData["programName"] = programName;
+                } 
+                
+                if( programId !== "" ) {
+                    programAndSolutionData["programId"] = programId;
+                } 
 
                 let solutionAndProgramCreation = 
                 await kendraService.createUserProgramAndSolution(
@@ -914,7 +964,7 @@ module.exports = class UserProjectsHelper {
 
                 result.programInformation =  _.omit(
                     solutionAndProgramCreation.data.program,
-                    ["__v"]
+                    ["__v","components"]
                 );
     
                 result.programInformation._id = 
@@ -928,75 +978,50 @@ module.exports = class UserProjectsHelper {
             } catch (error) {
                 return reject(error);
             }
-        })
+        });
     }
 
      /**
-      * Make Program and solution.
+      * Project details.
       * @method
-      * @name programAndSolution 
-      * @param {String} entityId - entity id.
-      * @param {String} userToken - Logged in user token.
-      * @param {String} [ programId = "" ] - Program Id.
-      * @param {String} [ programName = "" ] - Program Name.
-      * @returns {Object} Created program and solution data.
+      * @name details 
+      * @param {String} projectId - project id.
+      * @returns {Object} 
      */
 
-    static programAndSolution( entityId,userToken,programId = "", programName = "") {
+    static details( projectId,userId ) {
         return new Promise(async (resolve, reject) => {
             try {
 
-                let programAndSolutionData = {
-                    entityId : entityId,
-                    type : CONSTANTS.common.IMPROVEMENT_PROJECT,
-                    subType : CONSTANTS.common.IMPROVEMENT_PROJECT
-                };
+                const projectDetails = await this.projectDocument({
+                    _id : projectId,
+                    userId : userId
+                },"all",
+                [
+                    "taskReport",
+                    "createdFor",
+                    "rootOrganisations",
+                    "projectTemplateId",
+                    "projectTemplateExternalId",
+                    "userId",
+                    "createdBy",
+                    "updatedBy",
+                    "createdAt",
+                    "updatedAt"
+                ]);
 
-                if( programId == "" && programName == "" ) {
+                if( !projectDetails.length > 0 ) {
                     
-                    let privatePrograms = 
-                    await kendraService.userPrivatePrograms(userToken);
-
-                    if( !privatePrograms.success ) {
-                        return resolve({
-                            success : false,
-                            message : CONSTANTS.apiResponses.SOLUTION_PROGRAMS_NOT_CREATED,
-                            result : {}
-                        })
-                    }
-
-                    if( privatePrograms.data[0] && privatePrograms.data[0]._id ) {
-                        programAndSolutionData["programId"] = privatePrograms.data[0]._id;
-                    } else {
-                        programAndSolutionData["programName"] = "My Program"
-                    }
-                } else {
-                    
-                    if( programName !== "" ) {
-
-                        programAndSolutionData["programName"] = programName;
-                    } 
-                    
-                    if( programId !== "" ) {
-                        programAndSolutionData["programId"] = programId;
-                    } 
-                }
-
-                let solutionAndProgramCreation = 
-                await kendraService.createUserProgramAndSolution(
-                    programAndSolutionData,
-                    userToken
-                );
-
-                if( !solutionAndProgramCreation.success ) {
                     return resolve({
-                        success : false,
-                        message : CONSTANTS.apiResponses.SOLUTION_PROGRAMS_NOT_CREATED,
-                        result : {}
+                        message : CONSTANTS.apiResponses.PROJECT_NOT_FOUND,
+                        result : []
                     })
                 }
 
-                return resolve(solutionAndProgramCreation);
+                return resolve({
+                    message : CONSTANTS.apiResponses.PROJECT_DETAILS_FETCHED,
+                    result : projectDetails[0]
+                });
 
             } catch (error) {
                 return reject(error);
@@ -1038,6 +1063,7 @@ function _projectInformation(project) {
     }
 
     delete project.metaInformation;
+    delete project.__v;
 
     return project;
 }
@@ -1046,12 +1072,12 @@ function _projectInformation(project) {
   * Task of project.
   * @method
   * @name _projectTask
-  * @param {Array} task - task data.
+  * @param {Array} tasks - tasks data.
   * @param {String} userId - logged in user id.
   * @returns {Object} Project task.
 */
 
-function _projectTask(task,projectImportedFromLibrary = false) {
+function _projectTask(task) {
 
     task.forEach(singleTask => {
 
@@ -1063,7 +1089,7 @@ function _projectTask(task,projectImportedFromLibrary = false) {
         singleTask.createdAt = singleTask.createdAt ? singleTask.createdAt : new Date();
         singleTask.updatedAt = singleTask.updatedAt ? singleTask.updatedAt : new Date();
         singleTask._id = UTILS.isValidMongoId(singleTask._id.toString()) ? uuidv4() : singleTask._id;
-        singleTask.isImportedFromLibrary = projectImportedFromLibrary;
+        singleTask.isImportedFromLibrary = singleTask.isACustomTask;
 
         if( singleTask.startDate ) {
             singleTask.startDate = singleTask.startDate; 
@@ -1096,29 +1122,39 @@ function _projectCategories(categories) {
     return new Promise( async (resolve,reject)=>{
         try {
 
+            const categoryIds = categories.map(category => {
+                if( category.value && category.value !== "" ) {
+                    return category.value;
+                }
+            });
+
             const categoryData = 
             await libraryCategoriesHelper.categoryDocuments({
-                externalId : { $in : categories }
+                _id : { $in : categoryIds }
             },["name","externalId"]);
 
-            let categoriesExternalIdMap = {};
+            let categoryInternalIdToData = {};
 
             if ( categoryData.length > 0 ) {
                 
                 categoryData.forEach(category=>{
-                    categoriesExternalIdMap[category.externalId] = category;
+                    categoryInternalIdToData[category._id.toString()] = category;
                 });
             }
 
-            const categoriesData = categories.map(categoryExternalId => { 
+            const categoriesData = categories.map(category => { 
                 let categoryData = {};
 
-                if( categoriesExternalIdMap[categoryExternalId] ) {
-                    categoryData = categoriesExternalIdMap[categoryExternalId];
+                if( 
+                    category.value && 
+                    category.value !== "" && 
+                    categoryInternalIdToData[category.value] 
+                ) {
+                    categoryData = categoryInternalIdToData[category.value];
                 } else {
                     categoryData = {
-                        name : UTILS.camelCaseToTitleCase(categoryExternalId),
-                        externalId : categoryExternalId,
+                        name : category.label,
+                        externalId : "",
                         _id : ""
                     }
                 }
@@ -1175,6 +1211,7 @@ function _entitiesInformation(entityIds) {
         }
     })
 }
+
 
 
 

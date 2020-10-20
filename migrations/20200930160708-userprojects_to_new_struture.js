@@ -34,6 +34,12 @@ module.exports = {
         if (project.category) {
           categories = await db.collection('projectCategories').find({ externalId: { $in: project.category } }).project({ externalId: 1, name: 1, _id: 1 }).toArray();
         }
+
+        let entityInfo = {};
+        if(project.entityId){
+          entityInfo = await db.collection('entities').findOne({ _id:project.entityId  });
+        }
+
         let template;
         if (solutionInformation && solutionInformation.baseProjectDetails) {
           template = solutionInformation.baseProjectDetails[0]._id;
@@ -54,7 +60,6 @@ module.exports = {
             "projectTemplateId": template,
             "name": task.title,
             "externalId": task._id,
-            // "description" : task.,
             "updatedAt": task.lastSync,
             "createdAt": task.createdAt,
             "status": task.status
@@ -79,7 +84,6 @@ module.exports = {
                 "projectTemplateId": template,
                 "name": subTask.title,
                 "externalId": subTask._id,
-                //   "description" : subTask.,
                 "updatedAt": subTask.lastSync,
                 "createdAt": task.createdAt,
                 "status": subTask.status
@@ -109,9 +113,14 @@ module.exports = {
           "status": project.status,
           "updatedAt": project.lastSync,
           "createdAt": project.createdAt,
-
           "solutionInformation": solutionInformation,
           "programInformation": programInformation
+        }
+
+        if(entityInfo._id){
+          projectNewObj['entityId'] = entityInfo._id;
+          projectNewObj['entityExternalId'] = entityInfo.metaInformation.externalId;
+          projectNewObj['entityInformation'] = entityInfo;          
         }
 
         return resolve(projectNewObj);

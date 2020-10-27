@@ -48,13 +48,9 @@ ApiInterceptor.prototype.validateToken = function(token, callback) {
               if (now.getTime() > expiry * 1000) {
                 return callback('Expired', null);
               }
-              self.grantManager.userInfo(token, function(err, userData) {
-                if (err) {
-                  return callback(err, null);
-                } else {
-                  return callback(null, { token: token, userId: userData.sub.split(":").pop() });
-                }
-              });
+
+              return callback(null, { token: token, userId: decode.sub.split(":").pop() });
+
             } else {
               return callback("ERR_TOKEN_INVALID", null);
             }

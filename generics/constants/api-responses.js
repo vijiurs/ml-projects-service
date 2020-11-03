@@ -55,5 +55,6 @@ module.exports = {
     "USER_PROJECT_NOT_FOUND" : "Could not found user project",
     "USER_PROJECT_UPDATED" : "Updated user project successfully",
     "USER_PROJECT_NOT_UPDATED" : "Could not updated user project",
-    "PROJECT_DETAILS_FETCHED" : "Successfully fetched project details"
+    "PROJECT_DETAILS_FETCHED" : "Successfully fetched project details",
+    "REPORTS_GENERATED" : "Reports generated successfully."
 };

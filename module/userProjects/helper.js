@@ -1029,6 +1029,78 @@ module.exports = class UserProjectsHelper {
         })
     }
 
+
+          /**
+      * List of library projects.
+      * @method
+      * @name projects
+      * @param pageSize - Size of page.
+      * @param pageNo - Recent page no.
+      * @param search - search text.
+      * @returns {Object} List of library projects.
+     */
+
+    static projects( query,pageSize,pageNo,searchQuery,fieldsArray) {
+        return new Promise(async (resolve, reject) => {
+            try {
+
+                let matchQuery = {
+                    $match : query
+                };
+
+                if(searchQuery && searchQuery.length > 0){
+                    matchQuery["$match"]["$or"] = searchQuery;
+                }
+
+                let projection = {}
+                fieldsArray.forEach(field => {
+                    projection[field] = 1;
+                });
+
+                
+                let aggregateData = [];
+                aggregateData.push(matchQuery);
+
+                aggregateData.push({
+                    $project : projection
+                },{
+                    $facet : {
+                        "totalCount" : [
+                            { "$count" : "count" }
+                        ],
+                        "data" : [
+                            { $skip : pageSize * ( pageNo - 1 ) },
+                            { $limit : pageSize }
+                        ],
+                    }
+                },{
+                    $project : {
+                        "data" : 1,
+                        "count" : {
+                            $arrayElemAt : ["$totalCount.count", 0]
+                        }
+                    }
+                });
+
+                let result = 
+                await database.models.projects.aggregate(aggregateData);
+
+                return resolve({
+                    message : CONSTANTS.apiResponses.PROJECTS_FETCHED,
+                    result : {
+                        data : result[0].data,
+                        count : result[0].count ? result[0].count : 0
+                    }
+                });
+
+            } catch (error) {
+                return reject(error);
+            }
+        })
+    }
+
+
+
 };
 
  /**

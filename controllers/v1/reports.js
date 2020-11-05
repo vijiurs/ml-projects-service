@@ -21,27 +21,21 @@ module.exports = class Reports {
     }
 
     /**
-    * @api {get} /improvement-project/api/v1/reports/entity/:_id
+    * @api {post} /improvement-project/api/v1/reports/entity/:_id
     * Entity Report.
     * @apiVersion 1.0.0
     * @apiGroup Reports
     * @apiSampleRequest /improvement-project/api/v1/reports/entity/5f731631e8d7cd3b88ac0659
     * @apiParamExample {json} Request:
      {
-        
         "reportType":"lastMonth",
-        "category":["5f7ae023252cc522665b60d6"],
-        "programName":"School Improvement Project"
+        "programId":"5da5a3af6ee4a93ce5a1987a"
       }
     * @apiParamExample {json} Response:
     * {
     "message": "Reports generated successfully.",
     "status": 200,
     "result": {
-        "categories": {
-            "Community": 1,
-            "student": 1
-        },
         "tasks": {
             "total": 18,
             "notStarted": 10,
@@ -67,7 +61,7 @@ module.exports = class Reports {
       * @method
       * @name reports
       * @param {Object} req - request data.
-      * @param {String} req.params._id - Project id.
+      * @param {String} req.params._id - Entity id.
       * @returns {JSON} enity report details.
      */
     async entity(req) {
@@ -78,11 +72,122 @@ module.exports = class Reports {
                     req.params._id,
                     req.userDetails.userInformation.userId,
                     req.body.reportType,
-                    req.body.programName ? req.body.programName : "",
-                    req.body.category ? req.body.category : []
+                    req.body.programId ? req.body.programId : "",
                 );
 
                 return resolve(reports);
+
+            } catch (error) {
+                return reject({
+                    status: error.status || HTTP_STATUS_CODE.internal_server_error.status,
+                    message: error.message || HTTP_STATUS_CODE.internal_server_error.message,
+                    errorObject: error
+                });
+            }
+        })
+    }
+
+    /**
+    * @api {get} /improvement-project/api/v1/reports/getTypes
+    * Entity Report.
+    * @apiVersion 1.0.0
+    * @apiGroup Reports
+    * @apiSampleRequest /improvement-project/api/v1/reports/getTypes
+    * @apiParamExample {json} Response:
+    * {
+        "message": "Report types fetched successfully.",
+        "status": 200,
+        "result": [
+            {
+                "label": "Last Month",
+                "value": 1
+            },
+            {
+                "label": "Last Quarter",
+                "value": 3
+            }
+        ]
+    }
+    * @apiUse successBody
+    * @apiUse errorBody
+    */
+
+    /**
+      * Get entity types
+      * @method
+      * @name getTypes
+      * @param {Object} req - request data.
+      * @returns {JSON} enity report details.
+     */
+    async getTypes(req) {
+        return new Promise(async (resolve, reject) => {
+            try {
+
+                const entityTypes = await reportsHelper.getTypes();
+                return resolve(entityTypes);
+
+            } catch (error) {
+                return reject({
+                    status: error.status || HTTP_STATUS_CODE.internal_server_error.status,
+                    message: error.message || HTTP_STATUS_CODE.internal_server_error.message,
+                    errorObject: error
+                });
+            }
+        })
+    }
+
+    /**
+    * @api {get} /improvement-project/api/v1/reports/getProgramsByEntity/:_id
+    * Entity Report.
+    * @apiVersion 1.0.0
+    * @apiGroup Reports
+    * @apiSampleRequest /improvement-project/api/v1/reports/getProgramsByEntity/5ddf79ff47e9260268c9547a?page=1&limi1=10&search=a
+    * @apiParamExample {json} Response:
+    * {
+    "message": "Programs fetched successfully",
+    "status": 200,
+    "result": {
+        "data": [
+            {
+                "name": "School Improvement Project",
+                "_id": "5da5a3af6ee4a93ce5a1987a"
+            },
+            {
+                "name": "School Improvement Project",
+                "_id": "5da5a3af6ee4a93ce5a1987a"
+            },
+            {
+                "name": "School Improvement Project",
+                "_id": "5da5a3af6ee4a93ce5a1987a"
+            }
+        ],
+        "count": 3
+    }
+}
+    * @apiUse successBody
+    * @apiUse errorBody
+    */
+
+    /**
+      * Get programs by entity
+      * @method
+      * @name getProgramsByEntity
+      * @param {Object} req - request data.
+      * @param {String} req.params._id - Entity id.
+      * @returns {JSON} enity report details.
+     */
+    async getProgramsByEntity(req) {
+        return new Promise(async (resolve, reject) => {
+            try {
+
+                const entities = await reportsHelper.getProgramsByEntity(
+                    req.userDetails.userInformation.userId,
+                    req.params._id,
+                    req.pageSize,
+                    req.pageNo,
+                    req.searchText
+                );
+                return resolve(entities);
 
             } catch (error) {
                 return reject({

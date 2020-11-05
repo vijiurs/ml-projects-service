@@ -8,7 +8,8 @@
 module.exports = (req) => {
 
     let reportsValidator = {
-
+        entity : function () {
+        }
     }
 
     if (reportsValidator[req.params.method]) {

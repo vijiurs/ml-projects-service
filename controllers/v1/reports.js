@@ -68,14 +68,14 @@ module.exports = class Reports {
         return new Promise(async (resolve, reject) => {
             try {
 
-                const reports = await reportsHelper.entity(
+                const entityReports = await reportsHelper.entity(
                     req.params._id,
                     req.userDetails.userInformation.userId,
                     req.body.reportType,
                     req.body.programId ? req.body.programId : "",
                 );
 
-                return resolve(reports);
+                return resolve(entityReports);
 
             } catch (error) {
                 return reject({
@@ -123,8 +123,8 @@ module.exports = class Reports {
         return new Promise(async (resolve, reject) => {
             try {
 
-                const entityTypes = await reportsHelper.getTypes();
-                return resolve(entityTypes);
+                const reportTypes = await reportsHelper.getTypes();
+                return resolve(reportTypes);
 
             } catch (error) {
                 return reject({

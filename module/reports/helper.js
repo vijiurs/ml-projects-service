@@ -130,6 +130,8 @@ module.exports = class ReportsHelper {
                         }
                     }
 
+                    
+
                     if (project.taskReport) {
                         let keys = Object.keys(project.taskReport);
                         keys.map(key => {
@@ -152,7 +154,19 @@ module.exports = class ReportsHelper {
                             }
                         }
                     }));
+
+
                 }));
+
+                if(projectReport['inProgress']){
+                    projectReport['onGoing'] =  projectReport['inProgress'];
+                    delete projectReport['inProgress'];
+                }
+                
+                if(tasksReport['inProgress']){
+                    tasksReport['onGoing'] =  tasksReport['inProgress'];
+                    delete tasksReport['inProgress'];
+                }
 
                 let response = {
                     categories: categories,

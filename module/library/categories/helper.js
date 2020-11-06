@@ -222,7 +222,7 @@ module.exports = class LibraryCategoriesHelper {
 
                 if ( search !== "" ) {
                     matchQuery["$match"]["$or"] = [
-                        { "name": new RegExp(search, 'i') },
+                        { "title": new RegExp(search, 'i') },
                         { "descripion": new RegExp(search, 'i') },
                         { "categories": new RegExp(search, 'i') }
                     ]
@@ -246,7 +246,7 @@ module.exports = class LibraryCategoriesHelper {
 
                 aggregateData.push({
                     $project : {
-                        "name" : 1,
+                        "title" : 1,
                         "externalId" : 1,
                         "noOfRatings" : 1,
                         "averageRating" : 1,
@@ -319,6 +319,8 @@ module.exports = class LibraryCategoriesHelper {
                 await database.models.projectTemplates.find(
                     {
                         "_id" : projectId
+                    },{
+                       "__v" : 0
                     }
                 ).lean();
                 

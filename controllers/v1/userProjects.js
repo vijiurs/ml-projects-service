@@ -799,6 +799,4 @@ module.exports = class UserProjects extends Abstract {
         })
     }
 
-
-
 };

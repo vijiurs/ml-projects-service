@@ -90,7 +90,8 @@ module.exports = class UserProjectsHelper {
                         "taskReport",
                         "createdFor",
                         "projectTemplateId",
-                        "projectTemplateExternalId"
+                        "projectTemplateExternalId",
+                        "__v"
                     ]
                 );
 
@@ -103,6 +104,8 @@ module.exports = class UserProjectsHelper {
                 }
 
                 let projectIds = [];
+
+                let updateLastDownloadedDate = new Date();
 
                 for( let project = 0 ; project < projects.length ; project ++) {
                     let currentProject = projects[project];
@@ -123,18 +126,21 @@ module.exports = class UserProjectsHelper {
                         ["externalId","name","description","_id"]
                     );
 
+                    currentProject.lastDownloadedAt = updateLastDownloadedDate;
+
                     projectIds.push(currentProject._id);
 
                     delete currentProject.metaInformation;
-                }
+                } 
 
                 await database.models.projects.updateMany({
                     _id : { $in : projectIds }
                 },{
                     $set : {
-                        lastDownloadedAt : new Date()
+                        lastDownloadedAt : updateLastDownloadedDate
                     }
-                })
+                });
+
 
                 return resolve({
                     message : CONSTANTS.apiResponses.PROJECTS_FETCHED,
@@ -597,6 +603,8 @@ module.exports = class UserProjectsHelper {
                     });
                 }
 
+                let taskReport = {};
+
                 if( libraryProjects.result.tasks && libraryProjects.result.tasks.length > 0 ) {
                     
                     libraryProjects.result.tasks = await _projectTask(
@@ -604,6 +612,18 @@ module.exports = class UserProjectsHelper {
                         true,
                         {}
                     );
+
+                    taskReport.total = libraryProjects.result.tasks.length;
+
+                    libraryProjects.result.tasks.forEach(task => {
+                        if( !taskReport[task.status] ) {
+                            taskReport[task.status] = 1; 
+                        } else {
+                            taskReport[task.status] += 1; 
+                        }
+                    });
+
+                    libraryProjects.result["taskReport"] = taskReport;
                 }
 
                 let programAndSolutionInformation = 
@@ -619,6 +639,7 @@ module.exports = class UserProjectsHelper {
                 }
                 
                 libraryProjects.result.userId = libraryProjects.result.updatedBy = libraryProjects.result.createdBy = userId;
+                libraryProjects.result.lastDownloadedAt = new Date();
 
                 let projectCreation = await database.models.projects.create(
                     _.merge(
@@ -1033,8 +1054,7 @@ module.exports = class UserProjectsHelper {
         })
     }
 
-
-          /**
+    /**
       * List of library projects.
       * @method
       * @name projects
@@ -1095,15 +1115,13 @@ module.exports = class UserProjectsHelper {
                         data : result[0].data,
                         count : result[0].count ? result[0].count : 0
                     }
-                });
+                })
 
             } catch (error) {
                 return reject(error);
             }
         })
     }
-
-
 
 };
 
@@ -1132,8 +1150,10 @@ function _projectInformation(project) {
         ["externalId","name"]
     );
 
+    project.status = CONSTANTS.common.NOT_STARTED;
+
     if( project.metaInformation ) {
-        Object.keys(project.metaInformation).forEach(projectMetaKey=>{
+        Object.keys(project.metaInformation).forEach(projectMetaKey => {
             project[projectMetaKey] = project.metaInformation[projectMetaKey];
         });
     }
@@ -1272,7 +1292,7 @@ function _entitiesInformation(entityIds) {
 
             if( entityData.success && entityData.data.length > 0 ) {
 
-                entitiesData = entityData.result.map(entity => {
+                entitiesData = entityData.data.map(entity => {
                     entity.metaInformation._id = ObjectId(entity._id);
                     entity.metaInformation.entityType = entity.entityType;
                     entity.metaInformation.entityTypeId = ObjectId(entity.entityTypeId);

@@ -89,7 +89,7 @@ module.exports = class Reports {
 
     /**
     * @api {get} /improvement-project/api/v1/reports/getTypes
-    * Entity Report.
+    * Get report types.
     * @apiVersion 1.0.0
     * @apiGroup Reports
     * @apiSampleRequest /improvement-project/api/v1/reports/getTypes
@@ -138,7 +138,7 @@ module.exports = class Reports {
 
     /**
     * @api {get} /improvement-project/api/v1/reports/getProgramsByEntity/:_id
-    * Entity Report.
+    * Get programs by entity.
     * @apiVersion 1.0.0
     * @apiGroup Reports
     * @apiSampleRequest /improvement-project/api/v1/reports/getProgramsByEntity/5ddf79ff47e9260268c9547a?page=1&limi1=10&search=a

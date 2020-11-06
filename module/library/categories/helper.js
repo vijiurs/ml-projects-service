@@ -319,6 +319,8 @@ module.exports = class LibraryCategoriesHelper {
                 await database.models.projectTemplates.find(
                     {
                         "_id" : projectId
+                    },{
+                       "__v" : 0
                     }
                 ).lean();
                 

@@ -90,7 +90,8 @@ module.exports = class UserProjectsHelper {
                         "taskReport",
                         "createdFor",
                         "projectTemplateId",
-                        "projectTemplateExternalId"
+                        "projectTemplateExternalId",
+                        "__v"
                     ]
                 );
 
@@ -1095,7 +1096,7 @@ module.exports = class UserProjectsHelper {
                         data : result[0].data,
                         count : result[0].count ? result[0].count : 0
                     }
-                });
+                })
 
             } catch (error) {
                 return reject(error);

@@ -138,13 +138,13 @@ module.exports = class ProjectTemplatesHelper {
                         code : { $in : roleIds }
                     },["code"]);
 
-                    if( !userRolesData.result.length > 0 ) {
+                    if( !userRolesData.success ) {
                         throw {
-                            message : CONSTANTS.apiResponses.USER_ROLES_NOT_FOUND
+                            message : CONSTANTS.apiResponses.USER_ROLES_NOT_FOUND,
                         }
                     }
 
-                    recommendedFor = userRolesData.result.reduce((ac,role)=> ({
+                    recommendedFor = userRolesData.data.reduce((ac,role)=> ({
                         ...ac,
                         [role.code] : {
                             roleId : ObjectId(role._id),
@@ -162,13 +162,13 @@ module.exports = class ProjectTemplatesHelper {
                         name : { $in : entityTypes }
                     },["name"]);
 
-                    if( !entityTypesDocument.result.length > 0 ) {
+                    if( !entityTypesDocument.success ) {
                         throw {
                             message : CONSTANTS.apiResponses.ENTITY_TYPES_NOT_FOUND
                         }
                     }
 
-                    entityTypesData = entityTypesDocument.result.reduce((ac,entityType)=> ({
+                    entityTypesData = entityTypesDocument.data.reduce((ac,entityType)=> ({
                         ...ac,
                         [entityType.name] : {
                             _id : ObjectId(entityType._id),
@@ -556,16 +556,16 @@ module.exports = class ProjectTemplatesHelper {
                         externalId : solutionId
                     },["_id","externalId","programId","programExternalId"]);
     
-                    if( !solutionData.result.length > 0 ) {
+                    if( !solutionData.success ) {
                         throw {
                             message : CONSTANTS.apiResponses.SOLUTION_NOT_FOUND
                         }
                     }
 
-                    newProjectTemplate.solutionId = solutionData.result[0]._id;
-                    newProjectTemplate.solutionExternalId = solutionData.result[0].externalId;
-                    newProjectTemplate.programId = solutionData.result[0].programId;
-                    newProjectTemplate.programExternalId = solutionData.result[0].programExternalId;
+                    newProjectTemplate.solutionId = solutionData.data[0]._id;
+                    newProjectTemplate.solutionExternalId = solutionData.data[0].externalId;
+                    newProjectTemplate.programId = solutionData.data[0].programId;
+                    newProjectTemplate.programExternalId = solutionData.data[0].programExternalId;
                 } 
 
                 newProjectTemplate.parentTemplateId = projectTemplateData[0]._id;
@@ -645,21 +645,23 @@ module.exports = class ProjectTemplatesHelper {
                 let projectIndex = -1;
 
                 if( 
-                    userProfileData.result.ratings && 
-                    userProfileData.result.ratings.length > 0 
+                    userProfileData.success && 
+                    userProfileData.data &&
+                    userProfileData.data.ratings && 
+                    userProfileData.data.ratings.length > 0 
                 ) {
 
                     projectIndex = 
-                    userProfileData.result.ratings.findIndex(
+                    userProfileData.data.ratings.findIndex(
                         project => project._id.toString() === templateId.toString() 
                     );
 
                     if( !(projectIndex < 0) ) {
-                        userCurrentRating = userProfileData.result.ratings[projectIndex].rating;
+                        userCurrentRating = userProfileData.data.ratings[projectIndex].rating;
                         updateRating.ratings[userCurrentRating] -= 1;
                     }
                 } else {
-                    userProfileData.result.ratings = [];
+                    userProfileData.data.ratings = [];
                 }
 
                 let ratingUpdated = {};
@@ -683,7 +685,7 @@ module.exports = class ProjectTemplatesHelper {
                         new : true
                     });
 
-                    let improvementProjects = [...userProfileData.result.ratings];
+                    let improvementProjects = [...userProfileData.data.ratings];
                     if( projectIndex >= 0 ) {
                         improvementProjects[projectIndex].rating = rating;
                     } else {

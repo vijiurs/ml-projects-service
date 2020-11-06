@@ -167,7 +167,7 @@ module.exports = class UserProjectsHelper {
                     ]
                 );
 
-                if( !forms.result.length > 0 ) {
+                if( !forms.success ) {
 
                     return resolve({
                         message : CONSTANTS.apiResponses.PROJECTS_FORM_NOT_FOUND,
@@ -196,7 +196,7 @@ module.exports = class UserProjectsHelper {
                     value : CONSTANTS.common.OTHERS.toLowerCase()
                 });
 
-                let formsData = forms.result[0].value;
+                let formsData = forms.data[0].value;
 
                 formsData[formsData.length - 1].options = categoriesData;
 
@@ -231,7 +231,7 @@ module.exports = class UserProjectsHelper {
                     ]
                 );
 
-                if( !forms.result.length > 0 ) {
+                if( !forms.success ) {
 
                     return resolve({
                         message : CONSTANTS.apiResponses.PROJECT_TASKS_FORM_NOT_FOUND,
@@ -242,7 +242,7 @@ module.exports = class UserProjectsHelper {
 
                 return resolve({
                     message : CONSTANTS.apiResponses.PROJECT_TASKS_METAFORM_FETCHED,
-                    result : forms.result[0].value
+                    result : forms.data[0].value
                 });
 
             } catch (error) {
@@ -356,9 +356,12 @@ module.exports = class UserProjectsHelper {
                         "enableQuestionReadOut"
                     ]);
 
-                    if( solutionData.result && solutionData.result.length > 0 ) {
+                    if( 
+                        solutionData.success && 
+                        solutionData.data && solutionData.data.length > 0 
+                    ) {
                         
-                        solutionData.result.forEach(solution => {
+                        solutionData.data.forEach(solution => {
                             solutions[solution.externalId] = solution;
                         })
                     }
@@ -376,9 +379,9 @@ module.exports = class UserProjectsHelper {
                         }
                     },"all",["components"]);
 
-                    if( programData.result && programData.result.length > 0 ) {
+                    if( programData.success && programData.data.length > 0 ) {
                         
-                        programData.result.forEach(program => {
+                        programData.data.forEach(program => {
                             programs[program.externalId] = program;
                         })
                     }
@@ -1007,7 +1010,8 @@ module.exports = class UserProjectsHelper {
                     "createdBy",
                     "updatedBy",
                     "createdAt",
-                    "updatedAt"
+                    "updatedAt",
+                    "__v"
                 ]);
 
                 if( !projectDetails.length > 0 ) {
@@ -1194,7 +1198,7 @@ function _entitiesInformation(entityIds) {
 
             let entitiesData = [];
 
-            if( entityData.result && entityData.result.length > 0 ) {
+            if( entityData.success && entityData.data.length > 0 ) {
 
                 entitiesData = entityData.result.map(entity => {
                     entity.metaInformation._id = ObjectId(entity._id);

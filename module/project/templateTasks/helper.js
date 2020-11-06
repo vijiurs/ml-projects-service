@@ -156,7 +156,12 @@ module.exports = class ProjectTemplateTasksHelper {
                         _id : { $in : solutionIds }
                     },["externalId"]);
 
-                    if ( Object.keys(solutions.result).length > 0 ) {
+
+                    if ( 
+                        solutions.success && 
+                        solutions.data &&
+                        Object.keys(solutions.data).length > 0 
+                    ) {
                         solutionData = solutions.result;
                     }
                 }

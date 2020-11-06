@@ -36,15 +36,18 @@ const getDownloadableUrl = function (bodyData) {
         try {
 
             const kendraCallBack = function (err, response) {
+
+                let result = {
+                    success : true
+                };
+
                 if (err) {
-                    return reject({
-                        status : HTTP_STATUS_CODE.bad_request.status,
-                        message : CONSTANTS.apiResponses.KENDRA_SERVICE_DOWN
-                    });
+                    result.success = false;
                 } else {
-                    let downloadableImage = response.body;
-                    return resolve(downloadableImage);
+                    result["data"] = response.body.result;
                 }
+
+                return resolve(result);
             }
 
             request.post(fileDownloadUrl, {
@@ -90,15 +93,17 @@ const upload = function (file,filePath) {
         try {
 
             const kendraCallBack = function (err, response) {
+
+                let result = {
+                    success : true
+                };
+
                 if (err) {
-                    return reject({
-                        status : HTTP_STATUS_CODE.bad_request.status,
-                        message : CONSTANTS.apiResponses.KENDRA_SERVICE_DOWN
-                    })
+                    result.success = false;
                 } else {
-                    let uploadedData = response.body;
-                    return resolve(uploadedData);
+                    result["data"] = response.body;
                 }
+                return resolve(result);
             }
 
             let formData = request.post(fileUploadUrl,{
@@ -157,13 +162,17 @@ const solutionDocuments = function (
 
             function samikshaCallback(err, data) {
 
+                let result = {
+                    success : true
+                };
+
                 if (err) {
-                     return reject({
-                        message: CONSTANTS.apiResponses.KENDRA_SERVICE_DOWN
-                    });
+                    result.success = false;
                 } else {
-                    return resolve(data.body);
+                    result["data"] = data.body.result;
                 }
+
+                return resolve(result);
             }
 
         } catch (error) {
@@ -211,13 +220,17 @@ const entityTypesDocuments = function (
 
             function samikshaCallback(err, data) {
 
+                let result = {
+                    success : true
+                };
+
                 if (err) {
-                     return reject({
-                        message: CONSTANTS.apiResponses.KENDRA_SERVICE_DOWN
-                    });
+                    result.success = false;
                 } else {
-                    return resolve(data.body);
+                    result["data"] = data.body;
                 }
+
+                return resolve(result);
             }
 
         } catch (error) {
@@ -265,13 +278,17 @@ const rolesDocuments = function (
 
             function samikshaCallback(err, data) {
 
+                let result = {
+                    success : true
+                };
+
                 if (err) {
-                     return reject({
-                        message: CONSTANTS.apiResponses.KENDRA_SERVICE_DOWN
-                    });
+                    result.success = false;
                 } else {
-                    return resolve(data.body);
+                    result["data"] = data.body.result;
                 }
+
+                return resolve(result);
             }
 
         } catch (error) {
@@ -319,13 +336,16 @@ const formsDocuments = function (
 
             function samikshaCallback(err, data) {
 
+                let result = {
+                    success : true
+                };
+
                 if (err) {
-                     return reject({
-                        message: CONSTANTS.apiResponses.KENDRA_SERVICE_DOWN
-                    });
+                    result.success = false;
                 } else {
-                    return resolve(data.body);
+                    result["data"] = data.body.result;
                 }
+                return resolve(result);
             }
 
         } catch (error) {
@@ -372,13 +392,17 @@ const entityDocuments = function (
 
             function samikshaCallback(err, data) {
 
+                let result = {
+                    success : true
+                };
+
                 if (err) {
-                     return reject({
-                        message: CONSTANTS.apiResponses.KENDRA_SERVICE_DOWN
-                    });
+                    result.success = false;
                 } else {
-                    return resolve(data.body);
+                    result["data"] = data.body.result;
                 }
+
+                return resolve(result);
             }
 
         } catch (error) {
@@ -426,14 +450,17 @@ const programsDocuments = function (
 
             function samikshaCallback(err, data) {
 
+                let result = {
+                    success : true
+                };
+
                 if (err) {
-                     return reject({
-                        message: CONSTANTS.apiResponses.KENDRA_SERVICE_DOWN,
-                        result : []
-                    });
+                    result.success = false;
                 } else {
-                    return resolve(data.body);
+                    result["data"] = data.body.result;
                 }
+
+                return resolve(result);
             }
 
         } catch (error) {
@@ -473,16 +500,17 @@ const createUserProgramAndSolution = function ( data,userToken ) {
 
             function samikshaCallback(err, data) {
 
+                let result = {
+                    success : true
+                };
+
                 if (err) {
-                    return resolve({
-                        success : false
-                    });
+                    result.success = false;
                 } else {
-                    return resolve({
-                        success : true,
-                        data : data.body.result
-                    });
+                    result["data"] = data.body.result;
                 }
+
+                return resolve(result);
             }
 
         } catch (error) {
@@ -520,13 +548,17 @@ const getProfile = function ( token ) {
 
             function samikshaCallback(err, data) {
 
+                let result = {
+                    success : true
+                };
+
                 if (err) {
-                     return reject({
-                        message: CONSTANTS.apiResponses.KENDRA_SERVICE_DOWN
-                    });
+                    result.success = false;
                 } else {
-                    return resolve(JSON.parse(data.body));
+                    result["data"] = JSON.parse(data.body).result;
                 }
+
+                return resolve(result);
             }
 
         } catch (error) {
@@ -566,14 +598,17 @@ const updateUserProfile = function ( token,updateData ) {
 
             function samikshaCallback(err, data) {
 
+                let result = {
+                    success : true
+                };
+
                 if (err) {
-                     return reject({
-                        message: CONSTANTS.apiResponses.KENDRA_SERVICE_DOWN
-                    });
+                    result.success = false;
                 } else {
-                    return resolve(data.body);
+                    result["data"] = data.body;
                 }
-            }
+
+                return resolve(result);            }
 
         } catch (error) {
             return reject(error);
@@ -611,17 +646,17 @@ const userPrivatePrograms = function ( token ) {
 
             function samikshaCallback(err, data) {
 
+                let result = {
+                    success : true
+                };
+
                 if (err) {
-                     return resolve({
-                        success : false
-                    });
+                    result.success = false;
                 } else {
-                    
-                    return resolve({
-                        success : true,
-                        data : JSON.parse(data.body).result
-                    });
+                    result["data"] = JSON.parse(data.body).result;
                 }
+
+                return resolve(result);
             }
 
         } catch (error) {
@@ -661,14 +696,65 @@ const updateSolution = function ( token,updateData,solutionExternalId ) {
 
             function samikshaCallback(err, data) {
 
+                let result = {
+                    success : true
+                };
+
                 if (err) {
-                     return reject({
-                        message: CONSTANTS.apiResponses.KENDRA_SERVICE_DOWN,
-                        result : []
-                    });
+                    result.success = false;
                 } else {
-                    return resolve(data.body);
+                    result["data"] = data.body;
                 }
+
+                return resolve(result);
+            }
+
+        } catch (error) {
+            return reject(error);
+        }
+    })
+}
+
+/**
+  * Update solution
+  * @function
+  * @name getUserOrganisationsAndRootOrganisations
+  * @param {String} token - Logged in user token.
+  * @returns {JSON} - Update solutions.
+*/
+
+const getUserOrganisationsAndRootOrganisations = function ( token ) {
+    return new Promise(async (resolve, reject) => {
+        try {
+            
+            const url = 
+            process.env.KENDRA_APPLICATION_ENDPOINT + process.env.URL_PREFIX + 
+            CONSTANTS.endpoints.GET_USER_ORGANISATIONS;
+
+            const options = {
+                headers : {
+                    "content-type": "application/json",
+                    AUTHORIZATION : process.env.AUTHORIZATION,
+                    "internal-access-token": process.env.INTERNAL_ACCESS_TOKEN,
+                    "x-authenticated-user-token" : token
+                }
+            };
+
+            request.post(url,options,samikshaCallback);
+
+            function samikshaCallback(err, data) {
+
+                let result = {
+                    success : true
+                };
+
+                if (err) {
+                    result.success = false;
+                } else {
+                    result["data"] = JSON.parse(data.body).result;
+                }
+
+                return resolve(result);
             }
 
         } catch (error) {

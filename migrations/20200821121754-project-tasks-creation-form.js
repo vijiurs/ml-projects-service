@@ -14,16 +14,6 @@ module.exports = {
         validation: {
           required: true
         }
-      },{
-        field: "description",
-        label: "Description",
-        value: "",
-        visible: true,
-        editable: true,
-        input: "textarea",
-        validation: {
-          required: true
-        }
       }
     ];
     

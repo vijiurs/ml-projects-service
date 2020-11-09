@@ -46,7 +46,10 @@ module.exports = class ReportsHelper {
 
                 var endOf = "";
                 var startFrom = "";
-                if (reportType == 3) {
+                if (reportType == 0) {
+                    endOf = moment().subtract(0, 'months').endOf('month').format('YYYY-MM-DD');
+                    startFrom = moment().subtract(0, 'months').startOf('month').format('YYYY-MM-DD');
+                } else if (reportType == 3) {
                     endOf = moment().subtract(1, 'months').endOf('month').format('YYYY-MM-DD');
                     startFrom = moment().subtract(3, 'months').startOf('month').format('YYYY-MM-DD');
                 } else {
@@ -58,6 +61,7 @@ module.exports = class ReportsHelper {
                         startFrom = moment().subtract(1, 'months').startOf('month').format('YYYY-MM-DD');
                     }
                 }
+
                 query['$or'] = [
                     { "lastSync": { $gte: new Date(startFrom), $lte: new Date(endOf) } },
                     { "tasks": { $elemMatch: { lastSync: { $gte: new Date(startFrom), $lte: new Date(endOf) } } } },
@@ -104,7 +108,7 @@ module.exports = class ReportsHelper {
                         });
                         categories['total'] = categoriesArray.length;
                     }
-                  
+
                     if (project.status == "completed") {
 
                         projectReport['completed'] = projectReport['completed'] + 1;
@@ -130,7 +134,7 @@ module.exports = class ReportsHelper {
                         }
                     }
 
-                    
+
 
                     if (project.taskReport) {
                         let keys = Object.keys(project.taskReport);
@@ -158,13 +162,13 @@ module.exports = class ReportsHelper {
 
                 }));
 
-                if(projectReport['inProgress']){
-                    projectReport['onGoing'] =  projectReport['inProgress'];
+                if (projectReport['inProgress']) {
+                    projectReport['onGoing'] = projectReport['inProgress'];
                     delete projectReport['inProgress'];
                 }
-                
-                if(tasksReport['inProgress']){
-                    tasksReport['onGoing'] =  tasksReport['inProgress'];
+
+                if (tasksReport['inProgress']) {
+                    tasksReport['onGoing'] = tasksReport['inProgress'];
                     delete tasksReport['inProgress'];
                 }
 
@@ -226,7 +230,7 @@ module.exports = class ReportsHelper {
                 }
 
                 let programs = [];
-             
+
                 let projectDetails = projectDocuments.result.data;
                 for (let index = 0; index < projectDetails.length; index++) {
                     programs.push({
@@ -249,7 +253,7 @@ module.exports = class ReportsHelper {
         })
     }
 
-    
+
 
     /**
       * Get report types
@@ -262,14 +266,19 @@ module.exports = class ReportsHelper {
         return new Promise(async (resolve, reject) => {
             try {
 
-                let reportTypes = [{
-                    label:"Last Month",
-                    value: 1
-                },{
-                    label:"Last Quarter",
-                    value: 3
-                }]
-                resolve({ result:reportTypes ,message:  CONSTANTS.apiResponses.REPORT_TYPES_FOUND } );
+                let reportTypes = [
+                    {
+                        label: "Current Month",
+                        value: 0
+                    },
+                    {
+                        label: "Last Month",
+                        value: 1
+                    }, {
+                        label: "Last Quarter",
+                        value: 3
+                    }]
+                resolve({ result: reportTypes, message: CONSTANTS.apiResponses.REPORT_TYPES_FOUND });
 
             } catch (error) {
                 return reject(error);

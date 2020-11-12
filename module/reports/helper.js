@@ -71,25 +71,43 @@ module.exports = class ReportsHelper {
                     []
                 );
 
-                if (!projectDetails.length > 0) {
-
-                    return resolve({
-                        message: CONSTANTS.apiResponses.REPORTS_DATA_NOT_FOUND,
-                        result: []
-                    })
-                }
-
-                let tasksReport = {};
-                let categories = {};
+                let tasksReport = {
+                    "total":0,
+                    "completed": 0,
+                    "inProgress": 0,
+                    "notStarted": 0,
+                    "overdue":0
+                };
+                let categories = {
+                    "total":0
+                };
                 let categoriesArray = [];
                 let projectReport = {
-                    "total": projectDetails.length,
+                    "total": 0,
                     "completed": 0,
                     "inProgress": 0,
                     "notStarted": 0,
                     "overdue": 0,
                 };
-            
+
+                if (!projectDetails.length > 0) {
+
+                    return resolve({
+                        message: CONSTANTS.apiResponses.REPORTS_DATA_NOT_FOUND,
+                        result:  {
+                            data_available:false,
+                            data :{ 
+                                categories: categories,
+                                tasks: tasksReport,
+                                projects: projectReport
+                            }
+                        }
+                    })
+                }
+
+                projectReport["total"] =projectDetails.length;
+
+                   
                 await Promise.all(projectDetails.map(async function (project) {
 
                     if (project.categories) {
@@ -174,7 +192,10 @@ module.exports = class ReportsHelper {
                 }
                 return resolve({
                     message: CONSTANTS.apiResponses.REPORTS_GENERATED,
-                    result: response
+                    result: {
+                        data_available:true,
+                        data:response,   
+                    }
                 });
 
             } catch (error) {

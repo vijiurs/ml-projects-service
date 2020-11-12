@@ -36,22 +36,30 @@ module.exports = class Reports {
     "message": "Reports generated successfully.",
     "status": 200,
     "result": {
-        "tasks": {
-            "total": 18,
-            "notStarted": 10,
-            "inProgress": 5,
-            "completed": 3,
-            "overdue": 1
-        },
-        "projects": {
-            "total": 1,
-            "completed": 0,
-            "inProgress": 0,
-            "notStarted": 0,
-            "overdue": 1
+        "data_available": true,
+        "data": {
+            "categories": {
+                "total": 2,
+                "Community": 2,
+                "student": 1
+            },
+            "tasks": {
+                "total": 18,
+                "completed": 3,
+                "notStarted": 10,
+                "overdue": 1,
+                "onGoing": 5
+            },
+            "projects": {
+                "total": 1,
+                "completed": 0,
+                "notStarted": 0,
+                "overdue": 0,
+                "onGoing": 1
+            }
         }
-     }
     }
+}
     * @apiUse successBody
     * @apiUse errorBody
     */

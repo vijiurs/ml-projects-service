@@ -335,7 +335,7 @@ module.exports = class ReportsHelper {
 
                 const projectDetails = await UserProjectsHelper.projectDocument(
                     query,
-                    ["name","taskReport", "status", "tasks", "categories"],
+                    ["title","taskReport", "status", "tasks", "categories"],
                     []
                 );
 

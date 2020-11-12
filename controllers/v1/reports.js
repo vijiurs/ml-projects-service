@@ -74,7 +74,7 @@ module.exports = class Reports {
                     req.body.reportType,
                     req.body.programId ? req.body.programId : "",
                 );
-
+                
                 return resolve(entityReports);
 
             } catch (error) {
@@ -198,5 +198,80 @@ module.exports = class Reports {
             }
         })
     }
+
+        /**
+    * @api {get} /improvement-project/api/v1/reports/detailView/:_id
+    * Get detail view report
+    * @apiVersion 1.0.0
+    * @apiGroup Reports
+     * @apiSampleRequest /improvement-project/api/v1/reports/detailView/5f731631e8d7cd3b88ac0659
+    * @apiParamExample {json} Request:
+     {
+        "reportType":1,
+        "programId":"5da5a3af6ee4a93ce5a1987a"
+      }
+    * @apiParamExample {json} Response:
+    * 
+    {
+    "message": "Chart report data generated succesfully",
+    "status": 200,
+    "result": [
+        {
+            "title": {
+                "text": "title 1 oct"
+            },
+            "series": [
+                {
+                    "data": [
+                        {
+                            "name": "task 1",
+                            "id": "5f7ae023252cc522665b60d6",
+                            "color": "",
+                            "start": 1605100782442,
+                            "end": 1601888291000
+                        }
+                    ]
+                }
+            ],
+            "xAxis": {
+                "min": 1605100782443,
+                "max": 1601888291000
+            }
+        }
+    ]
+}
+*/
+
+    /**
+      * Get details view report data
+      * @method
+      * @name detailView
+      * @param {Object} req - request data.
+      * @param {String} req.params._id - Entity id.
+      * @returns {JSON} view report chart data
+     */
+    async detailView(req) {
+        return new Promise(async (resolve, reject) => {
+            try {
+
+                const entities = await reportsHelper.detailView(
+                    req.params._id,
+                    req.userDetails.userInformation.userId,
+                    req.body.reportType,
+                    req.body.programId ? req.body.programId : "",
+                );
+                return resolve(entities);
+
+            } catch (error) {
+                return reject({
+                    status: error.status || HTTP_STATUS_CODE.internal_server_error.status,
+                    message: error.message || HTTP_STATUS_CODE.internal_server_error.message,
+                    errorObject: error
+                });
+            }
+        })
+    }
+
+    
 
 }

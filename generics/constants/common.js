@@ -17,5 +17,8 @@ module.exports = {
     "SINGLE_TASK_TYPE" : "single",
     "NOT_STARTED" : "not started",
     "RECENTLY_ADDED_PROJECT" : "currentlyAdded",
-    "IMPORTANT_PROJECT" : "importantProject"
+    "IMPORTANT_PROJECT" : "importantProject",
+    "COMPLETED_STATUS" : "completed",
+    "INPROGRESS_STATUS" : "inProgress",
+    "NOT_STARTED_STATUS" : "notStarted"
 };

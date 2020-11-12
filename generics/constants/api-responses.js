@@ -63,6 +63,8 @@ module.exports = {
     "ENTITIES_FOUND": "Entities fetched successfully",
     "ENTITIES_NOT_FOUND": "Entities not found",
     "ENTITY_TYPES_FOUND": "Entity types fetched successfully.",
-    "REPORT_TYPES_FOUND": "Report types fetched successfully."
+    "REPORT_TYPES_FOUND": "Report types fetched successfully.",
+    "REPORT_GENERATED":"Chart report data generated succesfully",
+    
     
 };

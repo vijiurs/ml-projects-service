@@ -41,25 +41,21 @@ module.exports = class ReportsHelper {
                 } else {
                     query["userId"] = userId
                 }
- 
+
                 var endOf = "";
                 var startFrom = "";
-                if (reportType == 0) {
+                if(reportType==0){
+                     let today = moment();
+                     startFrom = today.startOf('week').format('YYYY-MM-DD');
+                     endOf = today.endOf('week').format('YYYY-MM-DD');
+                }
+                else if (reportType == 1) {
                     endOf = moment().subtract(0, 'months').endOf('month').format('YYYY-MM-DD');
                     startFrom = moment().subtract(0, 'months').startOf('month').format('YYYY-MM-DD');
                 } else if (reportType == 3) {
-                    endOf = moment().subtract(1, 'months').endOf('month').format('YYYY-MM-DD');
-                    startFrom = moment().subtract(3, 'months').startOf('month').format('YYYY-MM-DD');
-                } else {
-                    endOf = moment().subtract(0, 'months').endOf('month').format('YYYY-MM-DD');
-                    startFrom = moment().subtract(0, 'months').startOf('month').format('YYYY-MM-DD');
-                    let currentDate = moment().format('YYYY-MM-DD');
-                    if (currentDate != endOf) {
-                        endOf = moment().subtract(1, 'months').endOf('month').format('YYYY-MM-DD');
-                        startFrom = moment().subtract(1, 'months').startOf('month').format('YYYY-MM-DD');
-                    }
-                }
-
+                     startFrom = moment().quarter(moment().quarter()).startOf('quarter').format('YYYY-MM-DD');
+                     endOf = moment().quarter(moment().quarter()).endOf('quarter').format('YYYY-MM-DD');
+                } 
                 query['$or'] = [
                     { "lastSync": { $gte: new Date(startFrom), $lte: new Date(endOf) } },
                     { "tasks": { $elemMatch: { lastSync: { $gte: new Date(startFrom), $lte: new Date(endOf) } } } },
@@ -267,14 +263,14 @@ module.exports = class ReportsHelper {
 
                 let reportTypes = [
                     {
-                        label: "Current Month",
+                        label: "Weekly",
                         value: 0
                     },
                     {
-                        label: "Last Month",
+                        label: "Monthly",
                         value: 1
                     }, {
-                        label: "Last Quarter",
+                        label: "Quarterly",
                         value: 3
                     }]
                 resolve({ result: reportTypes, message: CONSTANTS.apiResponses.REPORT_TYPES_FOUND });
@@ -315,21 +311,18 @@ module.exports = class ReportsHelper {
                 
                 var endOf = "";
                 var startFrom = "";
-                if (reportType == 0) {
-                    endOf = moment().subtract(0, 'months').endOf('month').format('YYYY-MM-DD');
-                    startFrom = moment().subtract(0, 'months').startOf('month').format('YYYY-MM-DD');
-                } else if (reportType == 3) {
-                    endOf = moment().subtract(1, 'months').endOf('month').format('YYYY-MM-DD');
-                    startFrom = moment().subtract(3, 'months').startOf('month').format('YYYY-MM-DD');
-                } else {
-                    endOf = moment().subtract(0, 'months').endOf('month').format('YYYY-MM-DD');
-                    startFrom = moment().subtract(0, 'months').startOf('month').format('YYYY-MM-DD');
-                    let currentDate = moment().format('YYYY-MM-DD');
-                    if (currentDate != endOf) {
-                        endOf = moment().subtract(1, 'months').endOf('month').format('YYYY-MM-DD');
-                        startFrom = moment().subtract(1, 'months').startOf('month').format('YYYY-MM-DD');
-                    }
-                }
+                if(reportType==0){
+                    let today = moment();
+                    startFrom = today.startOf('week').format('YYYY-MM-DD');
+                    endOf = today.endOf('week').format('YYYY-MM-DD');
+               }
+               else if (reportType == 1) {
+                   endOf = moment().subtract(0, 'months').endOf('month').format('YYYY-MM-DD');
+                   startFrom = moment().subtract(0, 'months').startOf('month').format('YYYY-MM-DD');
+               } else if (reportType == 3) {
+                    startFrom = moment().quarter(moment().quarter()).startOf('quarter').format('YYYY-MM-DD');
+                    endOf = moment().quarter(moment().quarter()).endOf('quarter').format('YYYY-MM-DD');
+               } 
 
                 query['$or'] = [
                     { "lastSync": { $gte: new Date(startFrom), $lte: new Date(endOf) } },
@@ -360,10 +353,10 @@ module.exports = class ReportsHelper {
                            
                             let reponseObj = {
                                 title: {
-                                    text: projectList.name
+                                    text: projectList.title
                                 },
                                 series: [{
-                                    name: projectList.name,
+                                    name: projectList.title,
                                     data: []
                                 }],
                                 xAxis: {

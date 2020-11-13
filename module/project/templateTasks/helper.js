@@ -153,7 +153,8 @@ module.exports = class ProjectTemplateTasksHelper {
                     
                     let solutions = 
                     await kendraService.solutionDocuments({
-                        _id : { $in : solutionIds }
+                        _id : { $in : solutionIds },
+                        isReusable : true
                     },["externalId"]);
 
 
@@ -203,40 +204,7 @@ module.exports = class ProjectTemplateTasksHelper {
                 let allValues = {};
                 allValues.type = parsedData.type.toLowerCase(); 
 
-                if ( allValues.type === CONSTANTS.common.ASSESSMENT ) {
-
-                    allValues.assessmentDetails = {};
-
-                    if( parsedData.assessmentType && parsedData.assessmentType !== "" ) {
-                        allValues.assessmentDetails.type = parsedData.assessmentType; 
-                    } else {
-                        parsedData.STATUS = 
-                        CONSTANTS.apiResponses.REQUIRED_ASSESSMENT_TYPE;
-                    }
-                    
-                    if ( parsedData.assessmentSubType && parsedData.assessmentSubType !== "" ) {
-                        allValues.assessmentDetails.subType = parsedData.assessmentSubType;
-                    } else {
-                        parsedData.STATUS = 
-                        CONSTANTS.apiResponses.REQUIRED_ASSESSMENT_SUB_TYPE;
-                    }
-
-                    if ( parsedData.solutionId && parsedData.solutionId !== "" ) {
-
-                        if ( !solutionData[parsedData.solutionId] ) {
-                            parsedData.STATUS = 
-                            CONSTANTS.apiResponses.SOLUTION_NOT_FOUND;
-                        } else {
-                            allValues.assessmentDetails.solutionId = 
-                            ObjectId(solutionData[parsedData.solutionId]);
-                        }
-
-                    } else {
-                        parsedData.STATUS = 
-                        CONSTANTS.apiResponses.REQUIRED_SOLUTION_ID;
-                    }
-
-                } else if ( allValues.type === CONSTANTS.common.CONTENT ) {
+                if ( allValues.type === CONSTANTS.common.CONTENT ) {
                     allValues.contentDetails = {};
 
                     if( parsedData.contentId && parsedData.contentId !== "" ) {
@@ -267,8 +235,39 @@ module.exports = class ProjectTemplateTasksHelper {
                         parsedData.STATUS = 
                         CONSTANTS.apiResponses.REQUIRED_IMPROVEMENT_PROJECT_ID;
                     }
-                } else if ( allValues.type === CONSTANTS.common.MULTIPLE ) {
-                    allValues.children = [];
+                } else { // If type is assessment or observation
+
+                    allValues.solutionDetails = {};
+
+                    if( parsedData.solutionType && parsedData.solutionType !== "" ) {
+                        allValues.solutionDetails.type = parsedData.solutionType; 
+                    } else {
+                        parsedData.STATUS = 
+                        CONSTANTS.apiResponses.REQUIRED_SOLUTION_TYPE;
+                    }
+                    
+                    if ( parsedData.solutionSubType && parsedData.solutionSubType !== "" ) {
+                        allValues.solutionDetails.subType = parsedData.solutionSubType;
+                    } else {
+                        parsedData.STATUS = 
+                        CONSTANTS.apiResponses.REQUIRED_SOLUTION_SUB_TYPE;
+                    }
+
+                    if ( parsedData.solutionId && parsedData.solutionId !== "" ) {
+
+                        if ( !solutionData[parsedData.solutionId] ) {
+                            parsedData.STATUS = 
+                            CONSTANTS.apiResponses.SOLUTION_NOT_FOUND;
+                        } else {
+                            allValues.solutionDetails.solutionId = 
+                            ObjectId(solutionData[parsedData.solutionId]);
+                        }
+
+                    } else {
+                        parsedData.STATUS = 
+                        CONSTANTS.apiResponses.REQUIRED_SOLUTION_ID;
+                    }
+
                 }
 
                 allValues.projectTemplateId = templateId;

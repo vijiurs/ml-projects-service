@@ -44,21 +44,22 @@ module.exports = class ReportsHelper {
 
                 var endOf = "";
                 var startFrom = "";
-                if(reportType==0){
+                
+                if(reportType == 0) {
                      let today = moment();
                      startFrom = today.startOf('week').format('YYYY-MM-DD');
                      endOf = today.endOf('week').format('YYYY-MM-DD');
-                }
-                else if (reportType == 1) {
+                } else if (reportType == 1) {
                     endOf = moment().subtract(0, 'months').endOf('month').format('YYYY-MM-DD');
                     startFrom = moment().subtract(0, 'months').startOf('month').format('YYYY-MM-DD');
                 } else if (reportType == 3) {
                      startFrom = moment().quarter(moment().quarter()).startOf('quarter').format('YYYY-MM-DD');
                      endOf = moment().quarter(moment().quarter()).endOf('quarter').format('YYYY-MM-DD');
-                } 
+                }
+
                 query['$or'] = [
-                    { "lastSync": { $gte: new Date(startFrom), $lte: new Date(endOf) } },
-                    { "tasks": { $elemMatch: { lastSync: { $gte: new Date(startFrom), $lte: new Date(endOf) } } } },
+                    { "lastSync" : { $gte: new Date(startFrom), $lte: new Date(endOf) } },
+                    { "tasks" : { $elemMatch: { lastSync: { $gte: new Date(startFrom), $lte: new Date(endOf) } } } },
                 ]
 
                 if (programId) {

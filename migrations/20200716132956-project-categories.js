@@ -12,7 +12,7 @@ module.exports = {
         updatedAt : new Date(),
         updatedBy : "SYSTEM",
         createdBy : "SYSTEM",
-        icon : "individualAssessments.png",
+        icon : "teachers.png",
         isDeleted : false,
         isVisible : true,
         status : "active"
@@ -24,7 +24,7 @@ module.exports = {
         updatedAt : new Date(),
         updatedBy : "SYSTEM",
         createdBy : "SYSTEM",
-        icon : "institutionalAssessments.png",
+        icon : "students.png",
         isDeleted : false,
         isVisible : true,
         status : "active"
@@ -36,7 +36,7 @@ module.exports = {
         updatedAt : new Date(),
         updatedBy : "SYSTEM",
         createdBy : "SYSTEM",
-        icon : "observationSolutions.png",
+        icon : "infrastructure.png",
         isDeleted : false,
         isVisible : true,
         status : "active"
@@ -48,7 +48,7 @@ module.exports = {
         updatedAt : new Date(),
         updatedBy : "SYSTEM",
         createdBy : "SYSTEM",
-        icon : "drafts.png",
+        icon : "community.png",
         isDeleted : false,
         isVisible : true,
         status : "active"

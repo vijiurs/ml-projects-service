@@ -75,6 +75,7 @@ module.exports = {
         resources : {
             type : Array,
             default : []
-        }
+        },
+        lastSync : Date
     }
 };

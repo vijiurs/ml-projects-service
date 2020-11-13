@@ -36,7 +36,7 @@ module.exports = {
             type : String,
             required : true
         },
-        assessmentDetails : {
+        solutionDetails : {
             type : Object,
             default : {}
         },

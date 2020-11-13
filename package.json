@@ -1,7 +1,7 @@
 {
-  "name": "sl-unnati-services",
+  "name": "sl-unnati-service",
   "version": "1.0.0",
-  "description": "Unnati services",
+  "description": "Unnati service",
   "main": "app.js",
   "bin": {
     "unnati-migrations": "module/migrations/bin/migrations.js"
@@ -13,7 +13,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/shikshalokam/sl-unnati-services.git"
+    "url": "https://github.com/shikshalokam/sl-unnati-service.git"
   },
   "keywords": [
     "shikshalokam"
@@ -21,9 +21,9 @@
   "author": "Shikshalokam <info@shikshalokam.com>",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/shikshalokam/sl-unnati-services/issues"
+    "url": "https://github.com/shikshalokam/sl-unnati-service/issues"
   },
-  "homepage": "https://github.com/shikshalokam/sl-unnati-services#readme",
+  "homepage": "https://github.com/shikshalokam/sl-unnati-service#readme",
   "dependencies": {
     "async": "^3.2.0",
     "body-parser": "^1.19.0",

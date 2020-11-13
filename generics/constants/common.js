@@ -20,5 +20,6 @@ module.exports = {
     "IMPORTANT_PROJECT" : "importantProject",
     "COMPLETED_STATUS" : "completed",
     "INPROGRESS_STATUS" : "inProgress",
-    "NOT_STARTED_STATUS" : "notStarted"
+    "NOT_STARTED_STATUS" : "notStarted",
+    "OBSERVATION" : "observation"
 };

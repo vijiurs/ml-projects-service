@@ -465,7 +465,7 @@ module.exports = class UserProjects extends Abstract {
                 "updatedAt": "2020-09-29T09:08:41.667Z",
                 "createdAt": "2020-09-29T09:08:41.667Z",
                 "__v": 0,
-                "status": "not started"
+                "status": "notStarted"
             }
         ],
         "updatedBy": "01c04166-a65e-4e92-a87b-a9e4194e771d",
@@ -474,7 +474,7 @@ module.exports = class UserProjects extends Abstract {
         "deleted": false,
         "name": "Test-2",
         "description": "improving school library",
-        "status": "draft",
+        "status": "notStarted",
         "updatedAt": "2020-09-29T11:41:28.656Z",
         "createdAt": "2020-09-11T08:18:22.077Z",
         "__v": 0,

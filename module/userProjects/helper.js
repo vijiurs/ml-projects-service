@@ -192,12 +192,14 @@ module.exports = class UserProjectsHelper {
 
                 categoriesData = categoriesData.map(category=>{
                     return {
+                        _id : category._id,
                         label : category.name,
                         value : category.externalId 
                     };
                 });
 
                 categoriesData.push({
+                    _id : "",
                     label : CONSTANTS.common.OTHERS,
                     value : CONSTANTS.common.OTHERS.toLowerCase()
                 });
@@ -605,12 +607,14 @@ module.exports = class UserProjectsHelper {
 
                 let taskReport = {};
 
-                if( libraryProjects.result.tasks && libraryProjects.result.tasks.length > 0 ) {
+                if( 
+                    libraryProjects.result.tasks && 
+                    libraryProjects.result.tasks.length > 0 
+                ) {
                     
                     libraryProjects.result.tasks = await _projectTask(
                         libraryProjects.result.tasks,
-                        true,
-                        {}
+                        true
                     );
 
                     taskReport.total = libraryProjects.result.tasks.length;
@@ -640,6 +644,7 @@ module.exports = class UserProjectsHelper {
                 
                 libraryProjects.result.userId = libraryProjects.result.updatedBy = libraryProjects.result.createdBy = userId;
                 libraryProjects.result.lastDownloadedAt = new Date();
+                libraryProjects.result.status = CONSTANTS.common.NOT_STARTED_STATUS;
 
                 let projectCreation = await database.models.projects.create(
                     _.merge(
@@ -855,6 +860,7 @@ module.exports = class UserProjectsHelper {
                 });
 
                 updateProject.updatedBy = userId;
+                updateProject.updatedAt =  updateProject.lastSync = new Date();
 
                 if( data.resources ) {
                     updateProject.resources = data.resources;
@@ -1150,7 +1156,7 @@ function _projectInformation(project) {
         ["externalId","name"]
     );
 
-    project.status = CONSTANTS.common.NOT_STARTED;
+    project.status = CONSTANTS.common.NOT_STARTED_STATUS;
 
     if( project.metaInformation ) {
         Object.keys(project.metaInformation).forEach(projectMetaKey => {
@@ -1173,19 +1179,20 @@ function _projectInformation(project) {
   * @returns {Object} Project task.
 */
 
-function _projectTask(task) {
+function _projectTask(task,isImportedFromLibrary = false) {
 
     task.forEach(singleTask => {
 
         singleTask.externalId = singleTask.externalId ? singleTask.externalId : singleTask.name.toLowerCase();
         singleTask.type = singleTask.type ? singleTask.type : CONSTANTS.common.SINGLE_TASK_TYPE;
-        singleTask.status = singleTask.status ? singleTask.status : CONSTANTS.common.NOT_STARTED;
+        singleTask.status = singleTask.status ? singleTask.status : CONSTANTS.common.NOT_STARTED_STATUS;
         singleTask.isDeleted = singleTask.isDeleted ? singleTask.isDeleted : false;
         singleTask.isDeleteable = singleTask.isDeleteable ? singleTask.isDeleteable : false;
         singleTask.createdAt = singleTask.createdAt ? singleTask.createdAt : new Date();
-        singleTask.updatedAt = singleTask.updatedAt ? singleTask.updatedAt : new Date();
+        singleTask.updatedAt = new Date();
         singleTask._id = UTILS.isValidMongoId(singleTask._id.toString()) ? uuidv4() : singleTask._id;
-        singleTask.isImportedFromLibrary = singleTask.isACustomTask;
+        singleTask.isImportedFromLibrary = isImportedFromLibrary;
+        singleTask.lastSync = new Date();
 
         if( singleTask.startDate ) {
             singleTask.startDate = singleTask.startDate; 

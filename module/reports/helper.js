@@ -120,7 +120,7 @@ module.exports = class ReportsHelper {
                                 categories[category.name] = 1;
                             }
                         });
-                        categories['total'] = categories['total'] + categoriesArray.length;
+                        categories['total'] = categories['total'] + project.categories.length;
                     }
 
                     if (project.status == CONSTANTS.common.COMPLETED_STATUS) {

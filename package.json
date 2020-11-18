@@ -1,10 +1,10 @@
 {
-  "name": "sl-unnati-service",
+  "name": "sl-improvement-service",
   "version": "1.0.0",
-  "description": "Unnati service",
+  "description": "Improvement service",
   "main": "app.js",
   "bin": {
-    "unnati-migrations": "module/migrations/bin/migrations.js"
+    "improvement-service-migrations": "module/migrations/bin/migrations.js"
   },
   "scripts": {
     "test": "mocha --timeout 10000",

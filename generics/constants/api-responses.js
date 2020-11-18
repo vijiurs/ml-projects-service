@@ -66,5 +66,6 @@ module.exports = {
     "REPORT_TYPES_FOUND": "Report types fetched successfully.",
     "REPORT_GENERATED": "Chart report data generated succesfully.",
     "PRESSIGNED_URLS_GENERATED": "File upload urls generated successfully.",
-    "FAILED_TO_GENERATE_PRESSIGNED_URLS": "Failed to generate file upload urls."
+    "FAILED_TO_GENERATE_PRESSIGNED_URLS": "Failed to generate file upload urls.",
+    "TASKS_STATUS_FETCHED" : "Tasks status fetched successfully"
 };

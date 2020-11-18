@@ -68,6 +68,10 @@ module.exports = {
         visibleIf : {
             type : Array,
             default : []
+        },
+        hasSubTasks : {
+            type : Boolean,
+            default : false
         }
     }
 };

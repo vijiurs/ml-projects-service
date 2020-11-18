@@ -796,8 +796,7 @@ module.exports = class UserProjectsHelper {
                     let taskReport = {};
 
                     updateProject.tasks = await _projectTask(
-                        data.tasks,
-                        userId
+                        data.tasks
                     );
 
                     if (

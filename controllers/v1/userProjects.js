@@ -801,7 +801,7 @@ module.exports = class UserProjects extends Abstract {
 
 
     /**
-    * @api {get} /improvement-project/api/v1/userProjects/getFileUploadUrl getFileUploadUrl
+    * @api {POST} /improvement-project/api/v1/userProjects/getFileUploadUrl getFileUploadUrl
     * Get file upload urls
     * @apiVersion 1.0.0
     * @apiGroup User Projects

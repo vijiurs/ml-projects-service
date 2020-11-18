@@ -801,35 +801,43 @@ module.exports = class UserProjects extends Abstract {
 
 
     /**
-    * @api {get} /improvement-project/api/v1/userProjects/getFileUploadUrl getFileUploadUrl
+    * @api {POST} /improvement-project/api/v1/userProjects/getFileUploadUrl getFileUploadUrl
     * Get file upload urls
     * @apiVersion 1.0.0
     * @apiGroup User Projects
     * @apiSampleRequest /improvement-project/api/v1/userProjects/getFileUploadUrl
     * @apiParamExample {json} Request:
     * {
-    *   	"fileNames":["uploadFile.jpg","taskComplete.png"]
-    * }
+        "5f72f9998925ec7c60f79a91": {
+            "images": ["uploadFile.jpg", "uploadFile2.jpg"]
+        }
+      }
     * @apiParamExample {json} Response:
-    *{
+    * {
         "message": "File upload urls generated successfully.",
         "status": 200,
-        "result": [
-            {
-                "url": "https://storage.googleapis.com/sl-dev-storage/ab.jpg?GoogleAccessId=sl-dev-storage%40shikshalokam.iam.gserviceaccount.com&Expires=1605688492&Signature=V3B2dgD9QPVgCJOe8DORpp1aDAGGm3AjUzLbLlbMGJ88ISxdvHoPQ6ZE0sKIvwHtEXSSOrV0RllQ%2BEAiVFxXjxfs6lLpKIrJeEOFLVXgIaKmxpm3C4uiCBbX5NB2fKdSuazNkgLLzOAwJt3n3BlZ%2F8ZULrmzAVJAAu75hpC0baL6fTlbLtk%2Fbltew2XEOCF3mw1D%2FBCkyJ6iSRTcC4T0zTjjz7bl86G5Br5tVNQkTW7dAEmgvh%2FOugxK%2FW0Oeg4snCz88INelU9znuXtv5ZuwqhtNsvjTyBEpDOoTV48vAcckACatIY8P79iJ5ug2E0XxhlpyN%2FWKmZ5QGc8KWU2MA%3D%3D",
-                "payload": {
-                    "sourcePath": "ab.jpg"
-                },
-                "cloudStorage": "GC"
-            },
-            {
-                "url": "https://storage.googleapis.com/sl-dev-storage/ann.png?GoogleAccessId=sl-dev-storage%40shikshalokam.iam.gserviceaccount.com&Expires=1605688492&Signature=fj0%2BuRYVPOt3DmAgch5HE6VIisMIv6xGYE5wwBhchJA0RCHkth%2F5QdtWyu4LbD7h55kO4WiTs722CrJdQwpt%2BAfAE4GcISyQwj%2B4elhwOPwT2mtdDUdr5YUAsVsuPmz4J8NE1JMtPWbZaOp%2FuQd9h7y7A38A0KvjBOpAXyc9O5DTIdrbIOYAXn7vBRFBXhEkSMkX6SJJw2oMIavBUUmAUFDv3vwwIlHkEQs57GrC%2FvBbGbq79iNLhFCO%2BQl7SIGd%2B8kAq2q%2BhC3XScnMuvoC%2Bjmr7qWmb6YzPaH7UYtPz%2BHkiyPlZt60wXTPVpINZFH6qORouqMNHBPGUYv4HwBTzg%3D%3D",
-                "payload": {
-                    "sourcePath": "ann.png"
-                },
-                "cloudStorage": "GC"
+        "result": {
+            "5f72f9998925ec7c60f79a91": {
+                "images": [
+                    {
+                        "file": "uploadFile.jpg",
+                        "url": "https://storage.googleapis.com/sl-dev-storage/01c04166-a65e-4e92-a87b-a9e4194e771d/5f72f9998925ec7c60f79a91/cd6763c9-a64a-4241-9907-4365970e8d11_uploadFile.jpg?GoogleAccessId=sl-dev-storage%40shikshalokam.iam.gserviceaccount.com&Expires=1605698490&Signature=ej6WHNOyx6EvUbAi81pDcYb3YqM7dkAhNT1Ktsf%2FTiRhwL%2ByhS89E1zRspIYlVOutlzoZXgRAl%2Fd0y%2BQcdryWYgfVAKAZmJVZtK3oVisLxhkFCKYeHAbzZ%2FadkCXdU3e1AVJGyRvKoN04Yr84%2BIa%2F1ApszOYDmVT%2Fn%2FOi4JSScbvzhe82bSe5xEr%2FPDwDq48%2FKgUhAc0faP%2FlAA2Wf7V1Ifuxc3quw9OpzvND8CKuugXZ%2FDZ6mhF0O80IXwP%2BFJOn4u9ydHqwXM3zDRDOO0WMh6VBLuvRFBRwJsrJG3v5zZMw0r5cYOIvkW4Tqo%2FefpXUDsvCVBTlZ9zBEdwx2Jshw%3D%3D",
+                        "payload": {
+                            "sourcePath": "01c04166-a65e-4e92-a87b-a9e4194e771d/5f72f9998925ec7c60f79a91/cd6763c9-a64a-4241-9907-4365970e8d11_uploadFile.jpg"
+                        },
+                        "cloudStorage": "GC"
+                    },
+                    {
+                        "file": "uploadFile2.jpg",
+                        "url": "https://storage.googleapis.com/sl-dev-storage/01c04166-a65e-4e92-a87b-a9e4194e771d/5f72f9998925ec7c60f79a91/1626ec00-f890-4f8b-9594-4342868e8703_uploadFile2.jpg?GoogleAccessId=sl-dev-storage%40shikshalokam.iam.gserviceaccount.com&Expires=1605698490&Signature=RucBanx70czWdcqNb5R3wTtATUCGl7BH6vUbx6GJqJJnxvVF179XLCgPHUcsv9eXNv9o0ptueFwA%2BHTAOA4d7g6tx2G7BYqua1zMsGIw5%2B57dUaIRfgXQgO%2Br5voQvKMDmSUJMx9nVY0Dfe5xce3xbcn4XjtQKopb%2Fjh1YqnCmnK7EujbU2tfk0ENBKHtEyd%2FdZlpCtQ7IqnZ%2FZJ73OZgX%2FjnFd18iJ2ce7%2FJ%2FwjUBUQnTBLPk7n%2FMFDkLfNMeSYlutwkwcApLj9cuLO%2FbmuEfT%2Fa%2BxzJz1xF639piOpTW6vAFHgXJz%2FLtR9nMUidMTOnhZdhTjjr%2BFiokqK03SGNw%3D%3D",
+                        "payload": {
+                            "sourcePath": "01c04166-a65e-4e92-a87b-a9e4194e771d/5f72f9998925ec7c60f79a91/1626ec00-f890-4f8b-9594-4342868e8703_uploadFile2.jpg"
+                        },
+                        "cloudStorage": "GC"
+                    }
+                ]
             }
-        ]
+        }
     }
     * @apiUse successBody
     * @apiUse errorBody
@@ -848,7 +856,7 @@ module.exports = class UserProjects extends Abstract {
             try {
 
                 const fileUploadUrls = await userProjectsHelper.getFileUploadUrl(
-                    req.body.fileNames,
+                    req.body,
                     req.userDetails.userInformation.userId
                 );
                 return resolve(fileUploadUrls);

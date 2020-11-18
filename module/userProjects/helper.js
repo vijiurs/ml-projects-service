@@ -5,13 +5,13 @@
  * Description : Projects helper functionality.
  */
 
- // Dependencies
+// Dependencies
 
- const kendraService = require(GENERICS_FILES_PATH + "/services/kendra");
- const libraryCategoriesHelper = require(MODULES_BASE_PATH + "/library/categories/helper");
- const projectTemplatesHelper = require(MODULES_BASE_PATH + "/project/templates/helper");
- const projectTemplateTasksHelper = require(MODULES_BASE_PATH + "/project/templateTasks/helper");
- const {v4: uuidv4 } = require('uuid');
+const kendraService = require(GENERICS_FILES_PATH + "/services/kendra");
+const libraryCategoriesHelper = require(MODULES_BASE_PATH + "/library/categories/helper");
+const projectTemplatesHelper = require(MODULES_BASE_PATH + "/project/templates/helper");
+const projectTemplateTasksHelper = require(MODULES_BASE_PATH + "/project/templateTasks/helper");
+const { v4: uuidv4 } = require('uuid');
 
 /**
     * UserProjectsHelper
@@ -29,43 +29,43 @@ module.exports = class UserProjectsHelper {
      * @param {Array} [skipFields = "none"] - field not to include
      * @returns {Array} Lists of projects. 
      */
-    
+
     static projectDocument(
-        filterData = "all", 
+        filterData = "all",
         fieldsArray = "all",
         skipFields = "none"
     ) {
         return new Promise(async (resolve, reject) => {
             try {
-                
+
                 let queryObject = (filterData != "all") ? filterData : {};
                 let projection = {}
-           
+
                 if (fieldsArray != "all") {
                     fieldsArray.forEach(field => {
                         projection[field] = 1;
-                   });
-               }
-               
-               if( skipFields !== "none" ) {
-                   skipFields.forEach(field=>{
-                       projection[field] = 0;
-                   });
-               }
-               
-               let templates = 
-               await database.models.projects.find(
-                   queryObject, 
-                   projection
-               ).lean();
-           
-               return resolve(templates);
-           
-           } catch (error) {
-               return reject(error);
-           }
-       });
-   }
+                    });
+                }
+
+                if (skipFields !== "none") {
+                    skipFields.forEach(field => {
+                        projection[field] = 0;
+                    });
+                }
+
+                let templates =
+                    await database.models.projects.find(
+                        queryObject,
+                        projection
+                    ).lean();
+
+                return resolve(templates);
+
+            } catch (error) {
+                return reject(error);
+            }
+        });
+    }
 
     /**
       * List of projects.
@@ -78,12 +78,12 @@ module.exports = class UserProjectsHelper {
     static list(userId) {
         return new Promise(async (resolve, reject) => {
             try {
-                
-                let projects = 
-                await this.projectDocument(
-                    {
-                        userId : userId
-                    },"all",[
+
+                let projects =
+                    await this.projectDocument(
+                        {
+                            userId: userId
+                        }, "all", [
                         "createdBy",
                         "updatedBy",
                         "rootOrganisations",
@@ -93,13 +93,13 @@ module.exports = class UserProjectsHelper {
                         "projectTemplateExternalId",
                         "__v"
                     ]
-                );
+                    );
 
-                if( !projects.length > 0 ) {
-                    
+                if (!projects.length > 0) {
+
                     return resolve({
-                        message : CONSTANTS.apiResponses.PROJECT_NOT_FOUND,
-                        result : []
+                        message: CONSTANTS.apiResponses.PROJECT_NOT_FOUND,
+                        result: []
                     })
                 }
 
@@ -107,23 +107,23 @@ module.exports = class UserProjectsHelper {
 
                 let updateLastDownloadedDate = new Date();
 
-                for( let project = 0 ; project < projects.length ; project ++) {
+                for (let project = 0; project < projects.length; project++) {
                     let currentProject = projects[project];
-                    currentProject.entityInformation = 
-                    _.pick(
-                        currentProject.entityInformation,
-                        ["externalId","name"]
-                    );
+                    currentProject.entityInformation =
+                        _.pick(
+                            currentProject.entityInformation,
+                            ["externalId", "name"]
+                        );
 
-                    currentProject.solutionInformation = 
-                    _.pick(
-                        currentProject.solutionInformation,
-                        ["externalId","name","description","_id"]
-                    );
+                    currentProject.solutionInformation =
+                        _.pick(
+                            currentProject.solutionInformation,
+                            ["externalId", "name", "description", "_id"]
+                        );
 
                     currentProject.programInformation = _.pick(
                         currentProject.programInformation,
-                        ["externalId","name","description","_id"]
+                        ["externalId", "name", "description", "_id"]
                     );
 
                     currentProject.lastDownloadedAt = updateLastDownloadedDate;
@@ -131,20 +131,20 @@ module.exports = class UserProjectsHelper {
                     projectIds.push(currentProject._id);
 
                     delete currentProject.metaInformation;
-                } 
+                }
 
                 await database.models.projects.updateMany({
-                    _id : { $in : projectIds }
-                },{
-                    $set : {
-                        lastDownloadedAt : updateLastDownloadedDate
+                    _id: { $in: projectIds }
+                }, {
+                    $set: {
+                        lastDownloadedAt: updateLastDownloadedDate
                     }
                 });
 
 
                 return resolve({
-                    message : CONSTANTS.apiResponses.PROJECTS_FETCHED,
-                    result : projects
+                    message: CONSTANTS.apiResponses.PROJECTS_FETCHED,
+                    result: projects
                 });
 
             } catch (error) {
@@ -153,55 +153,55 @@ module.exports = class UserProjectsHelper {
         })
     }
 
-      /**
-      * List of projects meta form.
-      * @method
-      * @name metaForm
-      * @returns {Object} List of projects meta form.
-     */
+    /**
+    * List of projects meta form.
+    * @method
+    * @name metaForm
+    * @returns {Object} List of projects meta form.
+   */
 
     static metaForm() {
         return new Promise(async (resolve, reject) => {
             try {
-                
-                let forms = 
-                await kendraService.formsDocuments(
-                    {
-                        name : "projects"
-                    },[
+
+                let forms =
+                    await kendraService.formsDocuments(
+                        {
+                            name: "projects"
+                        }, [
                         "value"
                     ]
-                );
+                    );
 
-                if( !forms.success ) {
+                if (!forms.success) {
 
                     return resolve({
-                        message : CONSTANTS.apiResponses.PROJECTS_FORM_NOT_FOUND,
-                        result : []
+                        message: CONSTANTS.apiResponses.PROJECTS_FORM_NOT_FOUND,
+                        result: []
                     });
 
                 }
 
-                let categoriesData = 
-                await database.models.projectCategories.find({},
-                    {
-                        name : 1,
-                        externalId : 1
-                    }
-                ).lean();
+                let categoriesData =
+                    await database.models.projectCategories.find({},
+                        {
+                            name: 1,
+                            externalId: 1
+                        }
+                    ).lean();
 
-                categoriesData = categoriesData.map(category=>{
+                categoriesData = categoriesData.map(category => {
                     return {
-                        _id : category._id,
-                        label : category.name,
-                        value : category.externalId 
+                        _id: category._id,
+                        label: category.name,
+                        value: category.externalId
                     };
                 });
 
                 categoriesData.push({
-                    _id : "",
-                    label : CONSTANTS.common.OTHERS,
-                    value : CONSTANTS.common.OTHERS.toLowerCase()
+                    _id: "",
+                    label: CONSTANTS.common.OTHERS,
+                    value: CONSTANTS.common.OTHERS.toLowerCase()
                 });
 
                 let formsData = forms.data[0].value;
@@ -209,8 +209,8 @@ module.exports = class UserProjectsHelper {
                 formsData[formsData.length - 1].options = categoriesData;
 
                 return resolve({
-                    message : CONSTANTS.apiResponses.PROJECTS_METAFORM_FETCHED,
-                    result : formsData
+                    message: CONSTANTS.apiResponses.PROJECTS_METAFORM_FETCHED,
+                    result: formsData
                 });
 
             } catch (error) {
@@ -229,28 +229,28 @@ module.exports = class UserProjectsHelper {
     static tasksMetaForm() {
         return new Promise(async (resolve, reject) => {
             try {
-                
-                let forms = 
-                await kendraService.formsDocuments(
-                    {
-                        name : "projectTasks"
-                    },[
+
+                let forms =
+                    await kendraService.formsDocuments(
+                        {
+                            name: "projectTasks"
+                        }, [
                         "value"
                     ]
-                );
+                    );
 
-                if( !forms.success ) {
+                if (!forms.success) {
 
                     return resolve({
-                        message : CONSTANTS.apiResponses.PROJECT_TASKS_FORM_NOT_FOUND,
-                        result : []
+                        message: CONSTANTS.apiResponses.PROJECT_TASKS_FORM_NOT_FOUND,
+                        result: []
                     });
 
                 }
 
                 return resolve({
-                    message : CONSTANTS.apiResponses.PROJECT_TASKS_METAFORM_FETCHED,
-                    result : forms.data[0].value
+                    message: CONSTANTS.apiResponses.PROJECT_TASKS_METAFORM_FETCHED,
+                    result: forms.data[0].value
                 });
 
             } catch (error) {
@@ -269,14 +269,14 @@ module.exports = class UserProjectsHelper {
       * @returns {Object}  Bulk create user projects.
      */
 
-    static bulkCreate( csvData,userId,userToken ) {
+    static bulkCreate(csvData, userId, userToken) {
         return new Promise(async (resolve, reject) => {
             try {
 
                 const fileName = `bulk-create-user-`;
                 let fileStream = new CSV_FILE_STREAM(fileName);
                 let input = fileStream.initStream();
-      
+
                 (async function () {
                     await fileStream.getProcessorPromise();
                     return resolve({
@@ -289,7 +289,7 @@ module.exports = class UserProjectsHelper {
                 let entityIds = [];
 
                 csvData.forEach(data => {
-                    
+
                     templateIds.push(data.templateId);
                     entityIds.push(data.entityId);
 
@@ -299,40 +299,40 @@ module.exports = class UserProjectsHelper {
 
                 if (entityIds.length > 0) {
                     const entitiesData = await _entitiesInformation(entityIds);
-                    entityDocument = 
-                    entitiesData.reduce((ac, entity) => ({ ...ac, [entity._id.toString()]: entity}), {});
+                    entityDocument =
+                        entitiesData.reduce((ac, entity) => ({ ...ac, [entity._id.toString()]: entity }), {});
                 }
 
                 let templateData = {};
                 let solutionIds = [];
                 let programIds = [];
 
-                if( templateIds.length > 0 ) {
-                    
-                    const projectTemplates = 
-                    await projectTemplatesHelper.templateDocument({
-                        externalId : {
-                            $in : templateIds
-                        },
-                        isReusable : false
-                    },"all",
-                    [
-                        "ratings",
-                        "noOfRatings",
-                        "averageRating"
-                    ]);
+                if (templateIds.length > 0) {
 
-                    if( projectTemplates.length > 0 ) {
-                        
+                    const projectTemplates =
+                        await projectTemplatesHelper.templateDocument({
+                            externalId: {
+                                $in: templateIds
+                            },
+                            isReusable: false
+                        }, "all",
+                            [
+                                "ratings",
+                                "noOfRatings",
+                                "averageRating"
+                            ]);
+
+                    if (projectTemplates.length > 0) {
+
                         projectTemplates.forEach(template => {
-                            
+
                             templateData[template.externalId] = template;
-                            
-                            if( template.solutionId ) {
+
+                            if (template.solutionId) {
                                 solutionIds.push(template.solutionId);
                             }
 
-                            if( template.programId ) {
+                            if (template.programId) {
                                 programIds.push(template.programId);
                             }
 
@@ -342,33 +342,33 @@ module.exports = class UserProjectsHelper {
 
                 let solutions = {};
 
-                if( solutionIds.length > 0 ) {
+                if (solutionIds.length > 0) {
 
-                    let solutionData = 
-                    await kendraService.solutionDocuments({
-                        _id : {
-                            $in : solutionIds
-                        }
-                    },"all",[
-                        "levelToScoreMapping",
-                        "scoringSystem",
-                        "themes",
-                        "flattenedThemes",
-                        "questionSequenceByEcm",
-                        "entityProfileFieldsPerEntityTypes",
-                        "evidenceMethods",
-                        "sections",
-                        "noOfRatingLevels",
-                        "roles",
-                        "captureGpsLocationAtQuestionLevel",
-                        "enableQuestionReadOut"
-                    ]);
+                    let solutionData =
+                        await kendraService.solutionDocuments({
+                            _id: {
+                                $in: solutionIds
+                            }
+                        }, "all", [
+                            "levelToScoreMapping",
+                            "scoringSystem",
+                            "themes",
+                            "flattenedThemes",
+                            "questionSequenceByEcm",
+                            "entityProfileFieldsPerEntityTypes",
+                            "evidenceMethods",
+                            "sections",
+                            "noOfRatingLevels",
+                            "roles",
+                            "captureGpsLocationAtQuestionLevel",
+                            "enableQuestionReadOut"
+                        ]);
 
-                    if( 
-                        solutionData.success && 
-                        solutionData.data && solutionData.data.length > 0 
+                    if (
+                        solutionData.success &&
+                        solutionData.data && solutionData.data.length > 0
                     ) {
-                        
+
                         solutionData.data.forEach(solution => {
                             solutions[solution.externalId] = solution;
                         })
@@ -378,74 +378,74 @@ module.exports = class UserProjectsHelper {
 
                 let programs = {};
 
-                if( programIds.length > 0 ) {
+                if (programIds.length > 0) {
 
-                    let programData = 
-                    await kendraService.programsDocuments({
-                        _id : {
-                            $in : programIds
-                        }
-                    },"all",["components"]);
+                    let programData =
+                        await kendraService.programsDocuments({
+                            _id: {
+                                $in: programIds
+                            }
+                        }, "all", ["components"]);
 
-                    if( programData.success && programData.data.length > 0 ) {
-                        
+                    if (programData.success && programData.data.length > 0) {
+
                         programData.data.forEach(program => {
                             programs[program.externalId] = program;
                         })
                     }
                 }
 
-                for ( 
-                    let pointerToCsvData = 0; 
-                    pointerToCsvData < csvData.length ; 
-                    pointerToCsvData ++ 
+                for (
+                    let pointerToCsvData = 0;
+                    pointerToCsvData < csvData.length;
+                    pointerToCsvData++
                 ) {
 
                     let currentCsvData = csvData[pointerToCsvData];
 
-                    if( !templateData[currentCsvData.templateId] ) {
-                        currentCsvData["STATUS"] = 
-                        CONSTANTS.apiResponses.PROJECT_TEMPLATE_NOT_FOUND;
+                    if (!templateData[currentCsvData.templateId]) {
+                        currentCsvData["STATUS"] =
+                            CONSTANTS.apiResponses.PROJECT_TEMPLATE_NOT_FOUND;
                         continue;
                     }
 
-                    let currentTemplateData = 
-                    templateData[csvData[pointerToCsvData].templateId];
+                    let currentTemplateData =
+                        templateData[csvData[pointerToCsvData].templateId];
 
                     currentTemplateData.userId = csvData[pointerToCsvData]["keycloak-userId"];
                     currentTemplateData.createdBy = userId;
                     currentTemplateData.updatedBy = userId;
 
-                    if( 
-                        currentTemplateData && 
-                        currentTemplateData.tasks && 
-                        currentTemplateData.tasks.length > 0 
+                    if (
+                        currentTemplateData &&
+                        currentTemplateData.tasks &&
+                        currentTemplateData.tasks.length > 0
                     ) {
-                        
-                        const tasksAndSubTasks = 
-                        await projectTemplateTasksHelper.tasksAndSubTasks(
-                            currentTemplateData._id
-                        );
+
+                        const tasksAndSubTasks =
+                            await projectTemplateTasksHelper.tasksAndSubTasks(
+                                currentTemplateData._id
+                            );
 
                         currentTemplateData.tasks = _projectTask(tasksAndSubTasks);
                     }
 
                     let solutionInformation = {};
 
-                    if ( currentTemplateData.solutionExternalId ) {
+                    if (currentTemplateData.solutionExternalId) {
 
-                        if( !solutions[currentTemplateData.solutionExternalId] ) {
-                            currentCsvData["STATUS"] = 
-                            CONSTANTS.apiResponses.SOLUTION_NOT_FOUND;
+                        if (!solutions[currentTemplateData.solutionExternalId]) {
+                            currentCsvData["STATUS"] =
+                                CONSTANTS.apiResponses.SOLUTION_NOT_FOUND;
                             continue;
                         }
 
                         solutionInformation = solutions[currentTemplateData.solutionExternalId];
-                        currentTemplateData.solutionInformation = 
-                        _.omit(
-                            solutionInformation,
-                            ["entities","programId","programExternalId"]
-                        );
+                        currentTemplateData.solutionInformation =
+                            _.omit(
+                                solutionInformation,
+                                ["entities", "programId", "programExternalId"]
+                            );
 
                         currentTemplateData.createdFor = solutionInformation.createdFor;
                         currentTemplateData.rootOrganisations = solutionInformation.rootOrganisations;
@@ -454,59 +454,59 @@ module.exports = class UserProjectsHelper {
                         delete currentTemplateData.solutionExternalId;
                     }
 
-                    if( currentTemplateData.programExternalId ) {
+                    if (currentTemplateData.programExternalId) {
 
-                        if( !programs[currentTemplateData.programExternalId] ) {
-                            currentCsvData["STATUS"] = 
-                            CONSTANTS.apiResponses.PROGRAM_NOT_FOUND;
+                        if (!programs[currentTemplateData.programExternalId]) {
+                            currentCsvData["STATUS"] =
+                                CONSTANTS.apiResponses.PROGRAM_NOT_FOUND;
                             continue;
                         }
 
-                        currentTemplateData.programInformation = 
-                        programs[currentTemplateData.programExternalId];
+                        currentTemplateData.programInformation =
+                            programs[currentTemplateData.programExternalId];
 
                         delete currentTemplateData.programId;
                         delete currentTemplateData.programExternalId;
                     }
 
-                    if( entityDocument[csvData[pointerToCsvData].entityId] ) {
-                        
+                    if (entityDocument[csvData[pointerToCsvData].entityId]) {
+
                         let entities = [];
 
-                        if( 
-                            solutionInformation.entities && 
-                            solutionInformation.entities.length > 0 
+                        if (
+                            solutionInformation.entities &&
+                            solutionInformation.entities.length > 0
                         ) {
-                            let entityIndex = 
-                            solutionInformation.entities.findIndex(entity => entity._id === csvData[pointerToCsvData].entityId);
+                            let entityIndex =
+                                solutionInformation.entities.findIndex(entity => entity._id === csvData[pointerToCsvData].entityId);
 
-                            if( entityIndex < 0 ) {
-                                entities = 
-                                solutionInformation.entities.push(ObjectId(csvData[pointerToCsvData].entityId))
+                            if (entityIndex < 0) {
+                                entities =
+                                    solutionInformation.entities.push(ObjectId(csvData[pointerToCsvData].entityId))
                             }
                         } else {
                             entities = [ObjectId(csvData[pointerToCsvData].entityId)];
                         }
 
-                        if( entities.length > 0 ) {
+                        if (entities.length > 0) {
                             await kendraService.updateSolution(
                                 userToken,
                                 {
-                                    entities : entities
+                                    entities: entities
                                 },
                                 solutionInformation.externalId
                             )
                         }
 
-                        currentTemplateData.entityInformation = 
-                        entityDocument[csvData[pointerToCsvData].entityId];
+                        currentTemplateData.entityInformation =
+                            entityDocument[csvData[pointerToCsvData].entityId];
 
                         delete currentTemplateData.entityType;
                         delete currentTemplateData.entityTypeId;
                     }
 
-                    const projectCreation = 
-                    await database.models.projects.create(currentTemplateData);
+                    const projectCreation =
+                        await database.models.projects.create(currentTemplateData);
 
                     currentCsvData["STATUS"] = projectCreation._id;
 
@@ -529,18 +529,18 @@ module.exports = class UserProjectsHelper {
     */
 
     static booleanData() {
-        
+
         const projectsSchema = schemas["projects"].schema;
         const projectSchemaKey = Object.keys(projectsSchema);
 
-        let booleanProjects = []; 
-    
+        let booleanProjects = [];
+
         projectSchemaKey.forEach(projectSchema => {
             const currentSchema = projectsSchema[projectSchema];
 
-            if( 
-                currentSchema.hasOwnProperty('default') && 
-                typeof currentSchema.default === "boolean" 
+            if (
+                currentSchema.hasOwnProperty('default') &&
+                typeof currentSchema.default === "boolean"
             ) {
                 booleanProjects.push(projectSchema);
             }
@@ -557,17 +557,17 @@ module.exports = class UserProjectsHelper {
     */
 
     static mongooseIdData() {
-        
+
         const projectsSchema = schemas["projects"].schema;
         const projectSchemaKey = Object.keys(projectsSchema);
 
-        let mongooseIds = []; 
-    
-        projectSchemaKey.forEach(projectSchema=>{
+        let mongooseIds = [];
+
+        projectSchemaKey.forEach(projectSchema => {
 
             const currentSchemaType = projectsSchema[projectSchema];
 
-            if( currentSchemaType === "ObjectId" ) {
+            if (currentSchemaType === "ObjectId") {
                 mongooseIds.push(projectSchema);
             }
         });
@@ -586,32 +586,32 @@ module.exports = class UserProjectsHelper {
       * @returns {Object} Project created information.
      */
 
-    static importFromLibrary( projectTemplateId,requestedData,userToken,userId ) {
+    static importFromLibrary(projectTemplateId, requestedData, userToken, userId) {
         return new Promise(async (resolve, reject) => {
             try {
 
-                let libraryProjects = 
-                await libraryCategoriesHelper.projectDetails(
-                    projectTemplateId
-                );
+                let libraryProjects =
+                    await libraryCategoriesHelper.projectDetails(
+                        projectTemplateId
+                    );
 
-                if( 
-                    libraryProjects.result && 
-                    !Object.keys(libraryProjects.result).length > 0 
+                if (
+                    libraryProjects.result &&
+                    !Object.keys(libraryProjects.result).length > 0
                 ) {
                     return resolve({
-                        message : CONSTANTS.apiResponses.PROJECT_TEMPLATE_NOT_FOUND,
-                        result : {}
+                        message: CONSTANTS.apiResponses.PROJECT_TEMPLATE_NOT_FOUND,
+                        result: {}
                     });
                 }
 
                 let taskReport = {};
 
-                if( 
-                    libraryProjects.result.tasks && 
-                    libraryProjects.result.tasks.length > 0 
+                if (
+                    libraryProjects.result.tasks &&
+                    libraryProjects.result.tasks.length > 0
                 ) {
-                    
+
                     libraryProjects.result.tasks = await _projectTask(
                         libraryProjects.result.tasks,
                         true
@@ -620,40 +620,40 @@ module.exports = class UserProjectsHelper {
                     taskReport.total = libraryProjects.result.tasks.length;
 
                     libraryProjects.result.tasks.forEach(task => {
-                        if( !taskReport[task.status] ) {
-                            taskReport[task.status] = 1; 
+                        if (!taskReport[task.status]) {
+                            taskReport[task.status] = 1;
                         } else {
-                            taskReport[task.status] += 1; 
+                            taskReport[task.status] += 1;
                         }
                     });
 
                     libraryProjects.result["taskReport"] = taskReport;
                 }
 
-                let programAndSolutionInformation = 
-                await this.createProgramAndSolution(
-                    requestedData.entityId,
-                    requestedData.programId,
-                    requestedData.programName,
-                    userToken
-                );
+                let programAndSolutionInformation =
+                    await this.createProgramAndSolution(
+                        requestedData.entityId,
+                        requestedData.programId,
+                        requestedData.programName,
+                        userToken
+                    );
 
-                if( !programAndSolutionInformation.success ) {
+                if (!programAndSolutionInformation.success) {
                     return resolve(programAndSolutionInformation);
                 }
-                
+
                 libraryProjects.result.userId = libraryProjects.result.updatedBy = libraryProjects.result.createdBy = userId;
                 libraryProjects.result.lastDownloadedAt = new Date();
                 libraryProjects.result.status = CONSTANTS.common.NOT_STARTED_STATUS;
 
                 let projectCreation = await database.models.projects.create(
                     _.merge(
-                        _.omit(libraryProjects.result,["_id"]),
+                        _.omit(libraryProjects.result, ["_id"]),
                         programAndSolutionInformation.result
                     )
                 );
 
-                if( requestedData.rating && requestedData.rating > 0 ) {
+                if (requestedData.rating && requestedData.rating > 0) {
                     await projectTemplatesHelper.ratings(
                         projectTemplateId,
                         requestedData.rating,
@@ -664,8 +664,8 @@ module.exports = class UserProjectsHelper {
                 projectCreation = _projectInformation(projectCreation._doc);
 
                 return resolve({
-                    message : CONSTANTS.apiResponses.PROJECTS_FETCHED,
-                    result : projectCreation
+                    message: CONSTANTS.apiResponses.PROJECTS_FETCHED,
+                    result: projectCreation
                 });
 
             } catch (error) {
@@ -683,24 +683,24 @@ module.exports = class UserProjectsHelper {
       * @returns {Object} Return _id and lastDownloadedAt 
      */
 
-    static create( userId,userToken ) {
+    static create(userId, userToken) {
         return new Promise(async (resolve, reject) => {
             try {
 
                 let creationData = {
-                    lastDownloadedAt : new Date(),
-                    createdFor : [],
-                    rootOrganisations : []
+                    lastDownloadedAt: new Date(),
+                    createdFor: [],
+                    rootOrganisations: []
                 }
 
                 creationData["userId"] = creationData["createdBy"] = creationData["updatedBy"] = userId;
 
-                let userOrganisations = 
-                await kendraService.getUserOrganisationsAndRootOrganisations(
-                    userToken
-                );
+                let userOrganisations =
+                    await kendraService.getUserOrganisationsAndRootOrganisations(
+                        userToken
+                    );
 
-                if( userOrganisations.success ) {
+                if (userOrganisations.success) {
                     creationData.createdFor = userOrganisations.data.createdFor;
                     creationData.rootOrganisations = userOrganisations.data.rootOrganisations;
                 }
@@ -710,8 +710,8 @@ module.exports = class UserProjectsHelper {
                 );
 
                 return resolve({
-                    message : CONSTANTS.apiResponses.CREATED_USER_PROJECT,
-                    result : _.pick(userProject,["_id","lastDownloadedAt"])
+                    message: CONSTANTS.apiResponses.CREATED_USER_PROJECT,
+                    result: _.pick(userProject, ["_id", "lastDownloadedAt"])
                 });
 
             } catch (error) {
@@ -732,21 +732,21 @@ module.exports = class UserProjectsHelper {
       * @returns {Object} Project created information.
     */
 
-    static sync( projectId,lastDownloadedAt,data,userId,userToken ) {
+    static sync(projectId, lastDownloadedAt, data, userId, userToken) {
         return new Promise(async (resolve, reject) => {
             try {
 
                 const userProject = await this.projectDocument({
-                    _id : projectId,
-                    userId : userId,
-                    lastDownloadedAt : lastDownloadedAt
-                },["_id","tasks"]);
+                    _id: projectId,
+                    userId: userId,
+                    lastDownloadedAt: lastDownloadedAt
+                }, ["_id", "tasks"]);
 
-                if ( !userProject.length > 0 ) {
-                    
+                if (!userProject.length > 0) {
+
                     return resolve({
-                        message : CONSTANTS.apiResponses.USER_PROJECT_NOT_FOUND,
-                        result : {}
+                        message: CONSTANTS.apiResponses.USER_PROJECT_NOT_FOUND,
+                        result: {}
                     });
                 }
 
@@ -754,68 +754,68 @@ module.exports = class UserProjectsHelper {
 
                 let updateProject = {};
 
-                if( data.categories && data.categories.length > 0 ) {
-                    updateProject.categories = 
-                    await _projectCategories(data.categories);
+                if (data.categories && data.categories.length > 0) {
+                    updateProject.categories =
+                        await _projectCategories(data.categories);
                 }
 
-                if( data.startDate ) {
+                if (data.startDate) {
                     updateProject["startDate"] = data.startDate;
                 }
 
-                if( data.endDate ) {
+                if (data.endDate) {
                     updateProject["endDate"] = data.endDate;
                 }
 
-                if( 
-                    (data.programId && data.programId !== "") || 
-                    ( data.programName && data.programName !== "" ) 
+                if (
+                    (data.programId && data.programId !== "") ||
+                    (data.programName && data.programName !== "")
                 ) {
 
-                    let programAndSolutionInformation = 
-                    await this.createProgramAndSolution(
-                        data.entityId,
-                        data.programId,
-                        data.programName,
-                        userToken
-                    );
-    
-                    if( !programAndSolutionInformation.success ) {
+                    let programAndSolutionInformation =
+                        await this.createProgramAndSolution(
+                            data.entityId,
+                            data.programId,
+                            data.programName,
+                            userToken
+                        );
+
+                    if (!programAndSolutionInformation.success) {
                         return resolve(programAndSolutionInformation);
                     }
 
-                    updateProject = 
-                    _.merge(updateProject,programAndSolutionInformation.result);
+                    updateProject =
+                        _.merge(updateProject, programAndSolutionInformation.result);
                 }
 
                 let booleanData = this.booleanData(schemas["projects"].schema);
                 let mongooseIdData = this.mongooseIdData(schemas["projects"].schema);
 
-                if( data.tasks ) {  
+                if (data.tasks) {
 
                     let taskReport = {};
-                    
+
                     updateProject.tasks = await _projectTask(
                         data.tasks,
                         userId
                     );
 
-                    if( 
-                        userProject[0].tasks && 
-                        userProject[0].tasks.length > 0 
+                    if (
+                        userProject[0].tasks &&
+                        userProject[0].tasks.length > 0
                     ) {
 
                         updateProject.tasks.forEach(task => {
-    
+
                             task.updatedBy = userId;
                             task.updatedAt = new Date();
-                            
-                            let taskIndex = 
-                            userProject[0].tasks.findIndex(
-                                projectTask => projectTask._id === task._id 
-                            );
-                            
-                            if( taskIndex < 0 ) {
+
+                            let taskIndex =
+                                userProject[0].tasks.findIndex(
+                                    projectTask => projectTask._id === task._id
+                                );
+
+                            if (taskIndex < 0) {
                                 userProject[0].tasks.push(
                                     task
                                 );
@@ -823,17 +823,17 @@ module.exports = class UserProjectsHelper {
                                 userProject[0].tasks[taskIndex] = task;
                             }
                         });
-    
+
                         updateProject.tasks = userProject[0].tasks;
                     }
 
                     taskReport.total = updateProject.tasks.length;
 
                     updateProject.tasks.forEach(task => {
-                        if( !taskReport[task.status] ) {
-                            taskReport[task.status] = 1; 
+                        if (!taskReport[task.status]) {
+                            taskReport[task.status] = 1;
                         } else {
-                            taskReport[task.status] += 1; 
+                            taskReport[task.status] += 1;
                         }
                     });
 
@@ -841,51 +841,51 @@ module.exports = class UserProjectsHelper {
                 }
 
                 Object.keys(data).forEach(updateData => {
-                    if ( 
-                        !updateProject[updateData] && 
-                        projectsModel.includes(updateData) 
+                    if (
+                        !updateProject[updateData] &&
+                        projectsModel.includes(updateData)
                     ) {
-                        
-                        if ( booleanData.includes(updateData) ) {
-                
-                            updateProject[updateData] = 
-                            UTILS.convertStringToBoolean(data[updateData]);
-            
-                        } else if( mongooseIdData.includes(updateData) ) {
+
+                        if (booleanData.includes(updateData)) {
+
+                            updateProject[updateData] =
+                                UTILS.convertStringToBoolean(data[updateData]);
+
+                        } else if (mongooseIdData.includes(updateData)) {
                             updateProject[updateData] = ObjectId(data[updateData]);
                         } else {
                             updateProject[updateData] = data[updateData];
-                        } 
+                        }
                     }
                 });
 
                 updateProject.updatedBy = userId;
-                updateProject.updatedAt =  updateProject.lastSync = new Date();
+                updateProject.updatedAt = updateProject.lastSync = new Date();
 
-                if( data.resources ) {
+                if (data.resources) {
                     updateProject.resources = data.resources;
                 }
 
-                let projectUpdated = 
-                await database.models.projects.findOneAndUpdate(
-                    {
-                        _id : userProject[0]._id
-                    },
-                    {
-                        $set : updateProject
-                    },{
-                        new : true
+                let projectUpdated =
+                    await database.models.projects.findOneAndUpdate(
+                        {
+                            _id: userProject[0]._id
+                        },
+                        {
+                            $set: updateProject
+                        }, {
+                        new: true
                     }
-                );
+                    );
 
-                if( !projectUpdated._id ) {
+                if (!projectUpdated._id) {
                     return resolve({
-                        message : CONSTANTS.apiResponses.USER_PROJECT_NOT_UPDATED
+                        message: CONSTANTS.apiResponses.USER_PROJECT_NOT_UPDATED
                     })
                 }
 
                 return resolve({
-                    message : CONSTANTS.apiResponses.USER_PROJECT_UPDATED
+                    message: CONSTANTS.apiResponses.USER_PROJECT_UPDATED
                 });
 
             } catch (error) {
@@ -894,20 +894,20 @@ module.exports = class UserProjectsHelper {
         })
     }
 
-     /**
-      * Program and solution information
-      * @method
-      * @name createProgramAndSolution 
-      * @param {String} entityId - entity id.
-      * @param {String} userToken - Logged in user token.
-      * @param {String} [ programId = "" ] - Program Id.
-      * @param {String} [ programName = "" ] - Program Name.
-      * @returns {Object} Created program and solution data.
-     */
+    /**
+     * Program and solution information
+     * @method
+     * @name createProgramAndSolution 
+     * @param {String} entityId - entity id.
+     * @param {String} userToken - Logged in user token.
+     * @param {String} [ programId = "" ] - Program Id.
+     * @param {String} [ programName = "" ] - Program Name.
+     * @returns {Object} Created program and solution data.
+    */
 
-    static createProgramAndSolution( 
+    static createProgramAndSolution(
         entityId = "",
-        programId = "", 
+        programId = "",
         programName = "",
         userToken
     ) {
@@ -916,23 +916,23 @@ module.exports = class UserProjectsHelper {
 
                 let result = {};
 
-                if( entityId && entityId !== "" ) { 
+                if (entityId && entityId !== "") {
                     let entitiesData = await _entitiesInformation(entityId);
                     result["entityInformation"] = entitiesData[0];
                 }
 
                 let programAndSolutionData = {
-                    entities : 
-                    result.entityInformation ? 
-                    [ObjectId(result.entityInformation._id) ] : [],
-                    type : CONSTANTS.common.IMPROVEMENT_PROJECT,
-                    subType : CONSTANTS.common.IMPROVEMENT_PROJECT
+                    entities:
+                        result.entityInformation ?
+                            [ObjectId(result.entityInformation._id)] : [],
+                    type: CONSTANTS.common.IMPROVEMENT_PROJECT,
+                    subType: CONSTANTS.common.IMPROVEMENT_PROJECT
                 };
 
                 // <- Dirty fix not required currently
 
                 // if( programId == "" && programName == "" ) {
-                    
+
                 //     let privatePrograms = 
                 //     await kendraService.userPrivatePrograms(userToken);
 
@@ -950,59 +950,59 @@ module.exports = class UserProjectsHelper {
                 //         programAndSolutionData["programName"] = "My Program"
                 //     }
                 // } else {
-                    
+
                 //     if( programName !== "" ) {
 
                 //         programAndSolutionData["programName"] = programName;
                 //     } 
-                    
+
                 //     if( programId !== "" ) {
                 //         programAndSolutionData["programId"] = programId;
                 //     } 
                 // }
 
 
-                if( programName !== "" ) {
+                if (programName !== "") {
                     programAndSolutionData["programName"] = programName;
-                } 
-                
-                if( programId !== "" ) {
+                }
+
+                if (programId !== "") {
                     programAndSolutionData["programId"] = programId;
-                } 
+                }
 
-                let solutionAndProgramCreation = 
-                await kendraService.createUserProgramAndSolution(
-                    programAndSolutionData,
-                    userToken
-                );
+                let solutionAndProgramCreation =
+                    await kendraService.createUserProgramAndSolution(
+                        programAndSolutionData,
+                        userToken
+                    );
 
-                if( !solutionAndProgramCreation.success ) {
+                if (!solutionAndProgramCreation.success) {
                     return resolve({
-                        success : false,
-                        message : CONSTANTS.apiResponses.SOLUTION_PROGRAMS_NOT_CREATED,
-                        result : {}
+                        success: false,
+                        message: CONSTANTS.apiResponses.SOLUTION_PROGRAMS_NOT_CREATED,
+                        result: {}
                     })
                 }
-                
-                result.solutionInformation =  _.omit(
+
+                result.solutionInformation = _.omit(
                     solutionAndProgramCreation.data.solution,
                     ["__v"]
                 );
-                
-                result.solutionInformation._id = 
-                ObjectId(result.solutionInformation._id);
 
-                result.programInformation =  _.omit(
+                result.solutionInformation._id =
+                    ObjectId(result.solutionInformation._id);
+
+                result.programInformation = _.omit(
                     solutionAndProgramCreation.data.program,
-                    ["__v","components"]
+                    ["__v", "components"]
                 );
-    
-                result.programInformation._id = 
-                ObjectId(result.programInformation._id);
+
+                result.programInformation._id =
+                    ObjectId(result.programInformation._id);
 
                 return resolve({
-                    success : true,
-                    result : result
+                    success: true,
+                    result: result
                 });
 
             } catch (error) {
@@ -1011,47 +1011,47 @@ module.exports = class UserProjectsHelper {
         });
     }
 
-     /**
-      * Project details.
-      * @method
-      * @name details 
-      * @param {String} projectId - project id.
-      * @returns {Object} 
-     */
+    /**
+     * Project details.
+     * @method
+     * @name details 
+     * @param {String} projectId - project id.
+     * @returns {Object} 
+    */
 
-    static details( projectId,userId ) {
+    static details(projectId, userId) {
         return new Promise(async (resolve, reject) => {
             try {
 
                 const projectDetails = await this.projectDocument({
-                    _id : projectId,
-                    userId : userId
-                },"all",
-                [
-                    "taskReport",
-                    "createdFor",
-                    "rootOrganisations",
-                    "projectTemplateId",
-                    "projectTemplateExternalId",
-                    "userId",
-                    "createdBy",
-                    "updatedBy",
-                    "createdAt",
-                    "updatedAt",
-                    "__v"
-                ]);
+                    _id: projectId,
+                    userId: userId
+                }, "all",
+                    [
+                        "taskReport",
+                        "createdFor",
+                        "rootOrganisations",
+                        "projectTemplateId",
+                        "projectTemplateExternalId",
+                        "userId",
+                        "createdBy",
+                        "updatedBy",
+                        "createdAt",
+                        "updatedAt",
+                        "__v"
+                    ]);
 
-                if( !projectDetails.length > 0 ) {
-                    
+                if (!projectDetails.length > 0) {
+
                     return resolve({
-                        message : CONSTANTS.apiResponses.PROJECT_NOT_FOUND,
-                        result : []
+                        message: CONSTANTS.apiResponses.PROJECT_NOT_FOUND,
+                        result: []
                     })
                 }
 
                 return resolve({
-                    message : CONSTANTS.apiResponses.PROJECT_DETAILS_FETCHED,
-                    result : projectDetails[0]
+                    message: CONSTANTS.apiResponses.PROJECT_DETAILS_FETCHED,
+                    result: projectDetails[0]
                 });
 
             } catch (error) {
@@ -1070,15 +1070,15 @@ module.exports = class UserProjectsHelper {
       * @returns {Object} List of library projects.
      */
 
-    static projects( query,pageSize,pageNo,searchQuery,fieldsArray) {
+    static projects(query, pageSize, pageNo, searchQuery, fieldsArray) {
         return new Promise(async (resolve, reject) => {
             try {
 
                 let matchQuery = {
-                    $match : query
+                    $match: query
                 };
 
-                if(searchQuery && searchQuery.length > 0){
+                if (searchQuery && searchQuery.length > 0) {
                     matchQuery["$match"]["$or"] = searchQuery;
                 }
 
@@ -1087,39 +1087,39 @@ module.exports = class UserProjectsHelper {
                     projection[field] = 1;
                 });
 
-                
+
                 let aggregateData = [];
                 aggregateData.push(matchQuery);
 
                 aggregateData.push({
-                    $project : projection
-                },{
-                    $facet : {
-                        "totalCount" : [
-                            { "$count" : "count" }
+                    $project: projection
+                }, {
+                    $facet: {
+                        "totalCount": [
+                            { "$count": "count" }
                         ],
-                        "data" : [
-                            { $skip : pageSize * ( pageNo - 1 ) },
-                            { $limit : pageSize }
+                        "data": [
+                            { $skip: pageSize * (pageNo - 1) },
+                            { $limit: pageSize }
                         ],
                     }
-                },{
-                    $project : {
-                        "data" : 1,
-                        "count" : {
-                            $arrayElemAt : ["$totalCount.count", 0]
+                }, {
+                    $project: {
+                        "data": 1,
+                        "count": {
+                            $arrayElemAt: ["$totalCount.count", 0]
                         }
                     }
                 });
 
-                let result = 
-                await database.models.projects.aggregate(aggregateData);
+                let result =
+                    await database.models.projects.aggregate(aggregateData);
 
                 return resolve({
-                    message : CONSTANTS.apiResponses.PROJECTS_FETCHED,
-                    result : {
-                        data : result[0].data,
-                        count : result[0].count ? result[0].count : 0
+                    message: CONSTANTS.apiResponses.PROJECTS_FETCHED,
+                    result: {
+                        data: result[0].data,
+                        count: result[0].count ? result[0].count : 0
                     }
                 })
 
@@ -1129,36 +1129,83 @@ module.exports = class UserProjectsHelper {
         })
     }
 
+    /**
+      * To get uploadable file url
+      * @method
+      * @name getFileUploadUrl 
+      * @param {Array} fileNames - array of filenames
+      * @param {String} userId - Logged in user id.
+      * @returns {Object} - returns file uploadable urls
+    */
+
+    static getFileUploadUrl(fileNames, userId) {
+        return new Promise(async (resolve, reject) => {
+            try {
+
+                let allFileNames = [];
+                var requestFileNames = {};
+
+                fileNames.map(file => {
+                    var fileName = userId + "/" + uuidv4() + "_" + file;
+                    fileName = (fileName.replace(/\s+/g, '')).trim();
+                    requestFileNames[fileName] = file;
+                    allFileNames.push(fileName);
+                });
+
+                let response = await kendraService.getPreSignedUrl(fileNames);
+                if (response.success == true && response.data.result && response.data.result.length > 0) {
+                    response.data.result = response.data.result.map(element => {
+                        element.file = requestFileNames[element.file];
+                        return element;
+                    })
+                } else {
+                    return resolve({
+                        message: CONSTANTS.apiResponses.FAILED_TO_GENERATE_PRESSIGNED_URLS,
+                        result: []
+                    });
+                }
+
+                return resolve({
+                    message: CONSTANTS.apiResponses.PRESSIGNED_URLS_GENERATED,
+                    result: response.data.result
+                });
+
+            } catch (error) {
+                return reject(error);
+            }
+        })
+    }
+
 };
 
- /**
-  * Project information.
-  * @method
-  * @name _projectInformation 
-  * @param {Object} project - Project data.
-  * @returns {Object} Project information.
+/**
+ * Project information.
+ * @method
+ * @name _projectInformation 
+ * @param {Object} project - Project data.
+ * @returns {Object} Project information.
 */
 
 function _projectInformation(project) {
-    
+
     project.entityInformation = _.pick(
         project.entityInformation,
-        ["externalId","name","entityType","entityTpeId"]
+        ["externalId", "name", "entityType", "entityTpeId"]
     );
 
     project.solutionInformation = _.pick(
         project.solutionInformation,
-        ["externalId","name"]
+        ["externalId", "name"]
     );
 
     project.programInformation = _.pick(
         project.programInformation,
-        ["externalId","name"]
+        ["externalId", "name"]
     );
 
     project.status = CONSTANTS.common.NOT_STARTED_STATUS;
 
-    if( project.metaInformation ) {
+    if (project.metaInformation) {
         Object.keys(project.metaInformation).forEach(projectMetaKey => {
             project[projectMetaKey] = project.metaInformation[projectMetaKey];
         });
@@ -1179,7 +1226,7 @@ function _projectInformation(project) {
   * @returns {Object} Project task.
 */
 
-function _projectTask(task,isImportedFromLibrary = false) {
+function _projectTask(task, isImportedFromLibrary = false) {
 
     task.forEach(singleTask => {
 
@@ -1194,15 +1241,15 @@ function _projectTask(task,isImportedFromLibrary = false) {
         singleTask.isImportedFromLibrary = isImportedFromLibrary;
         singleTask.lastSync = new Date();
 
-        if( singleTask.startDate ) {
-            singleTask.startDate = singleTask.startDate; 
+        if (singleTask.startDate) {
+            singleTask.startDate = singleTask.startDate;
         }
 
-        if( singleTask.endDate ) {
-            singleTask.endDate = singleTask.endDate; 
+        if (singleTask.endDate) {
+            singleTask.endDate = singleTask.endDate;
         }
 
-        if( singleTask.children ) {
+        if (singleTask.children) {
             _projectTask(singleTask.children);
         } else {
             singleTask.children = [];
@@ -1222,43 +1269,43 @@ function _projectTask(task,isImportedFromLibrary = false) {
 */
 
 function _projectCategories(categories) {
-    return new Promise( async (resolve,reject)=>{
+    return new Promise(async (resolve, reject) => {
         try {
 
             const categoryIds = categories.map(category => {
-                if( category.value && category.value !== "" ) {
+                if (category.value && category.value !== "") {
                     return category.value;
                 }
             });
 
-            const categoryData = 
-            await libraryCategoriesHelper.categoryDocuments({
-                _id : { $in : categoryIds }
-            },["name","externalId"]);
+            const categoryData =
+                await libraryCategoriesHelper.categoryDocuments({
+                    _id: { $in: categoryIds }
+                }, ["name", "externalId"]);
 
             let categoryInternalIdToData = {};
 
-            if ( categoryData.length > 0 ) {
-                
-                categoryData.forEach(category=>{
+            if (categoryData.length > 0) {
+
+                categoryData.forEach(category => {
                     categoryInternalIdToData[category._id.toString()] = category;
                 });
             }
 
-            const categoriesData = categories.map(category => { 
+            const categoriesData = categories.map(category => {
                 let categoryData = {};
 
-                if( 
-                    category.value && 
-                    category.value !== "" && 
-                    categoryInternalIdToData[category.value] 
+                if (
+                    category.value &&
+                    category.value !== "" &&
+                    categoryInternalIdToData[category.value]
                 ) {
                     categoryData = categoryInternalIdToData[category.value];
                 } else {
                     categoryData = {
-                        name : category.label,
-                        externalId : "",
-                        _id : ""
+                        name: category.label,
+                        externalId: "",
+                        _id: ""
                     }
                 }
 
@@ -1267,7 +1314,7 @@ function _projectCategories(categories) {
 
             return resolve(categoriesData);
 
-        } catch(error) {
+        } catch (error) {
             return reject(error);
         }
     })
@@ -1282,22 +1329,22 @@ function _projectCategories(categories) {
 */
 
 function _entitiesInformation(entityIds) {
-    return new Promise( async (resolve,reject)=>{
+    return new Promise(async (resolve, reject) => {
         try {
 
-            let entityData = 
-            await kendraService.entityDocuments(
-                {
-                    _id : {
-                        $in : entityIds
-                    }
-                },
-                ["metaInformation","entityType","entityTypeId"]
-            );
+            let entityData =
+                await kendraService.entityDocuments(
+                    {
+                        _id: {
+                            $in: entityIds
+                        }
+                    },
+                    ["metaInformation", "entityType", "entityTypeId"]
+                );
 
             let entitiesData = [];
 
-            if( entityData.success && entityData.data.length > 0 ) {
+            if (entityData.success && entityData.data.length > 0) {
 
                 entitiesData = entityData.data.map(entity => {
                     entity.metaInformation._id = ObjectId(entity._id);
@@ -1309,7 +1356,7 @@ function _entitiesInformation(entityIds) {
 
             return resolve(entitiesData);
 
-        } catch(error) {
+        } catch (error) {
             return reject(error);
         }
     })

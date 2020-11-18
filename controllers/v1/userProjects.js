@@ -799,4 +799,68 @@ module.exports = class UserProjects extends Abstract {
         })
     }
 
+
+    /**
+    * @api {get} /improvement-project/api/v1/userProjects/getFileUploadUrl getFileUploadUrl
+    * Get file upload urls
+    * @apiVersion 1.0.0
+    * @apiGroup User Projects
+    * @apiSampleRequest /improvement-project/api/v1/userProjects/getFileUploadUrl
+    * @apiParamExample {json} Request:
+    * {
+    *   	"fileNames":["uploadFile.jpg","taskComplete.png"]
+    * }
+    * @apiParamExample {json} Response:
+    *{
+        "message": "File upload urls generated successfully.",
+        "status": 200,
+        "result": [
+            {
+                "url": "https://storage.googleapis.com/sl-dev-storage/ab.jpg?GoogleAccessId=sl-dev-storage%40shikshalokam.iam.gserviceaccount.com&Expires=1605688492&Signature=V3B2dgD9QPVgCJOe8DORpp1aDAGGm3AjUzLbLlbMGJ88ISxdvHoPQ6ZE0sKIvwHtEXSSOrV0RllQ%2BEAiVFxXjxfs6lLpKIrJeEOFLVXgIaKmxpm3C4uiCBbX5NB2fKdSuazNkgLLzOAwJt3n3BlZ%2F8ZULrmzAVJAAu75hpC0baL6fTlbLtk%2Fbltew2XEOCF3mw1D%2FBCkyJ6iSRTcC4T0zTjjz7bl86G5Br5tVNQkTW7dAEmgvh%2FOugxK%2FW0Oeg4snCz88INelU9znuXtv5ZuwqhtNsvjTyBEpDOoTV48vAcckACatIY8P79iJ5ug2E0XxhlpyN%2FWKmZ5QGc8KWU2MA%3D%3D",
+                "payload": {
+                    "sourcePath": "ab.jpg"
+                },
+                "cloudStorage": "GC"
+            },
+            {
+                "url": "https://storage.googleapis.com/sl-dev-storage/ann.png?GoogleAccessId=sl-dev-storage%40shikshalokam.iam.gserviceaccount.com&Expires=1605688492&Signature=fj0%2BuRYVPOt3DmAgch5HE6VIisMIv6xGYE5wwBhchJA0RCHkth%2F5QdtWyu4LbD7h55kO4WiTs722CrJdQwpt%2BAfAE4GcISyQwj%2B4elhwOPwT2mtdDUdr5YUAsVsuPmz4J8NE1JMtPWbZaOp%2FuQd9h7y7A38A0KvjBOpAXyc9O5DTIdrbIOYAXn7vBRFBXhEkSMkX6SJJw2oMIavBUUmAUFDv3vwwIlHkEQs57GrC%2FvBbGbq79iNLhFCO%2BQl7SIGd%2B8kAq2q%2BhC3XScnMuvoC%2Bjmr7qWmb6YzPaH7UYtPz%2BHkiyPlZt60wXTPVpINZFH6qORouqMNHBPGUYv4HwBTzg%3D%3D",
+                "payload": {
+                    "sourcePath": "ann.png"
+                },
+                "cloudStorage": "GC"
+            }
+        ]
+    }
+    * @apiUse successBody
+    * @apiUse errorBody
+    */
+    
+
+ /**
+ * Get file upload urls
+ * @name getFileUploadUrl
+ * @param {*} req 
+ *  api is to get getFileUploadUrl Urls of files
+ */
+
+    async getFileUploadUrl(req) {
+        return new Promise(async (resolve, reject) => {
+            try {
+
+                const fileUploadUrls = await userProjectsHelper.getFileUploadUrl(
+                    req.body.fileNames,
+                    req.userDetails.userInformation.userId
+                );
+                return resolve(fileUploadUrls);
+
+            } catch (error) {
+                return reject({
+                    status: error.status || HTTP_STATUS_CODE.internal_server_error.status,
+                    message: error.message || HTTP_STATUS_CODE.internal_server_error.message,
+                    errorObject: error
+                });
+            }
+        })
+    }
+
 };

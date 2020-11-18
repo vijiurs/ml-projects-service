@@ -762,6 +762,62 @@ const getUserOrganisationsAndRootOrganisations = function ( token ) {
         }
     })
 }
+/**
+  * Get presigned url
+  * @function
+  * @name getPreSignedUrl
+  * @param {Array} fileNames - array of filenames
+  * @returns {JSON} - preSigned urls.
+*/
+
+const getPreSignedUrl = function (fileNames) {
+    return new Promise(async (resolve, reject) => {
+        try {
+            
+            let filePreSignedUrl = process.env.KENDRA_APPLICATION_ENDPOINT;
+
+            let bodyData = {
+                fileNames: fileNames
+            }
+            if ( process.env.CLOUD_STORAGE === "GC" ) {
+                filePreSignedUrl = filePreSignedUrl + CONSTANTS.endpoints.PRESIGNED_GCP_URL;
+                bodyData.bucket = process.env.GCP_BUCKET_NAME;
+            } else if (process.env.CLOUD_STORAGE === "AWS" ) {
+                filePreSignedUrl = filePreSignedUrl + CONSTANTS.endpoints.PRESIGNED_AWS_URL;
+                bodyData.bucket = process.env.AWS_BUCKET_NAME;
+            } else {
+                filePreSignedUrl = filePreSignedUrl + CONSTANTS.endpoints.PRESIGNED_AZURE_URL;
+                bodyData.bucket = process.env.AZURE_STORAGE_CONTAINER;
+            }
+
+
+            const options = {
+                headers : {
+                    "internal-access-token": process.env.INTERNAL_ACCESS_TOKEN,
+                },
+                json : bodyData
+            };
+            
+            request.post(filePreSignedUrl,options,kendraCallback);
+
+            function kendraCallback(err, data) {
+
+                let result = {
+                    success : true
+                };
+                if (err) {
+                    result.success = false;
+                } else {
+                    result["data"] = data.body;
+                }
+                return resolve(result);
+            }
+
+        } catch (error) {
+            return reject(error);
+        }
+    })
+}
 
 module.exports = {
     getDownloadableUrl : getDownloadableUrl,
@@ -777,6 +833,7 @@ module.exports = {
     updateUserProfile : updateUserProfile,
     userPrivatePrograms : userPrivatePrograms,
     updateSolution : updateSolution,
-    getUserOrganisationsAndRootOrganisations : getUserOrganisationsAndRootOrganisations 
+    getUserOrganisationsAndRootOrganisations : getUserOrganisationsAndRootOrganisations,
+    getPreSignedUrl:getPreSignedUrl
 };
 

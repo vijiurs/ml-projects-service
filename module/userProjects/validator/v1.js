@@ -22,9 +22,6 @@ module.exports = (req) => {
         },
         details : function () {
             req.checkParams('_id').exists().withMessage("required project id");
-        },
-        getFileUploadUrl : function () {
-            req.checkBody('fileNames').exists().withMessage("required fileNames");
         }
     }
 

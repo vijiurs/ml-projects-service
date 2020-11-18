@@ -1133,30 +1133,49 @@ module.exports = class UserProjectsHelper {
       * To get uploadable file url
       * @method
       * @name getFileUploadUrl 
-      * @param {Array} fileNames - array of filenames
+      * @param {Object} input - request files
       * @param {String} userId - Logged in user id.
       * @returns {Object} - returns file uploadable urls
     */
-
-    static getFileUploadUrl(fileNames, userId) {
+    static getFileUploadUrl(input, userId) {
         return new Promise(async (resolve, reject) => {
             try {
 
                 let allFileNames = [];
                 var requestFileNames = {};
-
-                fileNames.map(file => {
-                    var fileName = userId + "/" + uuidv4() + "_" + file;
-                    fileName = (fileName.replace(/\s+/g, '')).trim();
-                    requestFileNames[fileName] = file;
-                    allFileNames.push(fileName);
+                let projectIds = Object.keys(input);
+                projectIds.map(projectId => {
+                    let images = input[projectId].images;
+                    requestFileNames[projectId] = [];
+                    if(images && images.length > 0){
+                        images.map(image=>{
+                            var fileName = userId + "/"+projectId+"/" + uuidv4() + "_" + image;
+                            fileName = (fileName.replace(/\s+/g, '')).trim();
+                            requestFileNames[fileName] = {
+                                projectId:projectId,
+                                name:image
+                            }
+                            allFileNames.push(fileName);
+                        });
+                    }
                 });
 
-                let response = await kendraService.getPreSignedUrl(fileNames);
+                let fileUploadResponse = {};
+                let response = await kendraService.getPreSignedUrl(allFileNames);
                 if (response.success == true && response.data.result && response.data.result.length > 0) {
                     response.data.result = response.data.result.map(element => {
-                        element.file = requestFileNames[element.file];
-                        return element;
+                        
+                        let fileInfo = requestFileNames[element.file].projectId;
+                        if(fileUploadResponse[fileInfo]){
+                            element.file = requestFileNames[element.file].name;
+                            fileUploadResponse[fileInfo]['images'].push(element);
+                        }else {
+                            fileUploadResponse[fileInfo] = {
+                                images : []
+                            }
+                            element.file = requestFileNames[element.file].name;
+                            fileUploadResponse[fileInfo]['images'].push(element);
+                        }
                     })
                 } else {
                     return resolve({
@@ -1167,7 +1186,7 @@ module.exports = class UserProjectsHelper {
 
                 return resolve({
                     message: CONSTANTS.apiResponses.PRESSIGNED_URLS_GENERATED,
-                    result: response.data.result
+                    result: fileUploadResponse
                 });
 
             } catch (error) {

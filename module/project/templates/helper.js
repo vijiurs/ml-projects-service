@@ -331,7 +331,7 @@ module.exports = class ProjectTemplatesHelper {
     static bulkCreate(templates,userId) {
         return new Promise(async (resolve, reject) => {
             try {
-
+                
                 const fileName = `project-templates-creation`;
                 let fileStream = new CSV_FILE_STREAM(fileName);
                 let input = fileStream.initStream();
@@ -519,7 +519,7 @@ module.exports = class ProjectTemplatesHelper {
      /**
       * Bulk update project templates.
       * @method
-      * @name importFromTemplates - import templates from existing project templates.
+      * @name importProjectTemplate - import templates from existing project templates.
       * @param {String} templateId - project template id.
       * @param {String} userId - logged in user id.
       * @param {String} userToken - logged in user token.
@@ -528,7 +528,7 @@ module.exports = class ProjectTemplatesHelper {
       * @returns {Object} imported templates data.
      */
 
-    static importFromTemplates( templateId,userId,userToken,solutionId,updateData = {} ) {
+    static importProjectTemplate( templateId,userId,userToken,solutionId,updateData = {} ) {
         return new Promise(async (resolve, reject) => {
             try {
 

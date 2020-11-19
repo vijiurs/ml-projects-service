@@ -30,12 +30,11 @@ module.exports = class ReportsHelper {
     * @param {String} programId - program id
     * @returns {Object} Entity report.
    */
-    static entity(entityId = "", userId, reportType, programId = "") {
+    static entity(entityId = "", userId, reportType, programId = "",getPdf=false) {
         return new Promise(async (resolve, reject) => {
             try {
 
                 let query = {};
-
                 if (entityId) {
                     query["entityInformation._id"] = mongoose.Types.ObjectId(entityId);
                 } else {
@@ -93,6 +92,15 @@ module.exports = class ReportsHelper {
 
                 if (!projectDetails.length > 0) {
 
+                    if(getPdf == "true"){
+                        return resolve({
+                           message: CONSTANTS.apiResponses.REPORTS_GENERATED,
+                           result: {
+                              data_available:true,
+                               pdf_url : "http://www.africau.edu/images/default/sample.pdf"
+                           }
+                       });
+                   } else {
                     return resolve({
                         message: CONSTANTS.apiResponses.REPORTS_DATA_NOT_FOUND,
                         result:  {
@@ -104,6 +112,10 @@ module.exports = class ReportsHelper {
                             }
                         }
                     })
+
+                   }
+
+                   
                 }
 
                 projectReport["total"] =projectDetails.length;
@@ -186,19 +198,31 @@ module.exports = class ReportsHelper {
                     delete tasksReport[CONSTANTS.common.INPROGRESS_STATUS];
                 }
 
-                let response = {
-                    categories: categories,
-                    tasks: tasksReport,
-                    projects: projectReport
-                }
-                return resolve({
-                    message: CONSTANTS.apiResponses.REPORTS_GENERATED,
-                    result: {
-                        data_available:true,
-                        data:response,   
-                    }
-                });
+               
+                if(getPdf == "true"){
+                     return resolve({
+                        message: CONSTANTS.apiResponses.REPORTS_GENERATED,
+                        result: {
+                            data_available:true,
+                            pdf_url : "http://www.africau.edu/images/default/sample.pdf"
+                        }
+                    });
+                } else {
 
+                    let response = {
+                        categories: categories,
+                        tasks: tasksReport,
+                        projects: projectReport
+                    }
+                    return resolve({
+                        message: CONSTANTS.apiResponses.REPORTS_GENERATED,
+                        result: {
+                            data_available:true,
+                            data:response,   
+                        }
+                    });
+
+                }
             } catch (error) {
                 return reject(error);
             }
@@ -314,7 +338,7 @@ module.exports = class ReportsHelper {
     * @returns {Object} - response consist of chart report data
    */
 
-    static detailView(entityId="",userId,reportType,programId) {
+    static detailView(entityId="",userId,reportType,programId,getPdf=false) {
         return new Promise(async (resolve, reject) => {
             try {
 
@@ -327,10 +351,8 @@ module.exports = class ReportsHelper {
                 } else {
                     query["userId"] = userId
                 }
-
               
-                let chartObject = [];
-                
+                let chartObject = [];                
                 var endOf = "";
                 var startFrom = "";
                 if(reportType==0){
@@ -368,6 +390,8 @@ module.exports = class ReportsHelper {
                         result: []
                     })
                 }
+
+
     
                     await Promise.all(
                         projectDetails.map(async projectList => {
@@ -431,7 +455,19 @@ module.exports = class ReportsHelper {
                             }
                         })
                     )
+
+
+                if(getPdf == "true"){
+                    return resolve({
+                        message: CONSTANTS.apiResponses.REPORT_GENERATED,
+                        result: {
+                            pdf_url : "http://www.africau.edu/images/default/sample.pdf"
+                        }
+                    });
+                } else {
                     resolve({ message: CONSTANTS.apiResponses.REPORT_GENERATED, result: chartObject })
+                }
+                    
                
             } catch (ex) {
                 return reject(error);

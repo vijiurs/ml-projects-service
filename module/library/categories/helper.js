@@ -373,6 +373,8 @@ module.exports = class LibraryCategoriesHelper {
                                 currentTask.children = [];
                                 taskData[currentTask._id.toString()] = currentTask;
                             }
+
+                            
                         }
 
                         projectsData[0].tasks = Object.values(taskData);

@@ -52,6 +52,18 @@ module.exports = {
         isDeleted : false,
         isVisible : true,
         status : "active"
+      },
+      {
+        name : "Education Leader",
+        externalId : "educationLeader",
+        createdAt : new Date(),
+        updatedAt : new Date(),
+        updatedBy : "SYSTEM",
+        createdBy : "SYSTEM",
+        icon : "educationLeader.png",
+        isDeleted : false,
+        isVisible : true,
+        status : "active"
       }
     ];
 

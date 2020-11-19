@@ -153,17 +153,21 @@ module.exports = class ProjectTemplateTasksHelper {
                     
                     let solutions = 
                     await kendraService.solutionDocuments({
-                        _id : { $in : solutionIds },
+                        externalId : { $in : solutionIds },
                         isReusable : true
                     },["externalId"]);
-
 
                     if ( 
                         solutions.success && 
                         solutions.data &&
                         Object.keys(solutions.data).length > 0 
                     ) {
-                        solutionData = solutions.result;
+
+                        solutions.data.forEach(solution => {
+                            if(!solutionData[solution.externalId]) {
+                                solutionData[solution.externalId] = solution._id;
+                            }
+                        });
                     }
                 }
 
@@ -235,7 +239,10 @@ module.exports = class ProjectTemplateTasksHelper {
                         parsedData.STATUS = 
                         CONSTANTS.apiResponses.REQUIRED_IMPROVEMENT_PROJECT_ID;
                     }
-                } else { // If type is assessment or observation
+                } else if ( 
+                    allValues.type === CONSTANTS.common.ASSESSMENT || 
+                    allValues.type === CONSTANTS.common.OBSERVATION
+                ) { 
 
                     allValues.solutionDetails = {};
 
@@ -329,7 +336,10 @@ module.exports = class ProjectTemplateTasksHelper {
                             },{
                                 $addToSet : {
                                     children : taskData._id
-                                }  
+                                },
+                                $set : {
+                                    hasSubTasks : true
+                                }
                             },{
                                 returnOriginal : true
                             });

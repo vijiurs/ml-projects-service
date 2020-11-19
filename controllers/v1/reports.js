@@ -81,6 +81,7 @@ module.exports = class Reports {
                     req.userDetails.userInformation.userId,
                     req.body.reportType,
                     req.body.programId ? req.body.programId : "",
+                    req.query.requestPdf ? req.query.requestPdf : false,
                 );
                 
                 return resolve(entityReports);
@@ -267,6 +268,7 @@ module.exports = class Reports {
                     req.userDetails.userInformation.userId,
                     req.body.reportType,
                     req.body.programId ? req.body.programId : "",
+                    req.query.requestPdf ? req.query.requestPdf : false,
                 );
                 return resolve(entities);
 

@@ -1,7 +1,6 @@
 module.exports = {
   async up(db) {
     global.migrationMsg = "Create index in projects";
-    await db.collection('projects').createIndex({ userId : 1 });
     await db.collection('projects').createIndex({ entityType : 1 });
     await db.collection('projects').createIndex({ programId : 1 });
     await db.collection('projects').createIndex({ solutionId : 1 });

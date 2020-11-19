@@ -136,11 +136,11 @@ module.exports = class ProjectTemplates extends Abstract {
     }
 
      /**
-    * @api {post} /improvement-project/api/v1/project/templates/importFromTemplates/:projectTemplateExternalId 
+    * @api {post} /improvement-project/api/v1/project/templates/importProjectTemplate/:projectTemplateExternalId 
     * Import templates from existsing project templates.
     * @apiVersion 1.0.0
     * @apiGroup Project Templates
-    * @apiSampleRequest /improvement-project/api/v1/project/templates/importFromTemplates/template-1
+    * @apiSampleRequest /improvement-project/api/v1/project/templates/importProjectTemplate/template-1
     * @apiParamExample {json} Request: 
     * {
     * "externalId" : "template1"
@@ -161,16 +161,16 @@ module.exports = class ProjectTemplates extends Abstract {
       /**
       * Import templates from existsing project templates.
       * @method
-      * @name importFromTemplates
+      * @name importProjectTemplate
       * @returns {JSON} returns imported project templates.
      */
 
-    async importFromTemplates(req) {
+    async importProjectTemplate(req) {
         return new Promise(async (resolve, reject) => {
             try {
 
                 const projectTemplates = 
-                await projectTemplatesHelper.importFromTemplates(
+                await projectTemplatesHelper.importProjectTemplate(
                     req.params._id,
                     req.userDetails.userInformation.userId,
                     req.userDetails.userToken,

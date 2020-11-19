@@ -10,7 +10,8 @@ module.exports = {
     schema: {
         externalId : {
             type : String,
-            required : true
+            required : true,
+            unique: true
         },
         name : {
             type : String,

@@ -35,7 +35,6 @@ module.exports = {
     });
 
     await db.collection('taskAttributes').insertMany(attributes);
-    await db.collection('taskAttributes').createIndex({ externalId: 1 },{ unique:true });
 
   },
 

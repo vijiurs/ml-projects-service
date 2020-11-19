@@ -66,8 +66,6 @@ module.exports = {
     }
 
     await db.collection('projectCategories').insertMany(projectCategories);
-    await db.collection('projectCategories').createIndex({ externalId : 1 },{ unique: true });
-
 
   },
 

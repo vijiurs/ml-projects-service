@@ -9,11 +9,14 @@ module.exports = {
     schema: {
         title : {
             type : String,
-            required : true
+            required : true,
+            index: true
         },
         externalId : {
             type : String,
-            required : true
+            required : true,
+            index: true,
+            unique: true
         },
         categories : {
             type : Array,

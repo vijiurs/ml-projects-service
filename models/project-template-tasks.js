@@ -10,7 +10,8 @@ module.exports = {
     schema: {
         name : {
             type : String,
-            required : true
+            required : true,
+            index: true
         },
         description : {
             type : String,
@@ -30,7 +31,9 @@ module.exports = {
         },
         externalId : {
             type : String,
-            required : true
+            required : true,
+            index: true,
+            unique: true
         },
         type : {
             type : String,

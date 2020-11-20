@@ -78,7 +78,6 @@ module.exports = {
 
     await db.collection('projectAttributes').insertMany(attributes);
 
-
   },
 
   async down(db) {

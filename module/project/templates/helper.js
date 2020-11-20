@@ -15,6 +15,7 @@
 const libraryCategoriesHelper = require(MODULES_BASE_PATH + "/library/categories/helper");
 const kendraService = require(GENERICS_FILES_PATH + "/services/kendra");
 const kafkaProducersHelper = require(GENERICS_FILES_PATH + "/kafka/producers");
+const projectTemplateTasksHelper = require(MODULES_BASE_PATH + "/project/templateTasks/helper");
 
 module.exports = class ProjectTemplatesHelper {
 
@@ -329,9 +330,11 @@ module.exports = class ProjectTemplatesHelper {
      */
 
     static bulkCreate(templates,userId) {
+        
         return new Promise(async (resolve, reject) => {
-            try {
 
+            try {
+                console.log("got",userId)
                 const fileName = `project-templates-creation`;
                 let fileStream = new CSV_FILE_STREAM(fileName);
                 let input = fileStream.initStream();
@@ -345,6 +348,7 @@ module.exports = class ProjectTemplatesHelper {
                 })();
 
                 let csvInformation = await this.extractCsvInformation(templates);
+
 
                 for ( let template = 0; template < templates.length ; template ++ ) {
 
@@ -382,28 +386,28 @@ module.exports = class ProjectTemplatesHelper {
                             
                             currentData["_SYSTEM_ID"] = createdTemplate._id;
 
-                            const kafkaMessage = 
-                            await kafkaProducersHelper.pushProjectToKafka({
-                                internal: false,
-                                text: 
-                                templateData.categories.length === 1 ?  
-                                `A new project has been added under ${templateData.categories[0].name} category in Unnati library.` : 
-                                `A new project has been added in Unnati library`,
-                                type: "information",
-                                action: "mapping",
-                                payload: {
-                                    project_id: createdTemplate._id
-                                },
-                                is_read : false,
-                                internal : false,
-                                title: "New project Available!",
-                                created_at: new Date(),
-                                type: process.env.IMPROVEMENT_PROJECT_APPLICATION_APP_TYPE
-                            });
+                            // const kafkaMessage = 
+                            // await kafkaProducersHelper.pushProjectToKafka({
+                            //     internal: false,
+                            //     text: 
+                            //     templateData.categories.length === 1 ?  
+                            //     `A new project has been added under ${templateData.categories[0].name} category in Unnati library.` : 
+                            //     `A new project has been added in Unnati library`,
+                            //     type: "information",
+                            //     action: "mapping",
+                            //     payload: {
+                            //         project_id: createdTemplate._id
+                            //     },
+                            //     is_read : false,
+                            //     internal : false,
+                            //     title: "New project Available!",
+                            //     created_at: new Date(),
+                            //     type: process.env.IMPROVEMENT_PROJECT_APPLICATION_APP_TYPE
+                            // });
 
-                            if (kafkaMessage.status !== CONSTANTS.common.SUCCESS) {
-                                currentData["_SYSTEM_ID"] = CONSTANTS.apiResponses.COULD_NOT_PUSHED_TO_KAFKA;
-                            }
+                            // if (kafkaMessage.status !== CONSTANTS.common.SUCCESS) {
+                            //     currentData["_SYSTEM_ID"] = CONSTANTS.apiResponses.COULD_NOT_PUSHED_TO_KAFKA;
+                            // }
 
                         }
 
@@ -519,7 +523,7 @@ module.exports = class ProjectTemplatesHelper {
      /**
       * Bulk update project templates.
       * @method
-      * @name importFromTemplates - import templates from existing project templates.
+      * @name importProjectTemplate - import templates from existing project templates.
       * @param {String} templateId - project template id.
       * @param {String} userId - logged in user id.
       * @param {String} userToken - logged in user token.
@@ -528,7 +532,7 @@ module.exports = class ProjectTemplatesHelper {
       * @returns {Object} imported templates data.
      */
 
-    static importFromTemplates( templateId,userId,userToken,solutionId,updateData = {} ) {
+    static importProjectTemplate( templateId,userId,userToken,solutionId,updateData = {} ) {
         return new Promise(async (resolve, reject) => {
             try {
 
@@ -543,7 +547,7 @@ module.exports = class ProjectTemplatesHelper {
                         message : CONSTANTS.apiResponses.PROJECT_TEMPLATE_NOT_FOUND
                     }
                 }
-                
+
                 let newProjectTemplate = {...projectTemplateData[0]};
                 newProjectTemplate.externalId = 
                 projectTemplateData[0].externalId +"-"+ UTILS.epochTime();
@@ -581,6 +585,13 @@ module.exports = class ProjectTemplatesHelper {
                     })
                 }
 
+                let tasksIds, newProjectTemplateTask, duplicateTemplateTask;
+                let newTaskId = [];
+
+                if(projectTemplateData[0].tasks){
+                    tasksIds = projectTemplateData[0].tasks;
+                }
+
                 let duplicateTemplateDocument = 
                 await database.models.projectTemplates.create(
                   _.omit(newProjectTemplate, ["_id"])
@@ -589,6 +600,43 @@ module.exports = class ProjectTemplatesHelper {
                 if ( !duplicateTemplateDocument._id ) {
                     throw {
                         message : CONSTANTS.apiResponses.PROJECT_TEMPLATES_NOT_CREATED
+                    }
+                }
+
+                if(Array.isArray(tasksIds) && tasksIds.length > 0 ){
+
+                    await Promise.all(tasksIds.map(async taskId => {
+                       
+                       let taskData = await database.models.projectTemplateTasks.findOne(
+                        {
+                            _id : taskId
+                        }).lean();
+
+                        if(taskData){
+
+                            newProjectTemplateTask = {...taskData};
+                            taskData.projectTemplateId = duplicateTemplateDocument._id;
+                            taskData.externalId = taskData.externalId +"-"+ UTILS.epochTime();
+                            duplicateTemplateTask = 
+                                await database.models.projectTemplateTasks.create(
+                                  _.omit(taskData, ["_id"])
+                                );
+                            newTaskId.push(duplicateTemplateTask._id);
+                        }
+
+                    }))
+
+                    if(newTaskId && newTaskId.length > 0){
+                        let updateDuplicateTemplete = await database.models.projectTemplates.findOneAndUpdate(
+                        {
+                            _id : duplicateTemplateDocument._id
+                        },
+                        {
+                            $set : {
+                                    tasks : newTaskId
+                            }
+                        }).lean();
+
                     }
                 }
 

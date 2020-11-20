@@ -108,23 +108,26 @@ module.exports = class UserProjectsHelper {
                 let updateLastDownloadedDate = new Date();
 
                 for (let project = 0; project < projects.length; project++) {
-                    let currentProject = projects[project];
-                    currentProject.entityInformation =
-                        _.pick(
-                            currentProject.entityInformation,
-                            ["externalId", "name"]
-                        );
+                    let currentProject = _projectInformation(projects[project]);
+                    
+                    // <- Dirty Fix not required response in this format.
 
-                    currentProject.solutionInformation =
-                        _.pick(
-                            currentProject.solutionInformation,
-                            ["externalId", "name", "description", "_id"]
-                        );
+                    // currentProject.entityInformation =
+                    //     _.pick(
+                    //         currentProject.entityInformation,
+                    //         ["externalId", "name"]
+                    //     );
 
-                    currentProject.programInformation = _.pick(
-                        currentProject.programInformation,
-                        ["externalId", "name", "description", "_id"]
-                    );
+                    // currentProject.solutionInformation =
+                    //     _.pick(
+                    //         currentProject.solutionInformation,
+                    //         ["externalId", "name", "description", "_id"]
+                    //     );
+
+                    // currentProject.programInformation = _.pick(
+                    //     currentProject.programInformation,
+                    //     ["externalId", "name", "description", "_id"]
+                    // );
 
                     currentProject.lastDownloadedAt = updateLastDownloadedDate;
 
@@ -1048,9 +1051,11 @@ module.exports = class UserProjectsHelper {
                     })
                 }
 
+                let result = _projectInformation(projectDetails[0]);
+
                 return resolve({
                     message: CONSTANTS.apiResponses.PROJECT_DETAILS_FETCHED,
-                    result: projectDetails[0]
+                    result: result
                 });
 
             } catch (error) {
@@ -1206,20 +1211,43 @@ module.exports = class UserProjectsHelper {
 
 function _projectInformation(project) {
 
-    project.entityInformation = _.pick(
-        project.entityInformation,
-        ["externalId", "name", "entityType", "entityTpeId"]
-    );
+    // <- Dirty Fix not required response in this format.
 
-    project.solutionInformation = _.pick(
-        project.solutionInformation,
-        ["externalId", "name"]
-    );
+    // project.entityInformation = _.pick(
+    //     project.entityInformation,
+    //     ["externalId", "name", "entityType", "entityTpeId"]
+    // );
 
-    project.programInformation = _.pick(
-        project.programInformation,
-        ["externalId", "name"]
-    );
+    if( project.entityInformation ) {
+        project.entityId = project.entityInformation._id;
+        project.entityName = project.entityInformation.name;
+        project.entityType = project.entityInformation.entityType;
+        project.entityTypeId = project.entityInformation.entityTypeId;
+    }
+
+    if( project.solutionInformation ) {
+        project.solutionId = project.solutionInformation._id;
+        project.solutionExternalId = project.solutionInformation.externalId;
+        project.solutionName = project.solutionInformation.name;
+    }
+
+
+    if (project.programInformation ) {
+        project.programId = project.programInformation._id;
+        project.programExternalId = project.programInformation.externalId;
+        project.programName = project.programInformation.name;
+    }
+
+    // <- Dirty Fix not required response in this format.
+    // project.solutionInformation = _.pick(
+    //     project.solutionInformation,
+    //     ["externalId", "name"]
+    // );
+
+    // project.programInformation = _.pick(
+    //     project.programInformation,
+    //     ["externalId", "name"]
+    // );
 
     project.status = CONSTANTS.common.NOT_STARTED_STATUS;
 
@@ -1231,6 +1259,9 @@ function _projectInformation(project) {
 
     delete project.metaInformation;
     delete project.__v;
+    delete project.entityInformation;
+    delete project.solutionInformation;
+    delete project.programInformation;
 
     return project;
 }

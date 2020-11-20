@@ -9,7 +9,7 @@ module.exports = (req) => {
 
     let projectTemplateValidator = {
 
-        importFromTemplates : function () {
+        importProjectTemplate : function () {
             req.checkParams('_id')
             .exists()
             .withMessage("required project template id");

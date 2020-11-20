@@ -20,7 +20,8 @@ module.exports = {
         },
         userId : {
             type : String,
-            default : "SYSTEM"
+            default : "SYSTEM",
+            index: true
         },
         createdFor : {
             type : Array,

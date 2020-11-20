@@ -43,33 +43,44 @@ module.exports = class LibraryCategories extends Abstract {
     * @apiGroup Library Categories
     * @apiSampleRequest /improvement-project/api/v1/library/categories/list
     * @apiParamExample {json} Response:
-    * {
-    * "message": "Library categories fetched successfully",
-    * "status": 200,
-    * "result": [
-    * {
+    {
+    "message": "Project categories fetched successfully",
+    "status": 200,
+    "result": [
+        {
             "name": "Community",
             "type": "community",
-            "updatedAt": "2020-07-16T09:51:43.533Z",
-            "url": "https://storage.googleapis.com/download/storage/v1/b/sl-dev-storage/o/static%2FprojectCategories%2Fdrafts.png?generation=1594893105112980&alt=media"
+            "updatedAt": "2020-11-18T16:03:22.563Z",
+            "projectsCount": 0,
+            "url": "https://storage.googleapis.com/download/storage/v1/b/sl-dev-storage/o/static%2FprojectCategories%2Fcommunity.png?alt=media"
+        },
+        {
+            "name": "Education Leader",
+            "type": "educationLeader",
+            "updatedAt": "2020-11-18T16:03:22.563Z",
+            "projectsCount": 0,
+            "url": "https://storage.googleapis.com/download/storage/v1/b/sl-dev-storage/o/static%2FprojectCategories%2FeducationLeader.png?alt=media"
         },
         {
             "name": "Infrastructure",
             "type": "infrastructure",
-            "updatedAt": "2020-07-16T09:51:43.533Z",
-            "url": "https://storage.googleapis.com/download/storage/v1/b/sl-dev-storage/o/static%2FprojectCategories%2FobservationSolutions.png?generation=1594893104772103&alt=media"
+            "updatedAt": "2020-11-18T16:03:22.563Z",
+            "projectsCount": 0,
+            "url": "https://storage.googleapis.com/download/storage/v1/b/sl-dev-storage/o/static%2FprojectCategories%2Finfrastructure.png?alt=media"
         },
         {
             "name": "Students",
             "type": "students",
-            "updatedAt": "2020-07-16T09:51:43.533Z",
-            "url": "https://storage.googleapis.com/download/storage/v1/b/sl-dev-storage/o/static%2FprojectCategories%2FinstitutionalAssessments.png?generation=1594893104496585&alt=media"
+            "updatedAt": "2020-11-18T16:03:22.563Z",
+            "projectsCount": 0,
+            "url": "https://storage.googleapis.com/download/storage/v1/b/sl-dev-storage/o/static%2FprojectCategories%2Fstudents.png?alt=media"
         },
         {
             "name": "Teachers",
             "type": "teachers",
-            "updatedAt": "2020-07-16T09:51:43.533Z",
-            "url": "https://storage.googleapis.com/download/storage/v1/b/sl-dev-storage/o/static%2FprojectCategories%2FindividualAssessments.png?generation=1594893104067373&alt=media"
+            "updatedAt": "2020-11-18T16:03:22.563Z",
+            "projectsCount": 0,
+            "url": "https://storage.googleapis.com/download/storage/v1/b/sl-dev-storage/o/static%2FprojectCategories%2Fteachers.png?alt=media"
         }
     ]}
     * @apiUse successBody

@@ -108,23 +108,26 @@ module.exports = class UserProjectsHelper {
                 let updateLastDownloadedDate = new Date();
 
                 for (let project = 0; project < projects.length; project++) {
-                    let currentProject = projects[project];
-                    currentProject.entityInformation =
-                        _.pick(
-                            currentProject.entityInformation,
-                            ["externalId", "name"]
-                        );
+                    let currentProject = _projectInformation(projects[project]);
+                    
+                    // <- Dirty Fix not required response in this format.
 
-                    currentProject.solutionInformation =
-                        _.pick(
-                            currentProject.solutionInformation,
-                            ["externalId", "name", "description", "_id"]
-                        );
+                    // currentProject.entityInformation =
+                    //     _.pick(
+                    //         currentProject.entityInformation,
+                    //         ["externalId", "name"]
+                    //     );
 
-                    currentProject.programInformation = _.pick(
-                        currentProject.programInformation,
-                        ["externalId", "name", "description", "_id"]
-                    );
+                    // currentProject.solutionInformation =
+                    //     _.pick(
+                    //         currentProject.solutionInformation,
+                    //         ["externalId", "name", "description", "_id"]
+                    //     );
+
+                    // currentProject.programInformation = _.pick(
+                    //     currentProject.programInformation,
+                    //     ["externalId", "name", "description", "_id"]
+                    // );
 
                     currentProject.lastDownloadedAt = updateLastDownloadedDate;
 
@@ -745,8 +748,8 @@ module.exports = class UserProjectsHelper {
                 if (!userProject.length > 0) {
 
                     return resolve({
-                        message: CONSTANTS.apiResponses.USER_PROJECT_NOT_FOUND,
-                        result: {}
+                        status : 400,
+                        message: CONSTANTS.apiResponses.USER_PROJECT_NOT_FOUND
                     });
                 }
 
@@ -922,8 +925,8 @@ module.exports = class UserProjectsHelper {
 
                 let programAndSolutionData = {
                     entities:
-                        result.entityInformation ?
-                            [ObjectId(result.entityInformation._id)] : [],
+                    result.entityInformation ?
+                    [ObjectId(result.entityInformation._id)] : [],
                     type: CONSTANTS.common.IMPROVEMENT_PROJECT,
                     subType: CONSTANTS.common.IMPROVEMENT_PROJECT
                 };
@@ -1048,9 +1051,11 @@ module.exports = class UserProjectsHelper {
                     })
                 }
 
+                let result = _projectInformation(projectDetails[0]);
+
                 return resolve({
                     message: CONSTANTS.apiResponses.PROJECT_DETAILS_FETCHED,
-                    result: projectDetails[0]
+                    result: result
                 });
 
             } catch (error) {
@@ -1194,6 +1199,64 @@ module.exports = class UserProjectsHelper {
         })
     }
 
+      /**
+      * Get tasks from a user project.
+      * @method
+      * @name tasks 
+      * @param {String} projectId - Project id. 
+      * @param {Array} taskIds - Array of tasks ids.
+      * @returns {Object} - return tasks from a project. 
+    */
+
+   static tasks(projectId, taskIds) {
+       return new Promise(async (resolve, reject) => {
+           try {
+            
+            let aggregatedData = [{
+                $match : {
+                    _id : ObjectId(projectId)
+                }
+            }];
+
+            if( taskIds.length > 0 ) {
+                
+                let unwindData = {
+                    "$unwind" : "$tasks"
+                }
+
+                let matchData = {
+                    "$match" : {
+                        "tasks._id" : { $in : taskIds }
+                    }
+                };
+
+                let groupData = {
+                    "$group" : {
+                        "_id" : "$_id",
+                        "tasks" : { "$push" : "$tasks" }
+                    }
+                }
+
+                aggregatedData.push(unwindData,matchData,groupData);
+            }
+
+            let projectData = {
+                "$project" : { "tasks" : 1 }
+            }
+
+            aggregatedData.push(projectData);
+
+            let projects = 
+            await database.models.projects.aggregate(aggregatedData);
+
+            return resolve(projects);
+
+           } catch (error) {
+               return reject(error);
+            }
+        })
+   }
+
 };
 
 /**
@@ -1206,20 +1269,43 @@ module.exports = class UserProjectsHelper {
 
 function _projectInformation(project) {
 
-    project.entityInformation = _.pick(
-        project.entityInformation,
-        ["externalId", "name", "entityType", "entityTpeId"]
-    );
+    // <- Dirty Fix not required response in this format.
 
-    project.solutionInformation = _.pick(
-        project.solutionInformation,
-        ["externalId", "name"]
-    );
+    // project.entityInformation = _.pick(
+    //     project.entityInformation,
+    //     ["externalId", "name", "entityType", "entityTpeId"]
+    // );
 
-    project.programInformation = _.pick(
-        project.programInformation,
-        ["externalId", "name"]
-    );
+    if( project.entityInformation ) {
+        project.entityId = project.entityInformation._id;
+        project.entityName = project.entityInformation.name;
+        project.entityType = project.entityInformation.entityType;
+        project.entityTypeId = project.entityInformation.entityTypeId;
+    }
+
+    if( project.solutionInformation ) {
+        project.solutionId = project.solutionInformation._id;
+        project.solutionExternalId = project.solutionInformation.externalId;
+        project.solutionName = project.solutionInformation.name;
+    }
+
+
+    if (project.programInformation ) {
+        project.programId = project.programInformation._id;
+        project.programExternalId = project.programInformation.externalId;
+        project.programName = project.programInformation.name;
+    }
+
+    // <- Dirty Fix not required response in this format.
+    // project.solutionInformation = _.pick(
+    //     project.solutionInformation,
+    //     ["externalId", "name"]
+    // );
+
+    // project.programInformation = _.pick(
+    //     project.programInformation,
+    //     ["externalId", "name"]
+    // );
 
     project.status = CONSTANTS.common.NOT_STARTED_STATUS;
 
@@ -1231,6 +1317,9 @@ function _projectInformation(project) {
 
     delete project.metaInformation;
     delete project.__v;
+    delete project.entityInformation;
+    delete project.solutionInformation;
+    delete project.programInformation;
 
     return project;
 }
@@ -1249,7 +1338,7 @@ function _projectTask(task, isImportedFromLibrary = false) {
     task.forEach(singleTask => {
 
         singleTask.externalId = singleTask.externalId ? singleTask.externalId : singleTask.name.toLowerCase();
-        singleTask.type = singleTask.type ? singleTask.type : CONSTANTS.common.SINGLE_TASK_TYPE;
+        singleTask.type = singleTask.type ? singleTask.type : CONSTANTS.common.SIMPLE_TASK_TYPE;
         singleTask.status = singleTask.status ? singleTask.status : CONSTANTS.common.NOT_STARTED_STATUS;
         singleTask.isDeleted = singleTask.isDeleted ? singleTask.isDeleted : false;
         singleTask.isDeleteable = singleTask.isDeleteable ? singleTask.isDeleteable : false;

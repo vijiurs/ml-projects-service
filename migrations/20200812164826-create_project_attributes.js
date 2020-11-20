@@ -77,8 +77,6 @@ module.exports = {
     });
 
     await db.collection('projectAttributes').insertMany(attributes);
-    await db.collection('projectAttributes').createIndex({ externalId: 1 },{ unique:true });
-
 
   },
 

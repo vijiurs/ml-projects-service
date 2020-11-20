@@ -12,6 +12,7 @@ module.exports = {
             type : String,
             required : true,
             unique: true
+            
         },
         name : {
             type : String,

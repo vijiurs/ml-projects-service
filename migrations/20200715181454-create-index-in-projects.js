@@ -7,6 +7,7 @@ module.exports = {
     await db.collection('projects').createIndex({ programExternalId : 1 });
     await db.collection('projects').createIndex({ solutionExternalId : 1 });
     await db.collection('projects').createIndex({ category : 1 });
+    
     return;
   },
 

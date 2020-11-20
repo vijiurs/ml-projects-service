@@ -78,7 +78,6 @@ module.exports = {
     }
 
     await db.collection('projectCategories').insertMany(projectCategories);
-
   },
 
   async down(db) {

@@ -11,6 +11,7 @@ module.exports = {
             type : String,
             required : true,
             index: true
+            
         },
         externalId : {
             type : String,

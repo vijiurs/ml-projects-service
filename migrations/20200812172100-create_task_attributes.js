@@ -35,7 +35,6 @@ module.exports = {
     });
 
     await db.collection('taskAttributes').insertMany(attributes);
-
   },
 
   async down(db) {

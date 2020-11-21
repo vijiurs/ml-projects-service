@@ -59,7 +59,7 @@ module.exports = {
             type : String,
             default : "SYSTEM"
         },
-        resources : {
+        learningResources : {
             type : Array,
             default : []
         },

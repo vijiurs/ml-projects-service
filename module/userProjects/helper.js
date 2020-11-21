@@ -956,8 +956,8 @@ module.exports = class UserProjectsHelper {
 
                 let programAndSolutionData = {
                     entities:
-                        result.entityInformation ?
-                            [ObjectId(result.entityInformation._id)] : [],
+                    result.entityInformation ?
+                    [ObjectId(result.entityInformation._id)] : [],
                     type: CONSTANTS.common.IMPROVEMENT_PROJECT,
                     subType: CONSTANTS.common.IMPROVEMENT_PROJECT
                 };
@@ -1249,6 +1249,64 @@ module.exports = class UserProjectsHelper {
         })
     }
 
+      /**
+      * Get tasks from a user project.
+      * @method
+      * @name tasks 
+      * @param {String} projectId - Project id. 
+      * @param {Array} taskIds - Array of tasks ids.
+      * @returns {Object} - return tasks from a project. 
+    */
+
+   static tasks(projectId, taskIds) {
+       return new Promise(async (resolve, reject) => {
+           try {
+            
+            let aggregatedData = [{
+                $match : {
+                    _id : ObjectId(projectId)
+                }
+            }];
+
+            if( taskIds.length > 0 ) {
+                
+                let unwindData = {
+                    "$unwind" : "$tasks"
+                }
+
+                let matchData = {
+                    "$match" : {
+                        "tasks._id" : { $in : taskIds }
+                    }
+                };
+
+                let groupData = {
+                    "$group" : {
+                        "_id" : "$_id",
+                        "tasks" : { "$push" : "$tasks" }
+                    }
+                }
+
+                aggregatedData.push(unwindData,matchData,groupData);
+            }
+
+            let projectData = {
+                "$project" : { "tasks" : 1 }
+            }
+
+            aggregatedData.push(projectData);
+
+            let projects = 
+            await database.models.projects.aggregate(aggregatedData);
+
+            return resolve(projects);
+
+           } catch (error) {
+               return reject(error);
+            }
+        })
+   }
+
 };
 
 /**
@@ -1330,7 +1388,7 @@ function _projectTask(task, isImportedFromLibrary = false) {
     task.forEach(singleTask => {
 
         singleTask.externalId = singleTask.externalId ? singleTask.externalId : singleTask.name.toLowerCase();
-        singleTask.type = singleTask.type ? singleTask.type : CONSTANTS.common.SINGLE_TASK_TYPE;
+        singleTask.type = singleTask.type ? singleTask.type : CONSTANTS.common.SIMPLE_TASK_TYPE;
         singleTask.status = singleTask.status ? singleTask.status : CONSTANTS.common.NOT_STARTED_STATUS;
         singleTask.isDeleted = singleTask.isDeleted ? singleTask.isDeleted : false;
         singleTask.isDeleteable = singleTask.isDeleteable ? singleTask.isDeleteable : false;

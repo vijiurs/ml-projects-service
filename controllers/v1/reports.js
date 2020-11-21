@@ -84,7 +84,10 @@ module.exports = class Reports {
                     req.query.requestPdf ? req.query.requestPdf : false,
                 );
                 
-                return resolve(entityReports);
+                return resolve({
+                    message: entityReports.message,
+                    result: entityReports.data
+                });
 
             } catch (error) {
                 return reject({
@@ -133,7 +136,11 @@ module.exports = class Reports {
             try {
 
                 const reportTypes = await reportsHelper.getTypes();
-                return resolve(reportTypes);
+
+                return resolve({
+                    message: reportTypes.message,
+                    result: reportTypes.data
+                });
 
             } catch (error) {
                 return reject({
@@ -196,7 +203,11 @@ module.exports = class Reports {
                     req.pageNo,
                     req.searchText
                 );
-                return resolve(entities);
+                
+                return resolve({
+                    message: entities.message,
+                    result: entities.data
+                });
 
             } catch (error) {
                 return reject({
@@ -270,7 +281,10 @@ module.exports = class Reports {
                     req.body.programId ? req.body.programId : "",
                     req.query.requestPdf ? req.query.requestPdf : false,
                 );
-                return resolve(entities);
+                return resolve({
+                    message: entities.message,
+                    result: entities.data
+                });
 
             } catch (error) {
                 return reject({

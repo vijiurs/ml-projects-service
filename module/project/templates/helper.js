@@ -543,9 +543,7 @@ module.exports = class ProjectTemplatesHelper {
                 });
 
                 if ( !projectTemplateData.length > 0 ) {
-                    throw {
-                        message : CONSTANTS.apiResponses.PROJECT_TEMPLATE_NOT_FOUND
-                    }
+                    throw new Error(CONSTANTS.apiResponses.PROJECT_TEMPLATE_NOT_FOUND)
                 }
 
                 let newProjectTemplate = {...projectTemplateData[0]};
@@ -561,9 +559,7 @@ module.exports = class ProjectTemplatesHelper {
                     },["_id","externalId","programId","programExternalId"]);
     
                     if( !solutionData.success ) {
-                        throw {
-                            message : CONSTANTS.apiResponses.SOLUTION_NOT_FOUND
-                        }
+                       throw new Error(CONSTANTS.apiResponses.SOLUTION_NOT_FOUND)
                     }
 
                     newProjectTemplate.solutionId = solutionData.data[0]._id;
@@ -598,9 +594,7 @@ module.exports = class ProjectTemplatesHelper {
                 );
 
                 if ( !duplicateTemplateDocument._id ) {
-                    throw {
-                        message : CONSTANTS.apiResponses.PROJECT_TEMPLATES_NOT_CREATED
-                    }
+                    throw new Error(CONSTANTS.apiResponses.PROJECT_TEMPLATES_NOT_CREATED)
                 }
 
                 if(Array.isArray(tasksIds) && tasksIds.length > 0 ){
@@ -647,13 +641,18 @@ module.exports = class ProjectTemplatesHelper {
                 );
 
                 return resolve({
+                    success: true,
                     message : CONSTANTS.apiResponses.DUPLICATE_PROJECT_TEMPLATES_CREATED,
-                    result : {
+                    data : {
                        _id : duplicateTemplateDocument._id 
                     }
                 })
             } catch (error) {
-                return reject(error);
+                return resolve({
+                    success: false,
+                    message: error.message,
+                    data: false
+                });
             }
         })
     }

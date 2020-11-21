@@ -99,7 +99,11 @@ module.exports = class LibraryCategories extends Abstract {
             try {
                 
                 const projectCategories = await libraryCategoriesHelper.list();
-                return resolve(projectCategories);
+
+                return resolve({
+                    message: projectCategories.message,
+                    result: projectCategories.data
+                });
 
             } catch (error) {
                 return reject({
@@ -160,7 +164,10 @@ module.exports = class LibraryCategories extends Abstract {
                     req.query.sort
                 );
                 
-                return resolve(libraryProjects);
+                return resolve({
+                    message: libraryProjects.message,
+                    result: libraryProjects.data
+                });
 
             } catch (error) {
                 return reject(error);
@@ -274,7 +281,10 @@ module.exports = class LibraryCategories extends Abstract {
                     req.params._id,
                     req.userDetails.userToken
                 );
-                return resolve(libraryProjectDetails);
+                return resolve({
+                    message: libraryProjectDetails.message,
+                    result: libraryProjectDetails.data
+                });
 
             } catch (error) {
                 return reject(error);

@@ -99,7 +99,7 @@ module.exports = class UserProjectsHelper {
 
                     return resolve({
                         message: CONSTANTS.apiResponses.PROJECT_NOT_FOUND,
-                        result: []
+                        data: []
                     })
                 }
 
@@ -146,12 +146,17 @@ module.exports = class UserProjectsHelper {
 
 
                 return resolve({
+                    success: true,
                     message: CONSTANTS.apiResponses.PROJECTS_FETCHED,
-                    result: projects
+                    data: projects
                 });
 
             } catch (error) {
-                return reject(error);
+                return resolve({
+                    success: false,
+                    message: error.message,
+                    data: false
+                });
             }
         })
     }
@@ -180,7 +185,7 @@ module.exports = class UserProjectsHelper {
 
                     return resolve({
                         message: CONSTANTS.apiResponses.PROJECTS_FORM_NOT_FOUND,
-                        result: []
+                        data: []
                     });
 
                 }
@@ -212,12 +217,17 @@ module.exports = class UserProjectsHelper {
                 formsData[formsData.length - 1].options = categoriesData;
 
                 return resolve({
+                    success: true,
                     message: CONSTANTS.apiResponses.PROJECTS_METAFORM_FETCHED,
-                    result: formsData
+                    data: formsData
                 });
 
             } catch (error) {
-                return reject(error);
+                return resolve({
+                    success: false,
+                    message: error.message,
+                    data: false
+                });
             }
         })
     }
@@ -246,18 +256,23 @@ module.exports = class UserProjectsHelper {
 
                     return resolve({
                         message: CONSTANTS.apiResponses.PROJECT_TASKS_FORM_NOT_FOUND,
-                        result: []
+                        data: []
                     });
 
                 }
 
                 return resolve({
+                    success: true,
                     message: CONSTANTS.apiResponses.PROJECT_TASKS_METAFORM_FETCHED,
-                    result: forms.data[0].value
+                    data: forms.data[0].value
                 });
 
             } catch (error) {
-                return reject(error);
+                return resolve({
+                    success: false,
+                    message: error.message,
+                    data: false
+                });
             }
         })
     }
@@ -599,30 +614,30 @@ module.exports = class UserProjectsHelper {
                     );
 
                 if (
-                    libraryProjects.result &&
-                    !Object.keys(libraryProjects.result).length > 0
+                    libraryProjects.data &&
+                    !Object.keys(libraryProjects.data).length > 0
                 ) {
                     return resolve({
                         message: CONSTANTS.apiResponses.PROJECT_TEMPLATE_NOT_FOUND,
-                        result: {}
+                        data: {}
                     });
                 }
 
                 let taskReport = {};
 
                 if (
-                    libraryProjects.result.tasks &&
-                    libraryProjects.result.tasks.length > 0
+                    libraryProjects.data.tasks &&
+                    libraryProjects.data.tasks.length > 0
                 ) {
 
-                    libraryProjects.result.tasks = await _projectTask(
-                        libraryProjects.result.tasks,
+                    libraryProjects.data.tasks = await _projectTask(
+                        libraryProjects.data.tasks,
                         true
                     );
 
-                    taskReport.total = libraryProjects.result.tasks.length;
+                    taskReport.total = libraryProjects.data.tasks.length;
 
-                    libraryProjects.result.tasks.forEach(task => {
+                    libraryProjects.data.tasks.forEach(task => {
                         if (!taskReport[task.status]) {
                             taskReport[task.status] = 1;
                         } else {
@@ -630,7 +645,7 @@ module.exports = class UserProjectsHelper {
                         }
                     });
 
-                    libraryProjects.result["taskReport"] = taskReport;
+                    libraryProjects.data["taskReport"] = taskReport;
                 }
 
                 let programAndSolutionInformation =
@@ -645,14 +660,14 @@ module.exports = class UserProjectsHelper {
                     return resolve(programAndSolutionInformation);
                 }
 
-                libraryProjects.result.userId = libraryProjects.result.updatedBy = libraryProjects.result.createdBy = userId;
-                libraryProjects.result.lastDownloadedAt = new Date();
-                libraryProjects.result.status = CONSTANTS.common.NOT_STARTED_STATUS;
+                libraryProjects.data.userId = libraryProjects.data.updatedBy = libraryProjects.data.createdBy = userId;
+                libraryProjects.data.lastDownloadedAt = new Date();
+                libraryProjects.data.status = CONSTANTS.common.NOT_STARTED_STATUS;
 
                 let projectCreation = await database.models.projects.create(
                     _.merge(
-                        _.omit(libraryProjects.result, ["_id"]),
-                        programAndSolutionInformation.result
+                        _.omit(libraryProjects.data, ["_id"]),
+                        programAndSolutionInformation.data
                     )
                 );
 
@@ -667,12 +682,17 @@ module.exports = class UserProjectsHelper {
                 projectCreation = _projectInformation(projectCreation._doc);
 
                 return resolve({
+                    success: true,
                     message: CONSTANTS.apiResponses.PROJECTS_FETCHED,
-                    result: projectCreation
+                    data: projectCreation
                 });
 
             } catch (error) {
-                return reject(error);
+                return resolve({
+                    success: false,
+                    message: error.message,
+                    data: false
+                });
             }
         })
     }
@@ -713,12 +733,17 @@ module.exports = class UserProjectsHelper {
                 );
 
                 return resolve({
+                    success: true,
                     message: CONSTANTS.apiResponses.CREATED_USER_PROJECT,
-                    result: _.pick(userProject, ["_id", "lastDownloadedAt"])
+                    data: _.pick(userProject, ["_id", "lastDownloadedAt"])
                 });
 
             } catch (error) {
-                return reject(error);
+                return resolve({
+                    success: false,
+                    message: error.message,
+                    data: false
+                });
             }
         })
     }
@@ -749,7 +774,7 @@ module.exports = class UserProjectsHelper {
 
                     return resolve({
                         message: CONSTANTS.apiResponses.USER_PROJECT_NOT_FOUND,
-                        result: {}
+                        data: {}
                     });
                 }
 
@@ -788,7 +813,7 @@ module.exports = class UserProjectsHelper {
                     }
 
                     updateProject =
-                        _.merge(updateProject, programAndSolutionInformation.result);
+                        _.merge(updateProject, programAndSolutionInformation.data);
                 }
 
                 let booleanData = this.booleanData(schemas["projects"].schema);
@@ -882,16 +907,22 @@ module.exports = class UserProjectsHelper {
 
                 if (!projectUpdated._id) {
                     return resolve({
+                        success: false,
                         message: CONSTANTS.apiResponses.USER_PROJECT_NOT_UPDATED
                     })
                 }
 
                 return resolve({
+                    success: true,
                     message: CONSTANTS.apiResponses.USER_PROJECT_UPDATED
                 });
 
             } catch (error) {
-                return reject(error);
+                return resolve({
+                    success: false,
+                    message: error.message,
+                    data: false
+                });
             }
         })
     }
@@ -982,7 +1013,7 @@ module.exports = class UserProjectsHelper {
                     return resolve({
                         success: false,
                         message: CONSTANTS.apiResponses.SOLUTION_PROGRAMS_NOT_CREATED,
-                        result: {}
+                        data: {}
                     })
                 }
 
@@ -1004,11 +1035,15 @@ module.exports = class UserProjectsHelper {
 
                 return resolve({
                     success: true,
-                    result: result
+                    data: result
                 });
 
             } catch (error) {
-                return reject(error);
+                return resolve({
+                    success: false,
+                    message: error.message,
+                    data: false
+                });
             }
         });
     }
@@ -1047,19 +1082,24 @@ module.exports = class UserProjectsHelper {
 
                     return resolve({
                         message: CONSTANTS.apiResponses.PROJECT_NOT_FOUND,
-                        result: []
+                        data: []
                     })
                 }
 
                 let result = _projectInformation(projectDetails[0]);
 
                 return resolve({
+                    success: true,
                     message: CONSTANTS.apiResponses.PROJECT_DETAILS_FETCHED,
-                    result: result
+                    data: result
                 });
 
             } catch (error) {
-                return reject(error);
+                return resolve({
+                    success: false,
+                    message: error.message,
+                    data: false
+                });
             }
         })
     }
@@ -1120,15 +1160,20 @@ module.exports = class UserProjectsHelper {
                     await database.models.projects.aggregate(aggregateData);
 
                 return resolve({
+                    success: true,
                     message: CONSTANTS.apiResponses.PROJECTS_FETCHED,
-                    result: {
+                    data: {
                         data: result[0].data,
                         count: result[0].count ? result[0].count : 0
                     }
                 })
 
             } catch (error) {
-                return reject(error);
+                return resolve({
+                    success: false,
+                    message: error.message,
+                    data: false
+                });
             }
         })
     }
@@ -1184,17 +1229,22 @@ module.exports = class UserProjectsHelper {
                 } else {
                     return resolve({
                         message: CONSTANTS.apiResponses.FAILED_TO_GENERATE_PRESSIGNED_URLS,
-                        result: []
+                        data: []
                     });
                 }
 
                 return resolve({
+                    success: true,
                     message: CONSTANTS.apiResponses.PRESSIGNED_URLS_GENERATED,
-                    result: fileUploadResponse
+                    data: fileUploadResponse
                 });
 
             } catch (error) {
-                return reject(error);
+                return resolve({
+                    success: false,
+                    message: error.message,
+                    data: false
+                });
             }
         })
     }

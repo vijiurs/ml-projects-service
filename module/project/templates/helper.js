@@ -169,7 +169,7 @@ module.exports = class ProjectTemplatesHelper {
                         }
                     }
 
-                    entityTypesData = entityTypesDocument.data.reduce((ac,entityType)=> ({
+                    entityTypesData = entityTypesDocument.data.result.reduce((ac,entityType)=> ({
                         ...ac,
                         [entityType.name] : {
                             _id : ObjectId(entityType._id),
@@ -334,7 +334,7 @@ module.exports = class ProjectTemplatesHelper {
         return new Promise(async (resolve, reject) => {
 
             try {
-                console.log("got",userId)
+                
                 const fileName = `project-templates-creation`;
                 let fileStream = new CSV_FILE_STREAM(fileName);
                 let input = fileStream.initStream();
@@ -386,28 +386,28 @@ module.exports = class ProjectTemplatesHelper {
                             
                             currentData["_SYSTEM_ID"] = createdTemplate._id;
 
-                            // const kafkaMessage = 
-                            // await kafkaProducersHelper.pushProjectToKafka({
-                            //     internal: false,
-                            //     text: 
-                            //     templateData.categories.length === 1 ?  
-                            //     `A new project has been added under ${templateData.categories[0].name} category in Unnati library.` : 
-                            //     `A new project has been added in Unnati library`,
-                            //     type: "information",
-                            //     action: "mapping",
-                            //     payload: {
-                            //         project_id: createdTemplate._id
-                            //     },
-                            //     is_read : false,
-                            //     internal : false,
-                            //     title: "New project Available!",
-                            //     created_at: new Date(),
-                            //     type: process.env.IMPROVEMENT_PROJECT_APPLICATION_APP_TYPE
-                            // });
+                            const kafkaMessage = 
+                            await kafkaProducersHelper.pushProjectToKafka({
+                                internal: false,
+                                text: 
+                                templateData.categories.length === 1 ?  
+                                `A new project has been added under ${templateData.categories[0].name} category in library.` : 
+                                `A new project has been added in library`,
+                                type: "information",
+                                action: "mapping",
+                                payload: {
+                                    project_id: createdTemplate._id
+                                },
+                                is_read : false,
+                                internal : false,
+                                title: "New project Available!",
+                                created_at: new Date(),
+                                type: process.env.IMPROVEMENT_PROJECT_APPLICATION_APP_TYPE
+                            });
 
-                            // if (kafkaMessage.status !== CONSTANTS.common.SUCCESS) {
-                            //     currentData["_SYSTEM_ID"] = CONSTANTS.apiResponses.COULD_NOT_PUSHED_TO_KAFKA;
-                            // }
+                            if (kafkaMessage.status !== CONSTANTS.common.SUCCESS) {
+                                currentData["_SYSTEM_ID"] = CONSTANTS.apiResponses.COULD_NOT_PUSHED_TO_KAFKA;
+                            }
 
                         }
 
@@ -621,7 +621,7 @@ module.exports = class ProjectTemplatesHelper {
                     }))
 
                     if(newTaskId && newTaskId.length > 0){
-                        let updateDuplicateTemplete = await database.models.projectTemplates.findOneAndUpdate(
+                        await database.models.projectTemplates.findOneAndUpdate(
                         {
                             _id : duplicateTemplateDocument._id
                         },

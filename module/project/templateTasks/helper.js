@@ -13,7 +13,7 @@
 // Dependencies
 const projectTemplatesHelper = require(MODULES_BASE_PATH + "/project/templates/helper");
 const kendraService = require(GENERICS_FILES_PATH + "/services/kendra");
-
+const learningResourcesHelper = require(MODULES_BASE_PATH + "/learningResources/helper");
 
 module.exports = class ProjectTemplateTasksHelper {
 
@@ -82,6 +82,7 @@ module.exports = class ProjectTemplateTasksHelper {
 
                 let taskIds = [];
                 let solutionIds = [];
+                let observationIds = [];
                 let systemId = false;
 
                 csvData.forEach(data=>{
@@ -98,6 +99,11 @@ module.exports = class ProjectTemplateTasksHelper {
                     if ( parsedData.solutionId && parsedData.solutionId !== "" ) {
                         solutionIds.push(parsedData.solutionId);
                     }
+
+                    if ( parsedData.observationId && parsedData.observationId !== "" ) {
+                        observationIds.push(parsedData.observationId);
+                    }
+
                 });
 
                 let tasks = {};
@@ -153,9 +159,8 @@ module.exports = class ProjectTemplateTasksHelper {
                     
                     let solutions = 
                     await kendraService.solutionDocuments({
-                        externalId : { $in : solutionIds },
-                        isReusable : true
-                    },["externalId"]);
+                        externalId : { $in : solutionIds }
+                    },["externalId","isReusable","name"]);
 
                     if ( 
                         solutions.success && 
@@ -165,7 +170,30 @@ module.exports = class ProjectTemplateTasksHelper {
 
                         solutions.data.forEach(solution => {
                             if(!solutionData[solution.externalId]) {
-                                solutionData[solution.externalId] = solution._id;
+                                solutionData[solution.externalId] = solution;
+                            }
+                        });
+                    }
+                }
+
+                let observationData = {};
+
+                if ( observationIds.length > 0 ) {
+                    
+                    let observations = 
+                    await kendraService.observationDocuments({
+                        _id : { $in : observationIds }
+                    },["_id"]);
+
+                    if ( 
+                        observations.success && 
+                        observations.data &&
+                        Object.keys(observations.data).length > 0 
+                    ) {
+
+                        observations.data.forEach(observation => {
+                            if( !observationData[observation._id.toString()]) {
+                                observationData[observation._id.toString()] = true;
                             }
                         });
                     }
@@ -174,7 +202,8 @@ module.exports = class ProjectTemplateTasksHelper {
                 return resolve({
                     tasks : tasks,
                     templateId : templateId,
-                    solutionData : solutionData
+                    solutionData : solutionData,
+                    observationData : observationData
                 });
 
            } catch (error) {
@@ -198,6 +227,7 @@ module.exports = class ProjectTemplateTasksHelper {
         data,
         templateId,
         solutionData,
+        observationData,
         update = false
     ) {
         return new Promise(async (resolve, reject) => {
@@ -209,21 +239,11 @@ module.exports = class ProjectTemplateTasksHelper {
                 allValues.type = parsedData.type.toLowerCase(); 
 
                 if ( allValues.type === CONSTANTS.common.CONTENT ) {
-                    allValues.contentDetails = {};
 
-                    if( parsedData.contentId && parsedData.contentId !== "" ) {
-                        allValues.contentDetails["contentId"] = ObjectId(parsedData.contentId);
-                    } else {
-                        parsedData.STATUS = CONSTANTS.apiResponses.REQUIRED_CONTENT_ID;
-                    }
-
-                    if( parsedData.contentType && parsedData.contentType !== "" ) {
-                        allValues.contentDetails["contentType"] = 
-                        parsedData.contentType;
-                    } else {
-                        parsedData.STATUS = 
-                        CONSTANTS.apiResponses.REQUIRED_CONTENT_TYPE;
-                    }
+                    let learningResources = 
+                    await learningResourcesHelper.extractLearningResourcesFromCsv(parsedData);
+                    
+                    allValues.learningResources = learningResources.data;
 
                 } else if ( allValues.type === CONSTANTS.common.IMPROVEMENT_PROJECT ) {   
                     parsedData.improvementProjectDetails = {};
@@ -266,14 +286,38 @@ module.exports = class ProjectTemplateTasksHelper {
                             parsedData.STATUS = 
                             CONSTANTS.apiResponses.SOLUTION_NOT_FOUND;
                         } else {
-                            allValues.solutionDetails.solutionId = 
-                            ObjectId(solutionData[parsedData.solutionId]);
+
+                            allValues.solutionDetails._id =
+                            ObjectId(solutionData[parsedData.solutionId]._id);
+
+                            allValues.solutionDetails.isReusable = 
+                            solutionData[parsedData.solutionId].isReusable;
+
+                            allValues.solutionDetails.externalId = 
+                            solutionData[parsedData.solutionId].externalId;
+
+                            allValues.solutionDetails.name = 
+                            solutionData[parsedData.solutionId].name;
                         }
 
                     } else {
                         parsedData.STATUS = 
                         CONSTANTS.apiResponses.REQUIRED_SOLUTION_ID;
                     }
+
+                    if( 
+                        allValues.type === CONSTANTS.common.OBSERVATION && 
+                        parsedData.observationId && parsedData.observationId !== ""
+                    ) {
+                       
+                        if( observationData[parsedData.observationId] ) {
+                            allValues.solutionDetails["observationId"] = 
+                            ObjectId(parsedData.observationId)
+                        } else {
+                            parsedData.STATUS = 
+                            CONSTANTS.apiResponses.INVALID_OBSERVATION_ID;
+                        }
+                    } 
 
                 }
 
@@ -445,7 +489,8 @@ module.exports = class ProjectTemplateTasksHelper {
                             await this.createOrUpdateTask(
                                 currentData,
                                 csvData.templateId,
-                                csvData.solutionData  
+                                csvData.solutionData,
+                                csvData.observationData
                             );
 
                             input.push(createdTask);
@@ -468,7 +513,8 @@ module.exports = class ProjectTemplateTasksHelper {
                             let createdTask = await this.createOrUpdateTask(
                                 currentData,
                                 csvData.templateId,
-                                csvData.solutionData
+                                csvData.solutionData,
+                                csvData.observationData
                             );
 
                             input.push(createdTask);
@@ -554,6 +600,7 @@ module.exports = class ProjectTemplateTasksHelper {
                         _.omit(currentData,["STATUS"]),
                         csvData.templateId,
                         csvData.solutionData,
+                        csvData.observationData,
                         true  
                     );
 
@@ -634,5 +681,3 @@ module.exports = class ProjectTemplateTasksHelper {
     }
 
 };
-
-

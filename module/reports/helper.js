@@ -108,8 +108,9 @@ module.exports = class ReportsHelper {
                         if (response && response.success == true) {
 
                             return resolve({
+                                success: true,
                                 message: CONSTANTS.apiResponses.REPORT_GENERATED,
-                                result: {
+                                data: {
                                     data: {
                                         downloadUrl: response.data.pdfUrl
                                     }
@@ -120,7 +121,7 @@ module.exports = class ReportsHelper {
                     } else {
                         return resolve({
                             message: CONSTANTS.apiResponses.REPORTS_DATA_NOT_FOUND,
-                            result: {
+                            data: {
                                 dataAvailable: false,
                                 data: {
                                     categories: categories,
@@ -216,8 +217,9 @@ module.exports = class ReportsHelper {
                     let response = await dhitiService.entityReport(userToken, pdfRequest);
                     if (response && response.success == true) {
                         return resolve({
+                            success: true,
                             message: CONSTANTS.apiResponses.REPORT_GENERATED,
-                            result: {
+                            data: {
                                 data: {
                                     downloadUrl: response.data.pdfUrl
                                 }
@@ -234,8 +236,9 @@ module.exports = class ReportsHelper {
                         projects: projectReport
                     }
                     return resolve({
+                        success: true,
                         message: CONSTANTS.apiResponses.REPORTS_GENERATED,
-                        result: {
+                        data: {
                             dataAvailable: true,
                             data: response,
                         }
@@ -243,7 +246,11 @@ module.exports = class ReportsHelper {
 
                 }
             } catch (error) {
-                return reject(error);
+                return resolve({
+                    success: false,
+                    message: error.message,
+                    data: false
+                });
             }
         })
     }
@@ -282,16 +289,16 @@ module.exports = class ReportsHelper {
                     ["programInformation.name", "userId"]
                 );
 
-                if (projectDocuments.result && projectDocuments.result.count == 0) {
+                if (projectDocuments.data && projectDocuments.data.count == 0) {
                     return resolve({
                         message: CONSTANTS.apiResponses.PROGRAMS_NOT_FOUND,
-                        result: []
+                        data: []
                     })
                 }
 
                 let programs = [];
 
-                let projectDetails = projectDocuments.result.data;
+                let projectDetails = projectDocuments.data.data;
                 for (let index = 0; index < projectDetails.length; index++) {
                     programs.push({
                         name: projectDetails[index].programInformation.name,
@@ -300,15 +307,20 @@ module.exports = class ReportsHelper {
                 }
 
                 return resolve({
+                    success: true,
                     message: CONSTANTS.apiResponses.PROGRAMS_FOUND,
-                    result: {
+                    data: {
                         data: programs,
                         count: projectDocuments.result.count
                     }
                 });
 
             } catch (error) {
-                return reject(error);
+                return resolve({
+                    success: false,
+                    message: error.message,
+                    data: false
+                });
             }
         })
     }
@@ -337,10 +349,19 @@ module.exports = class ReportsHelper {
                         label: "Quarterly",
                         value: 2
                     }]
-                resolve({ result: reportTypes, message: CONSTANTS.apiResponses.REPORT_TYPES_FOUND });
+
+                resolve({
+                    success: true,
+                    message: CONSTANTS.apiResponses.REPORT_TYPES_FOUND,
+                    data: reportTypes,
+                });
 
             } catch (error) {
-                return reject(error);
+                return resolve({
+                    success: false,
+                    message: error.message,
+                    data: false
+                });
             }
         })
     }
@@ -405,7 +426,7 @@ module.exports = class ReportsHelper {
 
                     return resolve({
                         message: CONSTANTS.apiResponses.REPORTS_DATA_NOT_FOUND,
-                        result: []
+                        data: []
                     })
                 }
 
@@ -448,8 +469,9 @@ module.exports = class ReportsHelper {
                     if (response && response.success == true) {
 
                         return resolve({
+                            success: true,
                             message: CONSTANTS.apiResponses.REPORT_GENERATED,
-                            result: {
+                            data: {
                                 data: {
                                     downloadUrl: response.data.pdfUrl
                                 }
@@ -519,11 +541,19 @@ module.exports = class ReportsHelper {
                             }
                         })
                     )
-                    resolve({ message: CONSTANTS.apiResponses.REPORT_GENERATED, result: chartObject })
+                    resolve({
+                        success: true, 
+                        message: CONSTANTS.apiResponses.REPORT_GENERATED,
+                        data: chartObject 
+                    })
                 }
 
             } catch (error) {
-                return reject(error);
+                return resolve({
+                    success: false,
+                    message: error.message,
+                    data: false
+                });
             }
         });
     }

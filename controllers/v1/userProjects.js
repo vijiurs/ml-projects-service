@@ -44,7 +44,6 @@ module.exports = class UserProjects extends Abstract {
     * @apiSampleRequest /improvement-project/api/v1/userProjects/list
     * @apiParamExample {json} Response:
     * {
-    "success": true,
     "message": "Project lists fetched successfully",
     "status": 200,
     "result": [
@@ -141,7 +140,10 @@ module.exports = class UserProjects extends Abstract {
                     req.userDetails.userInformation.userId
                 );
 
-                return resolve(projects);
+                return resolve({
+                    message: projects.message,
+                    result: projects.data
+                });
 
             } catch (error) {
                 return reject({
@@ -161,7 +163,6 @@ module.exports = class UserProjects extends Abstract {
     * @apiSampleRequest /improvement-project/api/v1/userProjects/metaForm
     * @apiParamExample {json} Response:
     * {
-    * "success": true,
     * "message": "Successfully fetched projects form",
     * "status": 200,
     * "result": [
@@ -223,7 +224,11 @@ module.exports = class UserProjects extends Abstract {
 
                 const formsData = 
                 await userProjectsHelper.metaForm(req.userDetails.userToken);
-                return resolve(formsData);
+
+                return resolve({
+                    message: formsData.message,
+                    result: formsData.data
+                });
 
             } catch (error) {
                 return reject({
@@ -287,7 +292,11 @@ module.exports = class UserProjects extends Abstract {
             try {
 
                 const formsData = await userProjectsHelper.tasksMetaForm();
-                return resolve(formsData);
+
+                return resolve({
+                    message: formsData.message,
+                    result: formsData.data
+                });
 
             } catch (error) {
                 return reject({
@@ -516,7 +525,10 @@ module.exports = class UserProjects extends Abstract {
                     req.userDetails.userInformation.userId
                 );
 
-                return resolve(createdProject);
+                return resolve({
+                    message: createdProject.message,
+                    result: createdProject.data
+                });
 
             } catch (error) {
                 return reject({
@@ -564,7 +576,10 @@ module.exports = class UserProjects extends Abstract {
                     req.userDetails.userToken
                 );
 
-                return resolve(createdProject);
+                return resolve({
+                    message: createdProject.message,
+                    result: createdProject.data
+                });
 
             } catch (error) {
                 return reject({
@@ -672,7 +687,10 @@ module.exports = class UserProjects extends Abstract {
                     req.userDetails.userToken
                 );
 
-                return resolve(createdProject);
+                return resolve({
+                    message: createdProject.message,
+                    result: createdProject.data
+                });
 
             } catch (error) {
                 return reject({
@@ -787,7 +805,10 @@ module.exports = class UserProjects extends Abstract {
                     req.userDetails.userInformation.userId
                 );
 
-                return resolve(projectDetails);
+                return resolve({
+                    message: projectDetails.message,
+                    result: projectDetails.data
+                });
 
             } catch (error) {
                 return reject({
@@ -859,7 +880,10 @@ module.exports = class UserProjects extends Abstract {
                     req.body,
                     req.userDetails.userInformation.userId
                 );
-                return resolve(fileUploadUrls);
+                return resolve({
+                    message: fileUploadUrls.message,
+                    result: fileUploadUrls.data
+                });
 
             } catch (error) {
                 return reject({

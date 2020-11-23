@@ -61,10 +61,6 @@ module.exports = {
             type : Array,
             default : []
         },
-        contentDetails : {
-            type : Object,
-            default : {}
-        },
         improvementProjectDetails : {
             type : Object,
             default : {}
@@ -76,6 +72,10 @@ module.exports = {
         hasSubTasks : {
             type : Boolean,
             default : false
+        },
+        learningResources : {
+            type : Array,
+            default : []
         }
     }
 };

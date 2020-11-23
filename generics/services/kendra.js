@@ -35,7 +35,7 @@ const getDownloadableUrl = function (bodyData) {
     return new Promise((resolve, reject) => {
         try {
 
-            const kendraCallBack = function (err, response) {
+            const kendraCallBack = function (err, data) {
 
                 let result = {
                     success : true
@@ -44,7 +44,13 @@ const getDownloadableUrl = function (bodyData) {
                 if (err) {
                     result.success = false;
                 } else {
-                    result["data"] = response.body.result;
+                    let response = data.body;
+
+                    if( response.status === HTTP_STATUS_CODE['ok'].status ) {
+                        result["data"] = response.result;
+                    } else {
+                        result.success = false;
+                    }
                 }
 
                 return resolve(result);
@@ -169,7 +175,13 @@ const solutionDocuments = function (
                 if (err) {
                     result.success = false;
                 } else {
-                    result["data"] = data.body.result;
+                    let response = data.body;
+
+                    if( response.status === HTTP_STATUS_CODE['ok'].status ) {
+                        result["data"] = response.result;
+                    } else {
+                        result.success = false;
+                    }
                 }
 
                 return resolve(result);
@@ -227,7 +239,14 @@ const entityTypesDocuments = function (
                 if (err) {
                     result.success = false;
                 } else {
-                    result["data"] = data.body;
+
+                    let response = data.body;
+
+                    if( response.status === HTTP_STATUS_CODE['ok'].status ) {
+                        result["data"] = response.result;
+                    } else {
+                        result.success = false;
+                    }
                 }
 
                 return resolve(result);
@@ -285,7 +304,13 @@ const rolesDocuments = function (
                 if (err) {
                     result.success = false;
                 } else {
-                    result["data"] = data.body.result;
+                    let response = data.body;
+
+                    if( response.status === HTTP_STATUS_CODE['ok'].status ) {
+                        result["data"] = response.result;
+                    } else {
+                        result.success = false;
+                    }
                 }
 
                 return resolve(result);
@@ -343,7 +368,13 @@ const formsDocuments = function (
                 if (err) {
                     result.success = false;
                 } else {
-                    result["data"] = data.body.result;
+
+                    let response = data.body;
+                    if( response.status === HTTP_STATUS_CODE['ok'].status ) {
+                        result["data"] = response.result;
+                    } else {
+                        result.success = false;
+                    }
                 }
                 return resolve(result);
             }
@@ -555,7 +586,14 @@ const getProfile = function ( token ) {
                 if (err) {
                     result.success = false;
                 } else {
-                    result["data"] = JSON.parse(data.body).result;
+                    
+                    let response = JSON.parse(data.body);
+
+                    if( response.status === HTTP_STATUS_CODE['ok'].status ) {
+                        result["data"] = response.result;
+                    } else {
+                        result.success = false;
+                    }
                 }
 
                 return resolve(result);
@@ -857,7 +895,13 @@ const updateObservation = function ( token,updateData,observationId ) {
                 if (err) {
                     result.success = false;
                 } else {
-                    result["data"] = data.body;
+
+                    let response = data.body;
+                    if( response.status === HTTP_STATUS_CODE['ok'].status ) {
+                        result["data"] = response.result;
+                    } else {
+                        result.success = false;
+                    }
                 }
 
                 return resolve(result);

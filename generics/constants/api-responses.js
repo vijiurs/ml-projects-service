@@ -68,5 +68,11 @@ module.exports = {
     "PRESSIGNED_URLS_GENERATED": "File upload urls generated successfully.",
     "FAILED_TO_GENERATE_PRESSIGNED_URLS": "Failed to generate file upload urls.",
     "TASKS_STATUS_FETCHED" : "Tasks status fetched successfully",
-    "INVALID_OBSERVATION_ID" : "Invalid observation id"
+    "INVALID_OBSERVATION_ID" : "Invalid observation id",
+    "PROJECT_TEMPLATE_TASKS_NOT_FOUND" : "Could not found project template tasks",
+    "LIBRARY_CATEGORIES_NOT_FOUND" : "Could not found library categories",
+    "SOLUTION_DETAILS_FETCHED" : "Solutions details fetched successfully",
+    "KENDRA_URL_NOT_FETCHED" : "Could not fetch url from kendra service",
+    "USER_PROFILE_NOT_FOUND" : "Not found user profile",
+    "OBSERVATION_NOT_FOUND": "No observation found"
 };

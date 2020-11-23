@@ -106,6 +106,18 @@ module.exports = function () {
     }
   });
 
+
+  // KAFKA CONSUMERS
+
+  fs.readdirSync(PROJECT_ROOT_DIRECTORY + "/generics/kafka/consumers")
+  .forEach(function (file) {
+    if (file.match(/\.js$/) !== null) {
+      var name = file.replace('.js', '');
+       global[name + 'Consumer'] = 
+      require(PROJECT_ROOT_DIRECTORY + "/generics/kafka/consumers/" + file);
+    }
+  });
+
   // Load log file
   global.LOGGER = bunyan.createLogger({
     name: 'information',
@@ -133,13 +145,5 @@ module.exports = function () {
       count: 3 // keep 3 back copies
     }]
   });
-
-  global.SESSIONS = {};
-
-  const libraryCategoriesHelper = require(MODULES_BASE_PATH+"/library/categories/helper");
-
-  (async () => {
-    await libraryCategoriesHelper.set();
-  })();
 
 };

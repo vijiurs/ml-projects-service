@@ -22,6 +22,13 @@ module.exports = (req) => {
         },
         details : function () {
             req.checkParams('_id').exists().withMessage("required project id");
+        },
+        tasksStatus : function () {
+            req.checkParams('_id').exists().withMessage("required project id");
+        },
+        solutionDetails : function () {
+            req.checkParams('_id').exists().withMessage("required project id");
+            req.checkQuery('taskId').exists().withMessage("required task id");
         }
     }
 

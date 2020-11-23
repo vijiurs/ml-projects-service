@@ -11,7 +11,6 @@ module.exports = {
             type : String,
             required : true,
             index: true
-            
         },
         externalId : {
             type : String,
@@ -87,7 +86,10 @@ module.exports = {
             type : Object,
             default : {}
         },
-        parentTemplateId : "ObjectId",
+        parentTemplateId : {
+            type : "ObjectId",
+            index: true
+        },
         solutionId : "ObjectId",
         solutionExternalId : String,
         programId : "ObjectId",

@@ -71,53 +71,13 @@ module.exports = class LibraryCategoriesHelper {
     }
 
     /**
-      * List of library project categories.
+      * List of project categories.
       * @method
       * @name list
       * @returns {Object} Project categories.
      */
 
     static list() {
-        return new Promise(async (resolve, reject) => {
-            try {
-
-                let result = "";
-                
-                // <- Dirty fix. Temporary not required as session is not working in multiple instances;
-                
-                // let projectCategoryData = sessionHelpers.get("libraryCategories");
-
-                // if( projectCategoryData && projectCategoryData.length > 0 ) {
-                //     result = projectCategoryData;
-                // } else {
-                    
-                    result = await this.set();
-                // }
-
-                return resolve({
-                  success: true,
-                  message : CONSTANTS.apiResponses.PROJECT_CATEGORIES_FETCHED,
-                  data : result
-                });
-
-            } catch (error) {
-                return resolve({
-                    success: false,
-                    message: error.message,
-                    data: false
-                });
-            }
-        })
-    }
-
-    /**
-      * Set library project categories.
-      * @method
-      * @name set
-      * @returns {Object} Set project categories.
-     */
-
-    static set() {
         return new Promise(async (resolve, reject) => {
             try {
 
@@ -131,17 +91,18 @@ module.exports = class LibraryCategoriesHelper {
                         "name",
                         "icon",
                         "updatedAt",
-                        "projectsCount"
+                        "noOfProjects"
                     ]
                 );
-                
+
                 if( !projectCategoriesData.length > 0 ) {
-                    return resolve({
-                        message : CONSTANTS.apiResponses.LIBRARY_CATEGORIES_NOT_FOUND,
-                        result : []
-                    });
+                    throw {
+                        status : HTTP_STATUS_CODE['bad_request'].status,
+                        message : CONSTANTS.apiResponses.LIBRARY_CATEGORIES_NOT_FOUND
+                    };
                 }
-    
+
+
                 let categories = {};
                 let icons = [];
                 
@@ -151,7 +112,7 @@ module.exports = class LibraryCategoriesHelper {
                         name : category.name,
                         type : category.externalId,
                         updatedAt : category.updatedAt,
-                        projectsCount : category.projectsCount ? category.projectsCount : 0
+                        projectsCount : category.noOfProjects ? category.noOfProjects : 0
                     };
 
                     if( category.icon !== "" ) {
@@ -171,15 +132,15 @@ module.exports = class LibraryCategoriesHelper {
                         }
                     );
                     
-                    if( !projectCategories.success) {
-                        return resolve({
-                            message : CONSTANTS.apiResponses.URL_COULD_NOT_BE_FOUND,
-                            result : []
-                        })
+                    if( !projectCategories.success ) {
+                        throw {
+                            status : HTTP_STATUS_CODE['bad_request'].status,
+                            message : CONSTANTS.apiResponses.KENDRA_URL_NOT_FETCHED
+                        }
                     }
 
                     projectCategories = 
-                    projectCategories.data.map(downloadableImage=>{
+                    projectCategories.data.map( downloadableImage => {
                         return _.merge(
                             categories[downloadableImage.filePath],
                             { url : downloadableImage.url }
@@ -192,12 +153,21 @@ module.exports = class LibraryCategoriesHelper {
 
                 projectCategories = projectCategories.sort((a,b)=> a.name.toString() > b.name.toString() ? 1 : -1);
 
-                sessionHelpers.set("libraryCategories",projectCategories);
-
-                return resolve(projectCategories);
+                return resolve({
+                  success: true,
+                  message : CONSTANTS.apiResponses.PROJECT_CATEGORIES_FETCHED,
+                  data : projectCategories
+                });
 
             } catch (error) {
-                return reject(error);
+                return resolve({
+                    status : 
+                    error.status ? 
+                    error.status : HTTP_STATUS_CODE['internal_server_error'].status,
+                    success: false,
+                    message: error.message,
+                    data: []
+                });
             }
         })
     }
@@ -307,7 +277,7 @@ module.exports = class LibraryCategoriesHelper {
                 return resolve({
                     success: false,
                     message: error.message,
-                    data: false
+                    data: []
                 });
             }
         })
@@ -328,17 +298,18 @@ module.exports = class LibraryCategoriesHelper {
                 let projectsData = 
                 await database.models.projectTemplates.find(
                     {
-                        "_id" : projectId
+                        "_id" : projectId,
+                        "isDeleted" : false
                     },{
                        "__v" : 0
                     }
                 ).lean();
                 
                 if( !projectsData.length > 0 ) {
-                    return resolve({
+                    throw {
+                        status : HTTP_STATUS_CODE['bad_request'].status,
                         message : CONSTANTS.apiResponses.PROJECT_NOT_FOUND,
-                        data : {}
-                    });
+                    };
                 }
 
                 projectsData[0].showProgramAndEntity = false;
@@ -349,7 +320,8 @@ module.exports = class LibraryCategoriesHelper {
                     await database.models.projectTemplateTasks.find({
                         _id : {
                             $in : projectsData[0].tasks
-                        }
+                        },
+                        isDeleted : false
                     }).lean();
 
                     if( tasks &&  tasks.length > 0 ) {
@@ -364,7 +336,8 @@ module.exports = class LibraryCategoriesHelper {
                             let currentTask = tasks[taskPointer];
                             
                             if( 
-                                currentTask.type === CONSTANTS.apiResponses.ASSESSMENT
+                                currentTask.type === CONSTANTS.common.ASSESSMENT ||
+                                currentTask.type === CONSTANTS.common.OBSERVATION
                             ) {
                                 projectsData[0].showProgramAndEntity = true;
                             }
@@ -396,8 +369,16 @@ module.exports = class LibraryCategoriesHelper {
                     
                     let userProfileData = await kendraService.getProfile(userToken);
 
+                    if( !userProfileData.success ) {
+                        throw {
+                            status : HTTP_STATUS_CODE['bad_request'].status,
+                            message : CONSTANTS.apiResponses.USER_PROFILE_NOT_FOUND
+                        }
+                    }
+
+                    projectsData[0].userRating = 0;
+
                     if( 
-                        userProfileData.success &&
                         userProfileData.data &&
                         userProfileData.data.ratings && 
                         userProfileData.data.ratings.length > 0 
@@ -408,9 +389,7 @@ module.exports = class LibraryCategoriesHelper {
                             project => project._id.toString() === projectId.toString() 
                         );
     
-                        if( projectIndex < 0 ) {
-                            projectsData[0].userRating = 0;
-                        } else {
+                        if( projectIndex > 0 ) {
                             projectsData[0].userRating = userProfileData.data.ratings[projectIndex].rating;
                         }
                     } 
@@ -424,9 +403,10 @@ module.exports = class LibraryCategoriesHelper {
 
             } catch (error) {   
                 return resolve({
+                    status : error.status ? error.status : HTTP_STATUS_CODE['internal_server_error'].status,
                     success: false,
                     message: error.message,
-                    data: false
+                    data : {}
                 });
             }
         })

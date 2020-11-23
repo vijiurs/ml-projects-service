@@ -43,7 +43,7 @@ module.exports = {
             type : String,
             default : ""
         },
-        projectsCount : {
+        noOfProjects : {
             type : Number,
             default : 0
         }

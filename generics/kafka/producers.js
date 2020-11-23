@@ -22,9 +22,9 @@ const pushProjectToKafka = function (message) {
           let kafkaPushStatus = await pushMessageToKafka([{
             topic: process.env.IMPROVEMENT_PROJECT_NOTIFICATIONS_TOPIC,
             messages: JSON.stringify(message)
-          }])
+          }]);
 
-          return resolve(kafkaPushStatus)
+          return resolve(kafkaPushStatus);
 
       } catch (error) {
           return reject(error);
@@ -43,14 +43,14 @@ const pushMessageToKafka = function(payload) {
   return new Promise((resolve, reject) => {
 
     if (kafkaCommunicationsOnOff != "ON") {
-      throw reject("Kafka configuration is not done")
+      throw reject("Kafka configuration is not done");
     }
 
     kafkaClient.kafkaProducer.send(payload, (err, data) => {
       if (err) {
-        return reject("Kafka push to topic "+ payload[0].topic +" failed.")
+        return reject("Kafka push to topic "+ payload[0].topic +" failed.");
       } else {
-        return resolve(data)
+        return resolve(data);
       }
     })
 
@@ -59,7 +59,7 @@ const pushMessageToKafka = function(payload) {
     return {
       status : CONSTANTS.common.SUCCESS,
       message: "Kafka push to topic "+ payload[0].topic +" successful with number - "+result[payload[0].topic][0]
-    }
+    };
 
   }).catch((err) => {
     return {

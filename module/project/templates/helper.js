@@ -120,6 +120,13 @@ module.exports = class ProjectTemplatesHelper {
                         externalId : { $in : categoryIds }
                     },["externalId","name"]);
 
+                    if( !categories.length > 0 ) {
+                        throw {
+                            status : HTTP_STATUS_CODE['bad_request'].status,
+                            message : CONSTANTS.apiResponses.LIBRARY_CATEGORIES_NOT_FOUND
+                        }
+                    }
+
                     categoriesData = categories.reduce((ac,category)=> ({
                         ...ac,
                         [category.externalId] : {
@@ -142,6 +149,7 @@ module.exports = class ProjectTemplatesHelper {
                     if( !userRolesData.success ) {
                         throw {
                             message : CONSTANTS.apiResponses.USER_ROLES_NOT_FOUND,
+                            status : HTTP_STATUS_CODE['bad_request'].status
                         }
                     }
 
@@ -165,11 +173,12 @@ module.exports = class ProjectTemplatesHelper {
 
                     if( !entityTypesDocument.success ) {
                         throw {
-                            message : CONSTANTS.apiResponses.ENTITY_TYPES_NOT_FOUND
+                            message : CONSTANTS.apiResponses.ENTITY_TYPES_NOT_FOUND,
+                            status : HTTP_STATUS_CODE['bad_request'].status
                         }
                     }
 
-                    entityTypesData = entityTypesDocument.data.result.reduce((ac,entityType)=> ({
+                    entityTypesData = entityTypesDocument.data.reduce((ac,entityType)=> ({
                         ...ac,
                         [entityType.name] : {
                             _id : ObjectId(entityType._id),
@@ -180,13 +189,20 @@ module.exports = class ProjectTemplatesHelper {
                 }
 
                 return resolve({
-                    categories : categoriesData,
-                    roles : recommendedFor,
-                    entityTypes : entityTypesData
+                    success : true,
+                    data : {
+                        categories : categoriesData,
+                        roles : recommendedFor,
+                        entityTypes : entityTypesData
+                    }
                 });
 
             } catch(error) {
-                return reject(error);
+                return resolve({
+                    success : false,
+                    message : error.message,
+                    status : error.status ? error.status : HTTP_STATUS_CODE['internal_server_error'].status
+                });
             }
         })
     }
@@ -216,7 +232,7 @@ module.exports = class ProjectTemplatesHelper {
                     await database.models.projectCategories.updateMany({
                         externalId : { $in : parsedData.categories }
                     },{
-                        $inc : { projectsCount : 1 }
+                        $inc : { noOfProjects : 1 }
                     });
 
                     parsedData.categories.forEach(category=>{
@@ -317,6 +333,9 @@ module.exports = class ProjectTemplatesHelper {
 
                 let csvInformation = await this.extractCsvInformation(templates);
 
+                if( !csvInformation.success ) {
+                    return resolve(csvInformation);
+                }
 
                 for ( let template = 0; template < templates.length ; template ++ ) {
 
@@ -335,7 +354,7 @@ module.exports = class ProjectTemplatesHelper {
 
                         let templateData = await this.templateData(
                             currentData,
-                            csvInformation,
+                            csvInformation.data,
                             userId
                         );
 
@@ -420,12 +439,17 @@ module.exports = class ProjectTemplatesHelper {
 
                 let csvInformation = await this.extractCsvInformation(templates);
 
+                if( !csvInformation.success ) {
+                    return resolve(csvInformation);
+                }
+
                 for ( let template = 0; template < templates.length ; template ++ ) {
 
                     const currentData = templates[template];
 
                     if ( !currentData._SYSTEM_ID ) {
-                        currentData["UPDATE_STATUS"] = CONSTANTS.apiResponses.MISSING_PROJECT_TEMPLATE_ID;
+                        currentData["UPDATE_STATUS"] = 
+                        CONSTANTS.apiResponses.MISSING_PROJECT_TEMPLATE_ID;
                     } else {
 
                         const template = 
@@ -467,7 +491,7 @@ module.exports = class ProjectTemplatesHelper {
                                 await database.models.projectCategories.updateMany({
                                     _id : { $in : categories }
                                 },{
-                                    $inc : { projectsCount : -1 }
+                                    $inc : { noOfProjects : -1 }
                                 });
                             }
 
@@ -549,58 +573,80 @@ module.exports = class ProjectTemplatesHelper {
                     })
                 }
 
-                let tasksIds, newProjectTemplateTask, duplicateTemplateTask;
+                let tasksIds = [];
                 let newTaskId = [];
 
-                if(projectTemplateData[0].tasks){
-                    tasksIds = projectTemplateData[0].tasks;
+                if( 
+                    projectTemplateData[0].tasks && 
+                    projectTemplateData[0].tasks.length > 0 
+                ){
+                    let duplicatedTasks = 
+                    await this.duplicateTemplateTasks(projectTemplateData[0].tasks);
                 }
 
-                let duplicateTemplateDocument = 
-                await database.models.projectTemplates.create(
-                  _.omit(newProjectTemplate, ["_id"])
-                );
+                // if( taskIds.length > 0 ) {
+                    
+                //     let taskData = await database.models.projectTemplateTasks.find(
+                //     {
+                //         _id : { $in : tasksIds }
+                //     }).lean();
 
-                if ( !duplicateTemplateDocument._id ) {
-                    throw new Error(CONSTANTS.apiResponses.PROJECT_TEMPLATES_NOT_CREATED)
-                }
+                //     if( taskData.length > 0 ) {
+                //         let templateTasks = 
+                //         taskData.map(task => {
+                //             task.externalId = task.externalId + "-" + UTILS.epochTime();
 
-                if(Array.isArray(tasksIds) && tasksIds.length > 0 ){
+                //         })
+                //     }
+                // }
 
-                    await Promise.all(tasksIds.map(async taskId => {
+                // let duplicateTemplateDocument = 
+                // await database.models.projectTemplates.create(
+                //   _.omit(newProjectTemplate, ["_id"])
+                // );
+
+                // if ( !duplicateTemplateDocument._id ) {
+                //     throw new Error(CONSTANTS.apiResponses.PROJECT_TEMPLATES_NOT_CREATED)
+                // }
+
+                // <- Priyanka code.
+
+                // if(Array.isArray(tasksIds) && tasksIds.length > 0 ){
+
+                //     await Promise.all(tasksIds.map(async taskId => {
                        
-                       let taskData = await database.models.projectTemplateTasks.findOne(
-                        {
-                            _id : taskId
-                        }).lean();
+                //        let taskData = await database.models.projectTemplateTasks.findOne(
+                //         {
+                //             _id : taskId
+                //         }).lean();
 
-                        if(taskData){
+                //         if(taskData){
 
-                            newProjectTemplateTask = {...taskData};
-                            taskData.projectTemplateId = duplicateTemplateDocument._id;
-                            taskData.externalId = taskData.externalId +"-"+ UTILS.epochTime();
-                            duplicateTemplateTask = 
-                                await database.models.projectTemplateTasks.create(
-                                  _.omit(taskData, ["_id"])
-                                );
-                            newTaskId.push(duplicateTemplateTask._id);
-                        }
+                //             newProjectTemplateTask = {...taskData};
+                //             taskData.projectTemplateId = duplicateTemplateDocument._id;
+                //             taskData.externalId = taskData.externalId +"-"+ UTILS.epochTime();
+                //             duplicateTemplateTask = 
+                //                 await database.models.projectTemplateTasks.create(
+                //                   _.omit(taskData, ["_id"])
+                //                 );
+                //             newTaskId.push(duplicateTemplateTask._id);
+                //         }
 
-                    }))
+                //     }))
 
-                    if(newTaskId && newTaskId.length > 0){
-                        await database.models.projectTemplates.findOneAndUpdate(
-                        {
-                            _id : duplicateTemplateDocument._id
-                        },
-                        {
-                            $set : {
-                                    tasks : newTaskId
-                            }
-                        }).lean();
+                //     if(newTaskId && newTaskId.length > 0){
+                //         await database.models.projectTemplates.findOneAndUpdate(
+                //         {
+                //             _id : duplicateTemplateDocument._id
+                //         },
+                //         {
+                //             $set : {
+                //                     tasks : newTaskId
+                //             }
+                //         }).lean();
 
-                    }
-                }
+                //     }
+                // }
 
                 await this.ratings(
                     projectTemplateData[0]._id,
@@ -640,6 +686,13 @@ module.exports = class ProjectTemplatesHelper {
                 
                 let userProfileData = await kendraService.getProfile(userToken);
 
+                if( !userProfileData.success ) {
+                    throw {
+                        status : HTTP_STATUS_CODE['bad_request'].status,
+                        message : CONSTANTS.apiResponses.USER_PROFILE_NOT_FOUND
+                    }
+                }
+
                 let templateData = 
                 await this.templateDocument({
                     _id : templateId,
@@ -660,7 +713,6 @@ module.exports = class ProjectTemplatesHelper {
                 let projectIndex = -1;
 
                 if( 
-                    userProfileData.success && 
                     userProfileData.data &&
                     userProfileData.data.ratings && 
                     userProfileData.data.ratings.length > 0 
@@ -720,6 +772,62 @@ module.exports = class ProjectTemplatesHelper {
                     );
                 }
 
+                return resolve(
+                    _.pick(
+                        ratingUpdated,
+                        ["averageRating","noOfRatings","ratings"]
+                    )
+                );
+
+            } catch (error) {
+                return resolve({
+                    success : false,
+                    message : error.message,
+                    status : error.status ? error.status : HTTP_STATUS_CODE['internal_server_error'].status
+                });
+            }
+        })
+    }
+
+     /**
+      * Project template tasks
+      * @method
+      * @name duplicateTemplateTasks
+      * @param {Array} taskIds - Task ids
+      * @returns {Object} Duplicated tasks.
+     */
+
+    static duplicateTemplateTasks( taskIds ) {
+        return new Promise(async (resolve, reject) => {
+            try {
+
+                let taskData = await database.models.projectTemplateTasks.find(
+                    {
+                        _id : {
+                            $in : taskIds
+                        },
+                        isDeleted : false
+                    },{
+                        "createdAt" : 0,
+                        "updatedAt" : 0
+                    }
+                ).lean();
+
+                if( !taskData.length > 0 ) {
+                    throw new Error(CONSTANTS.apiResponses.PROJECT_TEMPLATE_TASKS_NOT_FOUND);
+                }
+
+                let parentChildTasks = [];
+                let simpleTasks = [];
+
+                taskData.forEach(task => {
+
+                    task.externalId = task.externalId + "-" + UTILS.epochTime();
+
+                    if( task.parentId ) {
+                        
+                    }
+                })
                 return resolve(
                     _.pick(
                         ratingUpdated,

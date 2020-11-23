@@ -140,7 +140,7 @@ module.exports = class Reports {
         return new Promise(async (resolve, reject) => {
             try {
 
-                const reportTypes = await reportsHelper.getTypes();
+                const reportTypes = await reportsHelper.types();
 
                 return resolve({
                     message: reportTypes.message,

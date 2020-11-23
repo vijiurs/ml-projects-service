@@ -55,8 +55,8 @@ module.exports = class ReportsHelper {
                 }
 
                 query['$or'] = [
-                    { "syncedAt": { $gte: new Date(startFrom), $lte: new Date(endOf) } },
-                    { "tasks": { $elemMatch: { syncedAt: { $gte: new Date(startFrom), $lte: new Date(endOf) } } } },
+                    { "lastSync": { $gte: new Date(startFrom), $lte: new Date(endOf) } },
+                    { "tasks": { $elemMatch: { lastSync: { $gte: new Date(startFrom), $lte: new Date(endOf) } } } },
                 ]
 
                 if (programId) {
@@ -399,8 +399,8 @@ module.exports = class ReportsHelper {
                 let startFrom = dateRange.startFrom;
 
                 query['$or'] = [
-                    { "syncedAt": { $gte: new Date(startFrom), $lte: new Date(endOf) } },
-                    { "tasks": { $elemMatch: { syncedAt: { $gte: new Date(startFrom), $lte: new Date(endOf) } } } },
+                    { "lastSync": { $gte: new Date(startFrom), $lte: new Date(endOf) } },
+                    { "tasks": { $elemMatch: { lastSync: { $gte: new Date(startFrom), $lte: new Date(endOf) } } } },
                 ]
 
                 if (programId) {

@@ -73,7 +73,7 @@ module.exports = {
             type : [String],
             default : []
         },
-        resources : {
+        learningResources : {
             type : Array,
             default : []
         },

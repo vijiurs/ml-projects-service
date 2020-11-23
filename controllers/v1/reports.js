@@ -6,7 +6,6 @@
  */
 
 // Dependencies
-const csv = require('csvtojson');
 const reportsHelper = require(MODULES_BASE_PATH + "/reports/helper");
 
 /**
@@ -21,45 +20,40 @@ module.exports = class Reports {
     }
 
     /**
-    * @api {post} /improvement-project/api/v1/reports/entity/:_id
+    * @api {get} /improvement-project/api/v1/reports/entity/:_id?requestPdf=:requestPdf&programId=:programId&reportType=:reportType
     * Entity Report.
     * @apiVersion 1.0.0
     * @apiGroup Reports
-    * @apiSampleRequest /improvement-project/api/v1/reports/entity/5f731631e8d7cd3b88ac0659
-    * @apiParamExample {json} Request:
-     {
-        "reportType":"lastMonth",
-        "programId":"5da5a3af6ee4a93ce5a1987a"
-      }
+    * @apiSampleRequest /improvement-project/api/v1/reports/entity/5f731631e8d7cd3b88ac0659?requestPdf=false&reportType=1
     * @apiParamExample {json} Response:
     * {
-    "message": "Reports generated successfully.",
-    "status": 200,
-    "result": {
-        "data_available": true,
-        "data": {
-            "categories": {
-                "total": 2,
-                "Community": 2,
-                "student": 1
-            },
-            "tasks": {
-                "total": 18,
-                "completed": 3,
-                "notStarted": 10,
-                "overdue": 1,
-                "onGoing": 5
-            },
-            "projects": {
-                "total": 1,
-                "completed": 0,
-                "notStarted": 0,
-                "overdue": 0,
-                "onGoing": 1
+        "message": "Reports generated successfully.",
+        "status": 200,
+        "result": {
+            "data_available": true,
+            "data": {
+                "categories": {
+                    "total": 2,
+                    "Community": 2,
+                    "student": 1
+                },
+                "tasks": {
+                    "total": 18,
+                    "completed": 3,
+                    "notStarted": 10,
+                    "overdue": 1,
+                    "onGoing": 5
+                },
+                "projects": {
+                    "total": 1,
+                    "completed": 0,
+                    "notStarted": 0,
+                    "overdue": 0,
+                    "onGoing": 1
+                }
             }
         }
-    }
-}
+    * }
     * @apiUse successBody
     * @apiUse errorBody
     */
@@ -67,7 +61,7 @@ module.exports = class Reports {
     /**
       * Entity Report
       * @method
-      * @name reports
+      * @name entity
       * @param {Object} req - request data.
       * @param {String} req.params._id - Entity id.
       * @returns {JSON} enity report details.
@@ -79,12 +73,17 @@ module.exports = class Reports {
                 const entityReports = await reportsHelper.entity(
                     req.params._id,
                     req.userDetails.userInformation.userId,
-                    req.body.reportType,
-                    req.body.programId ? req.body.programId : "",
-                    req.query.requestPdf ? req.query.requestPdf : false,
+                    req.userDetails.userToken,
+                    req.userDetails.userInformation.userName,
+                    req.query.reportType,
+                    req.query.programId ? req.query.programId : "",
+                    req.query.requestPdf ? (req.query.requestPdf).toLowerCase() =="true" ? true :false : false,
                 );
                 
-                return resolve(entityReports);
+                return resolve({
+                    message: entityReports.message,
+                    result: entityReports.data
+                });
 
             } catch (error) {
                 return reject({
@@ -97,26 +96,35 @@ module.exports = class Reports {
     }
 
     /**
-    * @api {get} /improvement-project/api/v1/reports/getTypes
+    * @api {get} /improvement-project/api/v1/reports/types
     * Get report types.
     * @apiVersion 1.0.0
     * @apiGroup Reports
-    * @apiSampleRequest /improvement-project/api/v1/reports/getTypes
+    * @apiSampleRequest /improvement-project/api/v1/reports/types
     * @apiParamExample {json} Response:
     * {
         "message": "Report types fetched successfully.",
         "status": 200,
         "result": [
             {
-                "label": "Last Month",
-                "value": 1
-            },
-            {
-                "label": "Last Quarter",
-                "value": 3
-            }
+    "message": "Report types fetched successfully.",
+    "status": 200,
+    "result": [
+        {
+            "label": "Weekly",
+            "value": 0
+        },
+        {
+            "label": "Monthly",
+            "value": 1
+        },
+        {
+            "label": "Quarterly",
+            "value": 3
+        }
+  
         ]
-    }
+    * }
     * @apiUse successBody
     * @apiUse errorBody
     */
@@ -124,16 +132,20 @@ module.exports = class Reports {
     /**
       * Get entity types
       * @method
-      * @name getTypes
+      * @name types
       * @param {Object} req - request data.
       * @returns {JSON} enity report details.
-     */
-    async getTypes(req) {
+    */
+    async types(req) {
         return new Promise(async (resolve, reject) => {
             try {
 
                 const reportTypes = await reportsHelper.getTypes();
-                return resolve(reportTypes);
+
+                return resolve({
+                    message: reportTypes.message,
+                    result: reportTypes.data
+                });
 
             } catch (error) {
                 return reject({
@@ -153,26 +165,26 @@ module.exports = class Reports {
     * @apiSampleRequest /improvement-project/api/v1/reports/getProgramsByEntity/5ddf79ff47e9260268c9547a?page=1&limi1=10&search=a
     * @apiParamExample {json} Response:
     * {
-    "message": "Programs fetched successfully",
-    "status": 200,
-    "result": {
-        "data": [
-            {
-                "name": "School Improvement Project",
-                "_id": "5da5a3af6ee4a93ce5a1987a"
-            },
-            {
-                "name": "School Improvement Project",
-                "_id": "5da5a3af6ee4a93ce5a1987a"
-            },
-            {
-                "name": "School Improvement Project",
-                "_id": "5da5a3af6ee4a93ce5a1987a"
-            }
-        ],
-        "count": 3
-    }
-}
+        "message": "Programs fetched successfully",
+        "status": 200,
+        "result": {
+            "data": [
+                {
+                    "name": "School Improvement Project",
+                    "_id": "5da5a3af6ee4a93ce5a1987a"
+                },
+                {
+                    "name": "School Improvement Project",
+                    "_id": "5da5a3af6ee4a93ce5a1987a"
+                },
+                {
+                    "name": "School Improvement Project",
+                    "_id": "5da5a3af6ee4a93ce5a1987a"
+                }
+            ],
+            "count": 3
+        }
+    * }
     * @apiUse successBody
     * @apiUse errorBody
     */
@@ -184,7 +196,7 @@ module.exports = class Reports {
       * @param {Object} req - request data.
       * @param {String} req.params._id - Entity id.
       * @returns {JSON} enity report details.
-     */
+    */
     async getProgramsByEntity(req) {
         return new Promise(async (resolve, reject) => {
             try {
@@ -196,7 +208,11 @@ module.exports = class Reports {
                     req.pageNo,
                     req.searchText
                 );
-                return resolve(entities);
+                
+                return resolve({
+                    message: entities.message,
+                    result: entities.data
+                });
 
             } catch (error) {
                 return reject({
@@ -208,48 +224,42 @@ module.exports = class Reports {
         })
     }
 
-        /**
-    * @api {get} /improvement-project/api/v1/reports/detailView/:_id
+    /**
+    * @api {get} /improvement-project/api/v1/reports/detailView/:_id?requestPdf=:requestPdf&programId=:programId&reportType=:reportType
     * Get detail view report
     * @apiVersion 1.0.0
     * @apiGroup Reports
-     * @apiSampleRequest /improvement-project/api/v1/reports/detailView/5f731631e8d7cd3b88ac0659
-    * @apiParamExample {json} Request:
-     {
-        "reportType":1,
-        "programId":"5da5a3af6ee4a93ce5a1987a"
-      }
+    * @apiSampleRequest /improvement-project/api/v1/reports/detailView/5f731631e8d7cd3b88ac0659?requestPdf=false&programId=5da5a3af6ee4a93ce5a1987a&reportType=1
     * @apiParamExample {json} Response:
-    * 
-    {
-    "message": "Chart report data generated succesfully",
-    "status": 200,
-    "result": [
-        {
-            "title": {
-                "text": "title 1 oct"
-            },
-            "series": [
-                {
-                    "data": [
-                        {
-                            "name": "task 1",
-                            "id": "5f7ae023252cc522665b60d6",
-                            "color": "",
-                            "start": 1605100782442,
-                            "end": 1601888291000
-                        }
-                    ]
+    * {
+        "message": "Chart report data generated succesfully",
+        "status": 200,
+        "result": [
+            {
+                "title": {
+                    "text": "title 1 oct"
+                },
+                "series": [
+                    {
+                        "data": [
+                            {
+                                "name": "task 1",
+                                "id": "5f7ae023252cc522665b60d6",
+                                "color": "",
+                                "start": 1605100782442,
+                                "end": 1601888291000
+                            }
+                        ]
+                    }
+                ],
+                "xAxis": {
+                    "min": 1605100782443,
+                    "max": 1601888291000
                 }
-            ],
-            "xAxis": {
-                "min": 1605100782443,
-                "max": 1601888291000
             }
-        }
-    ]
-}
-*/
+        ]
+     }
+    */
 
     /**
       * Get details view report data
@@ -258,19 +268,23 @@ module.exports = class Reports {
       * @param {Object} req - request data.
       * @param {String} req.params._id - Entity id.
       * @returns {JSON} view report chart data
-     */
+    */
     async detailView(req) {
         return new Promise(async (resolve, reject) => {
             try {
 
                 const entities = await reportsHelper.detailView(
-                    req.params._id,
                     req.userDetails.userInformation.userId,
-                    req.body.reportType,
-                    req.body.programId ? req.body.programId : "",
-                    req.query.requestPdf ? req.query.requestPdf : false,
+                    req.userDetails.userToken,
+                    req.query.reportType,
+                    req.params._id,
+                    req.query.programId ? req.query.programId : "",
+                    req.query.requestPdf ? (req.query.requestPdf).toLowerCase() =="true" ? true :false : false,
                 );
-                return resolve(entities);
+                return resolve({
+                    message: entities.message,
+                    result: entities.data
+                });
 
             } catch (error) {
                 return reject({
@@ -281,7 +295,4 @@ module.exports = class Reports {
             }
         })
     }
-
-    
-
 }

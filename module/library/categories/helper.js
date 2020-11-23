@@ -95,12 +95,17 @@ module.exports = class LibraryCategoriesHelper {
                 // }
 
                 return resolve({
+                  success: true,
                   message : CONSTANTS.apiResponses.PROJECT_CATEGORIES_FETCHED,
-                  result : result
+                  data : result
                 });
 
             } catch (error) {
-                return reject(error);
+                return resolve({
+                    success: false,
+                    message: error.message,
+                    data: false
+                });
             }
         })
     }
@@ -290,15 +295,20 @@ module.exports = class LibraryCategoriesHelper {
                 }
 
                 return resolve({
+                    success: true,
                     message : CONSTANTS.apiResponses.PROJECTS_FETCHED,
-                    result : {
+                    data : {
                         data : result[0].data,
                         count : result[0].count ? result[0].count : 0
                     }
                 });
 
             } catch (error) {
-                return reject(error);
+                return resolve({
+                    success: false,
+                    message: error.message,
+                    data: false
+                });
             }
         })
     }
@@ -327,7 +337,7 @@ module.exports = class LibraryCategoriesHelper {
                 if( !projectsData.length > 0 ) {
                     return resolve({
                         message : CONSTANTS.apiResponses.PROJECT_NOT_FOUND,
-                        result : {}
+                        data : {}
                     });
                 }
 
@@ -407,12 +417,17 @@ module.exports = class LibraryCategoriesHelper {
                 }
 
                 return resolve({
+                    success: true,
                     message : CONSTANTS.apiResponses.PROJECTS_FETCHED,
-                    result : projectsData[0]
+                    data : projectsData[0]
                 });
 
             } catch (error) {   
-                return reject(error);
+                return resolve({
+                    success: false,
+                    message: error.message,
+                    data: false
+                });
             }
         })
     }

@@ -15,7 +15,7 @@
 const libraryCategoriesHelper = require(MODULES_BASE_PATH + "/library/categories/helper");
 const kendraService = require(GENERICS_FILES_PATH + "/services/kendra");
 const kafkaProducersHelper = require(GENERICS_FILES_PATH + "/kafka/producers");
-const projectTemplateTasksHelper = require(MODULES_BASE_PATH + "/project/templateTasks/helper");
+const learningResourcesHelper = require(MODULES_BASE_PATH + "/learningResources/helper");
 
 module.exports = class ProjectTemplatesHelper {
 
@@ -169,7 +169,7 @@ module.exports = class ProjectTemplatesHelper {
                         }
                     }
 
-                    entityTypesData = entityTypesDocument.data.reduce((ac,entityType)=> ({
+                    entityTypesData = entityTypesDocument.data.result.reduce((ac,entityType)=> ({
                         ...ac,
                         [entityType.name] : {
                             _id : ObjectId(entityType._id),
@@ -255,41 +255,9 @@ module.exports = class ProjectTemplatesHelper {
                 parsedData.entityType = entityType;
                 parsedData.entityTypeId = entityTypeId;
 
-                parsedData.resources = [];
-
-                for ( 
-                    let resourceCount = 1 ; 
-                    resourceCount < 20 ; 
-                    resourceCount++ 
-                ) {
-                    
-                    let resource = "resources" + resourceCount + "-";
-                    let resourceName = resource + "name";
-                    let resourceLink = resource + "link";
-                    let resourceApp = resource + "app";
-
-                    let resources = {};
-                    
-                    if( parsedData[resourceName] !== undefined ) {
-                        resources["name"] = parsedData[resourceName];
-                        delete parsedData[resourceName];
-                    }
-    
-                    if( parsedData[resourceLink] !== undefined ) {
-                        resources["link"] = parsedData[resourceLink];
-                        delete parsedData[resourceLink];
-                    }
-                    
-                    if( parsedData[resourceApp] !== undefined ) {
-                        resources["app"] = parsedData[resourceApp];
-                        delete parsedData[resourceApp];
-                    }
-
-                    if( Object.keys(resources).length > 0 ) {
-                        parsedData.resources.push(resources);
-                    }
-                    
-                }
+                let learningResources = 
+                await learningResourcesHelper.extractLearningResourcesFromCsv(parsedData);
+                parsedData.learningResources = learningResources.data;
 
                 parsedData.metaInformation = {};
                 let booleanData = 
@@ -334,7 +302,7 @@ module.exports = class ProjectTemplatesHelper {
         return new Promise(async (resolve, reject) => {
 
             try {
-                console.log("got",userId)
+                
                 const fileName = `project-templates-creation`;
                 let fileStream = new CSV_FILE_STREAM(fileName);
                 let input = fileStream.initStream();
@@ -386,28 +354,28 @@ module.exports = class ProjectTemplatesHelper {
                             
                             currentData["_SYSTEM_ID"] = createdTemplate._id;
 
-                            // const kafkaMessage = 
-                            // await kafkaProducersHelper.pushProjectToKafka({
-                            //     internal: false,
-                            //     text: 
-                            //     templateData.categories.length === 1 ?  
-                            //     `A new project has been added under ${templateData.categories[0].name} category in Unnati library.` : 
-                            //     `A new project has been added in Unnati library`,
-                            //     type: "information",
-                            //     action: "mapping",
-                            //     payload: {
-                            //         project_id: createdTemplate._id
-                            //     },
-                            //     is_read : false,
-                            //     internal : false,
-                            //     title: "New project Available!",
-                            //     created_at: new Date(),
-                            //     type: process.env.IMPROVEMENT_PROJECT_APPLICATION_APP_TYPE
-                            // });
+                            const kafkaMessage = 
+                            await kafkaProducersHelper.pushProjectToKafka({
+                                internal: false,
+                                text: 
+                                templateData.categories.length === 1 ?  
+                                `A new project has been added under ${templateData.categories[0].name} category in library.` : 
+                                `A new project has been added in library`,
+                                type: "information",
+                                action: "mapping",
+                                payload: {
+                                    project_id: createdTemplate._id
+                                },
+                                is_read : false,
+                                internal : false,
+                                title: "New project Available!",
+                                created_at: new Date(),
+                                type: process.env.IMPROVEMENT_PROJECT_APPLICATION_APP_TYPE
+                            });
 
-                            // if (kafkaMessage.status !== CONSTANTS.common.SUCCESS) {
-                            //     currentData["_SYSTEM_ID"] = CONSTANTS.apiResponses.COULD_NOT_PUSHED_TO_KAFKA;
-                            // }
+                            if (kafkaMessage.status !== CONSTANTS.common.SUCCESS) {
+                                currentData["_SYSTEM_ID"] = CONSTANTS.apiResponses.COULD_NOT_PUSHED_TO_KAFKA;
+                            }
 
                         }
 
@@ -543,9 +511,7 @@ module.exports = class ProjectTemplatesHelper {
                 });
 
                 if ( !projectTemplateData.length > 0 ) {
-                    throw {
-                        message : CONSTANTS.apiResponses.PROJECT_TEMPLATE_NOT_FOUND
-                    }
+                    throw new Error(CONSTANTS.apiResponses.PROJECT_TEMPLATE_NOT_FOUND)
                 }
 
                 let newProjectTemplate = {...projectTemplateData[0]};
@@ -561,9 +527,7 @@ module.exports = class ProjectTemplatesHelper {
                     },["_id","externalId","programId","programExternalId"]);
     
                     if( !solutionData.success ) {
-                        throw {
-                            message : CONSTANTS.apiResponses.SOLUTION_NOT_FOUND
-                        }
+                       throw new Error(CONSTANTS.apiResponses.SOLUTION_NOT_FOUND)
                     }
 
                     newProjectTemplate.solutionId = solutionData.data[0]._id;
@@ -598,9 +562,7 @@ module.exports = class ProjectTemplatesHelper {
                 );
 
                 if ( !duplicateTemplateDocument._id ) {
-                    throw {
-                        message : CONSTANTS.apiResponses.PROJECT_TEMPLATES_NOT_CREATED
-                    }
+                    throw new Error(CONSTANTS.apiResponses.PROJECT_TEMPLATES_NOT_CREATED)
                 }
 
                 //duplicate task
@@ -676,7 +638,7 @@ module.exports = class ProjectTemplatesHelper {
                     // console.log(newTaskId,"newTaskId")
 
                     if(newTaskId && newTaskId.length > 0){
-                        let updateDuplicateTemplete = await database.models.projectTemplates.findOneAndUpdate(
+                        await database.models.projectTemplates.findOneAndUpdate(
                         {
                             _id : duplicateTemplateDocument._id
                         },
@@ -696,13 +658,18 @@ module.exports = class ProjectTemplatesHelper {
                 );
 
                 return resolve({
+                    success: true,
                     message : CONSTANTS.apiResponses.DUPLICATE_PROJECT_TEMPLATES_CREATED,
-                    result : {
+                    data : {
                        _id : duplicateTemplateDocument._id 
                     }
                 })
             } catch (error) {
-                return reject(error);
+                return resolve({
+                    success: false,
+                    message: error.message,
+                    data: false
+                });
             }
         })
     }

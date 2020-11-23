@@ -151,8 +151,7 @@ module.exports = class ProjectTemplates extends Abstract {
     "status": 200,
     "result": {
         "_id": "5f2402f570d11462f8e9a591"
-    },
-    "success": true
+    }
     }
     * @apiUse successBody
     * @apiUse errorBody
@@ -178,7 +177,10 @@ module.exports = class ProjectTemplates extends Abstract {
                     req.body.data
                 );
 
-                return resolve(projectTemplates);
+                return resolve({
+                    message: projectTemplates.message,
+                    result: projectTemplates.data
+                });
 
             } catch (error) {
                 return reject({

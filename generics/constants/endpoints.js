@@ -26,5 +26,13 @@ module.exports = {
     GET_USER_ORGANISATIONS : "/users/getUserOrganisationsAndRootOrganisations",
     PRESIGNED_GCP_URL : "api/v1/cloud-services/gcp/preSignedUrls", // Kendra service
     PRESIGNED_AWS_URL : "api/v1/cloud-services/aws/preSignedUrls", // Kendra service
-    PRESIGNED_AZURE_URL : "api/v1/cloud-services/azure/preSignedUrls", // Kendra service
+    PRESIGNED_AZURE_URL : "api/v1/cloud-services/azure/preSignedUrls", // Kendra service,
+    VIEW_PROJECT_REPORT: "api/v1/unnati/viewProjectReport", // dhiti service
+    ENTITY_REPORT:"api/v1/unnati/entityReport", // dhiti service
+    ASSESSMENTS_CREATE : "/assessments/create", // Should be kendra as api is not build checked for assessment
+    OBSERVATION_CREATE : "/observations/create",
+    ADD_ENTITY_TO_OBSERVATIONS : "/observations/addEntityToObservation",
+    ADD_ENTITIES_TO_SOLUTIONS : "/solutions/addEntities",
+    UPDATE_OBSERVATION : "/observations/update",
+    LIST_OBSERVATIONS : "/observations/list",
 };

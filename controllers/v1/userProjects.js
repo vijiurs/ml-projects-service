@@ -596,10 +596,9 @@ module.exports = class UserProjects extends Abstract {
                     req.userDetails.userToken
                 );
 
-                return resolve({
-                    message: createdProject.message,
-                    result: createdProject.data
-                });
+                createdProject.result = createdProject.data;
+
+                return resolve(createdProject);
 
             } catch (error) {
                 return reject({
@@ -707,17 +706,9 @@ module.exports = class UserProjects extends Abstract {
                     req.userDetails.userToken
                 );
 
-                if( 
-                    createdProject.status && 
-                    createdProject.status === HTTP_STATUS_CODE["bad_request"].status 
-                ) {
-                    return resolve(createdProject);
-                }
+                createdProject.result = createdProject.data;
 
-                return resolve({
-                    message: createdProject.message,
-                    result: createdProject.data
-                });
+                return resolve(createdProject);
 
             } catch (error) {
                 return reject({
@@ -832,10 +823,9 @@ module.exports = class UserProjects extends Abstract {
                     req.userDetails.userInformation.userId
                 );
 
-                return resolve({
-                    message: projectDetails.message,
-                    result: projectDetails.data
-                });
+                projectDetails.result = projectDetails.data;
+
+                return resolve(projectDetails);
 
             } catch (error) {
                 return reject({
@@ -974,6 +964,8 @@ module.exports = class UserProjects extends Abstract {
                     req.params._id,
                     req.body.taskIds
                 );
+
+                taskStatus.result = taskStatus.data;
                 
                 return resolve(taskStatus);
 
@@ -1027,11 +1019,10 @@ module.exports = class UserProjects extends Abstract {
                     req.params._id,
                     req.query.taskId
                 );
+
+                solutionDetails.result = solutionDetails.data;
                 
-                return resolve({
-                    message : solutionDetails.message,
-                    result : solutionDetails.data
-                });
+                return resolve(solutionDetails);
 
             } catch (error) {
                 return reject({

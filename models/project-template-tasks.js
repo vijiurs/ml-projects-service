@@ -8,7 +8,7 @@
 module.exports = {
     name: "projectTemplateTasks",
     schema: {
-        name : {
+        title : {
             type : String,
             required : true,
             index: true

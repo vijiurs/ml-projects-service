@@ -74,5 +74,9 @@ module.exports = {
     "SOLUTION_DETAILS_FETCHED" : "Solutions details fetched successfully",
     "KENDRA_URL_NOT_FETCHED" : "Could not fetch url from kendra service",
     "USER_PROFILE_NOT_FOUND" : "Not found user profile",
-    "OBSERVATION_NOT_FOUND": "No observation found"
+    "OBSERVATION_NOT_FOUND": "No observation found",
+    "USER_ORGANISATION_NOT_FOUND" : "User organisation details not found",
+    "CATEGORY_NOT_FOUND" : "Not found category",
+    "ENTITY_NOT_FOUND" : "No entity found",
+    "ATTACHMENTS_URL_NOT_FOUND" : "Not found attachments url"
 };

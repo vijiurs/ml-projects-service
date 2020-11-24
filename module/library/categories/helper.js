@@ -97,7 +97,7 @@ module.exports = class LibraryCategoriesHelper {
 
                 if( !projectCategoriesData.length > 0 ) {
                     throw {
-                        status : HTTP_STATUS_CODE['bad_request'].status,
+                        status : HTTP_STATUS_CODE['ok'].status,
                         message : CONSTANTS.apiResponses.LIBRARY_CATEGORIES_NOT_FOUND
                     };
                 }

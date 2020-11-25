@@ -1936,7 +1936,7 @@ function _entitiesInformation(entityIds) {
     * @returns {Object} 
 */
 
-function _assessmentDetails( 
+function _assessmentDetails(
     userToken,
     solutionDetails,
     entityId,
@@ -2006,6 +2006,7 @@ function _assessmentDetails(
             });
         } catch(error) {
             return resolve({
+                message : error.message,
                 success : false,
                 status : error.status ? 
                 error.status : HTTP_STATUS_CODE['internal_server_error'].status

@@ -1853,6 +1853,7 @@ function _projectCategories(categories) {
 
         } catch (error) {
             return resolve({
+                message : error.message,
                 status : 
                 error.status ? 
                 error.status : HTTP_STATUS_CODE['internal_server_error'].status,

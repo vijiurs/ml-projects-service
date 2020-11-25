@@ -396,8 +396,7 @@ const formsDocuments = function (
 
 const entityDocuments = function ( 
     filterData =  "all",
-    projection = "all",
-    skipFields = "none"
+    projection = "all"
 ) {
     return new Promise(async (resolve, reject) => {
         try {
@@ -413,9 +412,8 @@ const entityDocuments = function (
                     "internal-access-token": process.env.INTERNAL_ACCESS_TOKEN,
                 },
                 json : {
-                    query : filterData,
-                    projection : projection,
-                    skipFields : skipFields
+                    entities : filterData,
+                    fields : projection
                 }
             };
 

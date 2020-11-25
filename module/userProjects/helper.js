@@ -11,7 +11,6 @@ const kendraService = require(GENERICS_FILES_PATH + "/services/kendra");
 const libraryCategoriesHelper = require(MODULES_BASE_PATH + "/library/categories/helper");
 const projectTemplatesHelper = require(MODULES_BASE_PATH + "/project/templates/helper");
 const projectTemplateTasksHelper = require(MODULES_BASE_PATH + "/project/templateTasks/helper");
-const { result } = require('lodash');
 const { v4: uuidv4 } = require('uuid');
 const assessmentService = require(GENERICS_FILES_PATH + "/services/assessment");
 
@@ -666,6 +665,7 @@ module.exports = class UserProjectsHelper {
 
                 let programAndSolutionInformation =
                 await this.createProgramAndSolution(
+                    libraryProjects.data._id,
                     requestedData.entityId,
                     requestedData.programId,
                     requestedData.programName,
@@ -674,6 +674,18 @@ module.exports = class UserProjectsHelper {
 
                 if (!programAndSolutionInformation.success) {
                     return resolve(programAndSolutionInformation);
+                }
+
+                let userOrganisations =
+                await kendraService.getUserOrganisationsAndRootOrganisations(
+                    userToken
+                );
+
+                if( !userOrganisations.success ) {
+                    throw {
+                        message : CONSTANTS.apiResponses.USER_ORGANISATION_NOT_FOUND,
+                        status : HTTP_STATUS_CODE['bad_request'].status
+                    }
                 }
 
                 libraryProjects.data.userId = libraryProjects.data.updatedBy = libraryProjects.data.createdBy = userId;
@@ -835,6 +847,7 @@ module.exports = class UserProjectsHelper {
 
                     let programAndSolutionInformation =
                     await this.createProgramAndSolution(
+                        userProject[0]._id,
                         data.entityId,
                         data.programId,
                         data.programName,
@@ -974,6 +987,7 @@ module.exports = class UserProjectsHelper {
     */
 
     static createProgramAndSolution(
+        projectId,
         entityId = "",
         programId = "",
         programName = "",
@@ -999,7 +1013,10 @@ module.exports = class UserProjectsHelper {
                     result.entityInformation ?
                     [ObjectId(result.entityInformation._id)] : [],
                     type: CONSTANTS.common.IMPROVEMENT_PROJECT,
-                    subType: CONSTANTS.common.IMPROVEMENT_PROJECT
+                    subType: CONSTANTS.common.IMPROVEMENT_PROJECT,
+                    project : {
+                        _id : ObjectId(projectId)
+                    }
                 };
 
                 // <- Dirty fix not required currently

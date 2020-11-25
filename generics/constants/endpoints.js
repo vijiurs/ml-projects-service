@@ -17,7 +17,7 @@ module.exports = {
     LIST_ENTITY_TYPES : "/entity-types/list",
     LIST_FORMS : "/forms/list",
     CREATE_PROGRAM_AND_SOLUTION : "/users/createProgramAndSolution",
-    LIST_ENTITIES : "/entities/list",
+    LIST_ENTITIES : "/entities/listByEntityIds",
     USER_EXTENSION_GET_PROFILE : "/user-extension/getProfile",
     USER_EXTENSION_UPDATE_USER_PROFILE : "/user-extension/update",
     USER_PRIVATE_PROGRAMS : "/users/privatePrograms",

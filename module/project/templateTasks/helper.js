@@ -185,34 +185,34 @@ module.exports = class ProjectTemplateTasksHelper {
                     }
                 }
 
-                let observationData = {};
+                // let observationData = {};
 
-                if ( observationIds.length > 0 ) {
+                // if ( observationIds.length > 0 ) {
                     
-                    let observations = 
-                    await kendraService.observationDocuments({
-                        _id : { $in : observationIds }
-                    },["_id"]);
+                //     let observations = 
+                //     await kendraService.observationDocuments({
+                //         _id : { $in : observationIds }
+                //     },["_id"]);
 
-                    if( !observations.success ) {
-                        throw {
-                            message : CONSTANTS.apiResponses.OBSERVATION_NOT_FOUND,
-                            status : HTTP_STATUS_CODE['bad_request'].status
-                        }
-                    }
+                //     if( !observations.success ) {
+                //         throw {
+                //             message : CONSTANTS.apiResponses.OBSERVATION_NOT_FOUND,
+                //             status : HTTP_STATUS_CODE['bad_request'].status
+                //         }
+                //     }
 
-                    if ( 
-                        observations.data &&
-                        Object.keys(observations.data).length > 0 
-                    ) {
+                //     if ( 
+                //         observations.data &&
+                //         Object.keys(observations.data).length > 0 
+                //     ) {
 
-                        observations.data.forEach(observation => {
-                            if( !observationData[observation._id.toString()]) {
-                                observationData[observation._id.toString()] = true;
-                            }
-                        });
-                    }
-                }
+                //         observations.data.forEach(observation => {
+                //             if( !observationData[observation._id.toString()]) {
+                //                 observationData[observation._id.toString()] = true;
+                //             }
+                //         });
+                //     }
+                // }
 
                 return resolve({
                     success : true,

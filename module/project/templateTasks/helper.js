@@ -13,7 +13,7 @@
 // Dependencies
 const projectTemplatesHelper = require(MODULES_BASE_PATH + "/project/templates/helper");
 const kendraService = require(GENERICS_FILES_PATH + "/services/kendra");
-
+const learningResourcesHelper = require(MODULES_BASE_PATH + "/learningResources/helper");
 
 module.exports = class ProjectTemplateTasksHelper {
 
@@ -82,6 +82,7 @@ module.exports = class ProjectTemplateTasksHelper {
 
                 let taskIds = [];
                 let solutionIds = [];
+                let observationIds = [];
                 let systemId = false;
 
                 csvData.forEach(data=>{
@@ -98,6 +99,11 @@ module.exports = class ProjectTemplateTasksHelper {
                     if ( parsedData.solutionId && parsedData.solutionId !== "" ) {
                         solutionIds.push(parsedData.solutionId);
                     }
+
+                    if ( parsedData.observationId && parsedData.observationId !== "" ) {
+                        observationIds.push(parsedData.observationId);
+                    }
+
                 });
 
                 let tasks = {};
@@ -139,12 +145,15 @@ module.exports = class ProjectTemplateTasksHelper {
                     _id : projectTemplateId
                 },["_id"]);
 
+                if( !projectTemplateId.length > 0 ) {
+                    throw {
+                        message : CONSTANTS.apiResponses.PROJECT_TEMPLATE_NOT_FOUND,
+                        status : HTTP_STATUS_CODE['bad_request'].status
+                    }
+                }
+
                 if ( projectTemplate.length > 0 ) {
                     templateId = projectTemplate[0]._id;
-                } else {
-                    throw {
-                        message : CONSTANTS.apiResponses.PROJECT_TEMPLATE_NOT_FOUND
-                    }
                 }
 
                 let solutionData = {};
@@ -153,32 +162,73 @@ module.exports = class ProjectTemplateTasksHelper {
                     
                     let solutions = 
                     await kendraService.solutionDocuments({
-                        externalId : { $in : solutionIds },
-                        isReusable : true
-                    },["externalId"]);
+                        externalId : { $in : solutionIds }
+                    },["externalId","isReusable","name"]);
+
+                    if( !solutions.success ) {
+                        throw {
+                            message : CONSTANTS.apiResponses.SOLUTION_NOT_FOUND,
+                            status : HTTP_STATUS_CODE['bad_request'].status
+                        }
+                    }
 
                     if ( 
-                        solutions.success && 
                         solutions.data &&
                         Object.keys(solutions.data).length > 0 
                     ) {
 
                         solutions.data.forEach(solution => {
                             if(!solutionData[solution.externalId]) {
-                                solutionData[solution.externalId] = solution._id;
+                                solutionData[solution.externalId] = solution;
+                            }
+                        });
+                    }
+                }
+
+                let observationData = {};
+
+                if ( observationIds.length > 0 ) {
+                    
+                    let observations = 
+                    await kendraService.observationDocuments({
+                        _id : { $in : observationIds }
+                    },["_id"]);
+
+                    if( !observations.success ) {
+                        throw {
+                            message : CONSTANTS.apiResponses.OBSERVATION_NOT_FOUND,
+                            status : HTTP_STATUS_CODE['bad_request'].status
+                        }
+                    }
+
+                    if ( 
+                        observations.data &&
+                        Object.keys(observations.data).length > 0 
+                    ) {
+
+                        observations.data.forEach(observation => {
+                            if( !observationData[observation._id.toString()]) {
+                                observationData[observation._id.toString()] = true;
                             }
                         });
                     }
                 }
 
                 return resolve({
-                    tasks : tasks,
-                    templateId : templateId,
-                    solutionData : solutionData
+                    success : true,
+                    data : {
+                        tasks : tasks,
+                        templateId : templateId,
+                        solutionData : solutionData,
+                        observationData : observationData
+                    }
                 });
 
            } catch (error) {
-               return reject(error);
+               return reject({
+                   success : false,
+                   status : error.status ? error.status : HTTP_STATUS_CODE['internal_server_error'].status
+               });
            }
        });
     }
@@ -198,6 +248,7 @@ module.exports = class ProjectTemplateTasksHelper {
         data,
         templateId,
         solutionData,
+        observationData,
         update = false
     ) {
         return new Promise(async (resolve, reject) => {
@@ -209,21 +260,11 @@ module.exports = class ProjectTemplateTasksHelper {
                 allValues.type = parsedData.type.toLowerCase(); 
 
                 if ( allValues.type === CONSTANTS.common.CONTENT ) {
-                    allValues.contentDetails = {};
 
-                    if( parsedData.contentId && parsedData.contentId !== "" ) {
-                        allValues.contentDetails["contentId"] = ObjectId(parsedData.contentId);
-                    } else {
-                        parsedData.STATUS = CONSTANTS.apiResponses.REQUIRED_CONTENT_ID;
-                    }
-
-                    if( parsedData.contentType && parsedData.contentType !== "" ) {
-                        allValues.contentDetails["contentType"] = 
-                        parsedData.contentType;
-                    } else {
-                        parsedData.STATUS = 
-                        CONSTANTS.apiResponses.REQUIRED_CONTENT_TYPE;
-                    }
+                    let learningResources = 
+                    await learningResourcesHelper.extractLearningResourcesFromCsv(parsedData);
+                    
+                    allValues.learningResources = learningResources.data;
 
                 } else if ( allValues.type === CONSTANTS.common.IMPROVEMENT_PROJECT ) {   
                     parsedData.improvementProjectDetails = {};
@@ -266,8 +307,18 @@ module.exports = class ProjectTemplateTasksHelper {
                             parsedData.STATUS = 
                             CONSTANTS.apiResponses.SOLUTION_NOT_FOUND;
                         } else {
-                            allValues.solutionDetails.solutionId = 
-                            ObjectId(solutionData[parsedData.solutionId]);
+
+                            allValues.solutionDetails._id =
+                            ObjectId(solutionData[parsedData.solutionId]._id);
+
+                            allValues.solutionDetails.isReusable = 
+                            solutionData[parsedData.solutionId].isReusable;
+
+                            allValues.solutionDetails.externalId = 
+                            solutionData[parsedData.solutionId].externalId;
+
+                            allValues.solutionDetails.name = 
+                            solutionData[parsedData.solutionId].name;
                         }
 
                     } else {
@@ -308,7 +359,8 @@ module.exports = class ProjectTemplateTasksHelper {
                         await database.models.projectTemplateTasks.create(allValues);
     
                         if ( !taskData._id ) {
-                            parsedData.STATUS = CONSTANTS.apiResponses.PROJECT_TEMPLATE_TASKS_NOT_CREATED;
+                            parsedData.STATUS = 
+                            CONSTANTS.apiResponses.PROJECT_TEMPLATE_TASKS_NOT_CREATED;
                         } else {
                             parsedData._SYSTEM_ID = taskData._id;
                             parsedData.STATUS = CONSTANTS.apiResponses.SUCCESS;
@@ -423,6 +475,10 @@ module.exports = class ProjectTemplateTasksHelper {
                     projectTemplateId
                 );
 
+                if( !csvData.success ) {
+                    return resolve(csvData);
+                }
+
                 let pendingItems = [];
 
                 for ( let task = 0; task < tasks.length ; task ++ ) {
@@ -431,12 +487,12 @@ module.exports = class ProjectTemplateTasksHelper {
 
                     if( 
                         currentData["hasAParentTask"] === "YES" &&
-                        !csvData.tasks[currentData.parentTaskId]
+                        !csvData.data.tasks[currentData.parentTaskId]
                     ) {
                         pendingItems.push(currentData);
                     } else {
                         
-                        if( csvData.tasks[currentData.externalId] ) {
+                        if( csvData.data.tasks[currentData.externalId] ) {
                             currentData._SYSTEM_ID = CONSTANTS.apiResponses.PROJECT_TEMPLATE_TASK_EXISTS;
                             input.push(currentData);
                         } else {
@@ -444,8 +500,9 @@ module.exports = class ProjectTemplateTasksHelper {
                             let createdTask = 
                             await this.createOrUpdateTask(
                                 currentData,
-                                csvData.templateId,
-                                csvData.solutionData  
+                                csvData.data.templateId,
+                                csvData.data.solutionData,
+                                csvData.data.observationData
                             );
 
                             input.push(createdTask);
@@ -460,15 +517,16 @@ module.exports = class ProjectTemplateTasksHelper {
                         let currentData = pendingItems[item];
                         currentData.createdBy = currentData.updatedBy = userId;
 
-                        if( csvData.tasks[currentData.externalId] ) {
+                        if( csvData.data.tasks[currentData.externalId] ) {
                             currentData._SYSTEM_ID = CONSTANTS.apiResponses.PROJECT_TEMPLATE_TASK_EXISTS;
                             input.push(currentData);
                         } else {
                             
                             let createdTask = await this.createOrUpdateTask(
                                 currentData,
-                                csvData.templateId,
-                                csvData.solutionData
+                                csvData.data.templateId,
+                                csvData.data.solutionData,
+                                csvData.data.observationData
                             );
 
                             input.push(createdTask);
@@ -517,15 +575,19 @@ module.exports = class ProjectTemplateTasksHelper {
                     projectTemplateId
                 );
 
+                if( !csvData.success ) {
+                    return resolve(csvData);
+                }
+
                 let tasksData =  Object.values(csvData.tasks);
 
-                if ( csvData.tasks && tasksData.length > 0 ) {
+                if ( csvData.data.tasks && tasksData.length > 0 ) {
 
                     tasksData.forEach(task=>{
                         if ( task.children && task.children.length > 0 ) {
                             task.children.forEach(children=>{
-                                if( csvData.tasks[children.toString()] ) {
-                                    csvData.tasks[children.toString()].parentTaskId = task._id.toString();
+                                if( csvData.data.tasks[children.toString()] ) {
+                                    csvData.data.tasks[children.toString()].parentTaskId = task._id.toString();
                                 }
                             })
                         }
@@ -539,7 +601,7 @@ module.exports = class ProjectTemplateTasksHelper {
                     if ( 
                         !currentData._SYSTEM_ID || 
                         !currentData._SYSTEM_ID === "" || 
-                        !csvData.tasks[currentData["_SYSTEM_ID"]] 
+                        !csvData.data.tasks[currentData["_SYSTEM_ID"]] 
                     ) {
                         currentData.STATUS = 
                         CONSTANTS.apiResponses.INVALID_TASK_ID;
@@ -552,19 +614,21 @@ module.exports = class ProjectTemplateTasksHelper {
                     let createdTask = 
                     await this.createOrUpdateTask(
                         _.omit(currentData,["STATUS"]),
-                        csvData.templateId,
-                        csvData.solutionData,
+                        csvData.data.templateId,
+                        csvData.data.solutionData,
+                        csvData.data.observationData,
                         true  
                     );
 
                     if( 
-                        csvData.tasks[currentData._SYSTEM_ID].parentId && 
-                        csvData.tasks[currentData._SYSTEM_ID].parentId.toString() !== createdTask._parentTaskId.toString()
+                        csvData.data.tasks[currentData._SYSTEM_ID].parentId && 
+                        csvData.data.tasks[currentData._SYSTEM_ID].parentId.toString() !== createdTask._parentTaskId.toString()
                     ) {
 
                         await database.models.projectTemplateTasks.findOneAndUpdate(
                             {
-                              _id: csvData.tasks[currentData._SYSTEM_ID].parentId                            },
+                              _id: csvData.data.tasks[currentData._SYSTEM_ID].parentId
+                            },
                             {
                               $pull: { children : ObjectId(currentData._SYSTEM_ID) }
                             }
@@ -634,5 +698,3 @@ module.exports = class ProjectTemplateTasksHelper {
     }
 
 };
-
-

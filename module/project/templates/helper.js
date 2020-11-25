@@ -15,7 +15,7 @@
 const libraryCategoriesHelper = require(MODULES_BASE_PATH + "/library/categories/helper");
 const kendraService = require(GENERICS_FILES_PATH + "/services/kendra");
 const kafkaProducersHelper = require(GENERICS_FILES_PATH + "/kafka/producers");
-const projectTemplateTasksHelper = require(MODULES_BASE_PATH + "/project/templateTasks/helper");
+const learningResourcesHelper = require(MODULES_BASE_PATH + "/learningResources/helper");
 
 module.exports = class ProjectTemplatesHelper {
 
@@ -120,6 +120,13 @@ module.exports = class ProjectTemplatesHelper {
                         externalId : { $in : categoryIds }
                     },["externalId","name"]);
 
+                    if( !categories.length > 0 ) {
+                        throw {
+                            status : HTTP_STATUS_CODE['bad_request'].status,
+                            message : CONSTANTS.apiResponses.LIBRARY_CATEGORIES_NOT_FOUND
+                        }
+                    }
+
                     categoriesData = categories.reduce((ac,category)=> ({
                         ...ac,
                         [category.externalId] : {
@@ -142,6 +149,7 @@ module.exports = class ProjectTemplatesHelper {
                     if( !userRolesData.success ) {
                         throw {
                             message : CONSTANTS.apiResponses.USER_ROLES_NOT_FOUND,
+                            status : HTTP_STATUS_CODE['bad_request'].status
                         }
                     }
 
@@ -165,11 +173,12 @@ module.exports = class ProjectTemplatesHelper {
 
                     if( !entityTypesDocument.success ) {
                         throw {
-                            message : CONSTANTS.apiResponses.ENTITY_TYPES_NOT_FOUND
+                            message : CONSTANTS.apiResponses.ENTITY_TYPES_NOT_FOUND,
+                            status : HTTP_STATUS_CODE['bad_request'].status
                         }
                     }
 
-                    entityTypesData = entityTypesDocument.data.result.reduce((ac,entityType)=> ({
+                    entityTypesData = entityTypesDocument.data.reduce((ac,entityType)=> ({
                         ...ac,
                         [entityType.name] : {
                             _id : ObjectId(entityType._id),
@@ -180,13 +189,20 @@ module.exports = class ProjectTemplatesHelper {
                 }
 
                 return resolve({
-                    categories : categoriesData,
-                    roles : recommendedFor,
-                    entityTypes : entityTypesData
+                    success : true,
+                    data : {
+                        categories : categoriesData,
+                        roles : recommendedFor,
+                        entityTypes : entityTypesData
+                    }
                 });
 
             } catch(error) {
-                return reject(error);
+                return resolve({
+                    success : false,
+                    message : error.message,
+                    status : error.status ? error.status : HTTP_STATUS_CODE['internal_server_error'].status
+                });
             }
         })
     }
@@ -213,13 +229,7 @@ module.exports = class ProjectTemplatesHelper {
 
                 if( parsedData.categories && parsedData.categories.length > 0 ) {
 
-                    await database.models.projectCategories.updateMany({
-                        externalId : { $in : parsedData.categories }
-                    },{
-                        $inc : { projectsCount : 1 }
-                    });
-
-                    parsedData.categories.forEach(category=>{
+                    parsedData.categories.forEach( category => {
                         if( csvInformation.categories[category] ) {
                             return categories.push(
                                 csvInformation.categories[category]
@@ -234,9 +244,9 @@ module.exports = class ProjectTemplatesHelper {
                 
                 if( parsedData.recommendedFor && parsedData.recommendedFor.length > 0 ) {
                     parsedData.recommendedFor.forEach(recommended => {
-                        if( csvInformation.roles[recommended.toUpperCase()] ) {
+                        if( csvInformation.roles[recommended] ) {
                             return recommendedFor.push(
-                                csvInformation.roles[recommended.toUpperCase()]
+                                csvInformation.roles[recommended]
                             );
                         }
                     });
@@ -255,41 +265,9 @@ module.exports = class ProjectTemplatesHelper {
                 parsedData.entityType = entityType;
                 parsedData.entityTypeId = entityTypeId;
 
-                parsedData.resources = [];
-
-                for ( 
-                    let resourceCount = 1 ; 
-                    resourceCount < 20 ; 
-                    resourceCount++ 
-                ) {
-                    
-                    let resource = "resources" + resourceCount + "-";
-                    let resourceName = resource + "name";
-                    let resourceLink = resource + "link";
-                    let resourceApp = resource + "app";
-
-                    let resources = {};
-                    
-                    if( parsedData[resourceName] !== undefined ) {
-                        resources["name"] = parsedData[resourceName];
-                        delete parsedData[resourceName];
-                    }
-    
-                    if( parsedData[resourceLink] !== undefined ) {
-                        resources["link"] = parsedData[resourceLink];
-                        delete parsedData[resourceLink];
-                    }
-                    
-                    if( parsedData[resourceApp] !== undefined ) {
-                        resources["app"] = parsedData[resourceApp];
-                        delete parsedData[resourceApp];
-                    }
-
-                    if( Object.keys(resources).length > 0 ) {
-                        parsedData.resources.push(resources);
-                    }
-                    
-                }
+                let learningResources = 
+                await learningResourcesHelper.extractLearningResourcesFromCsv(parsedData);
+                parsedData.learningResources = learningResources.data;
 
                 parsedData.metaInformation = {};
                 let booleanData = 
@@ -349,6 +327,9 @@ module.exports = class ProjectTemplatesHelper {
 
                 let csvInformation = await this.extractCsvInformation(templates);
 
+                if( !csvInformation.success ) {
+                    return resolve(csvInformation);
+                }
 
                 for ( let template = 0; template < templates.length ; template ++ ) {
 
@@ -367,7 +348,7 @@ module.exports = class ProjectTemplatesHelper {
 
                         let templateData = await this.templateData(
                             currentData,
-                            csvInformation,
+                            csvInformation.data,
                             userId
                         );
 
@@ -386,23 +367,47 @@ module.exports = class ProjectTemplatesHelper {
                             
                             currentData["_SYSTEM_ID"] = createdTemplate._id;
 
+                            if( 
+                                templateData.categories && 
+                                templateData.categories.length > 0 
+                            ) {
+                                
+                                let categories = templateData.categories.map(category => {
+                                    return category._id;
+                                });
+
+                                let updatedCategories = 
+                                await libraryCategoriesHelper.update({
+                                    _id : { $in : categories }
+                                },{
+                                    $inc : { noOfProjects : 1 }
+                                });
+
+                                if( !updatedCategories.success ) {
+                                    currentData["_SYSTEM_ID"] = updatedCategories.message;
+                                }
+                            }
+
                             const kafkaMessage = 
                             await kafkaProducersHelper.pushProjectToKafka({
-                                internal: false,
-                                text: 
+                                internal : false,
+                                text : 
                                 templateData.categories.length === 1 ?  
                                 `A new project has been added under ${templateData.categories[0].name} category in library.` : 
                                 `A new project has been added in library`,
-                                type: "information",
-                                action: "mapping",
-                                payload: {
+                                type : "information",
+                                action : "mapping",
+                                payload : {
                                     project_id: createdTemplate._id
                                 },
                                 is_read : false,
                                 internal : false,
-                                title: "New project Available!",
-                                created_at: new Date(),
-                                type: process.env.IMPROVEMENT_PROJECT_APPLICATION_APP_TYPE
+                                title : "New project Available!",
+                                created_at : new Date(),
+                                appType : process.env.IMPROVEMENT_PROJECT_APPLICATION_APP_TYPE,
+                                inApp:false,
+                                push: true,
+                                pushToTopic: true
                             });
 
                             if (kafkaMessage.status !== CONSTANTS.common.SUCCESS) {
@@ -452,12 +457,17 @@ module.exports = class ProjectTemplatesHelper {
 
                 let csvInformation = await this.extractCsvInformation(templates);
 
+                if( !csvInformation.success ) {
+                    return resolve(csvInformation);
+                }
+
                 for ( let template = 0; template < templates.length ; template ++ ) {
 
                     const currentData = templates[template];
 
                     if ( !currentData._SYSTEM_ID ) {
-                        currentData["UPDATE_STATUS"] = CONSTANTS.apiResponses.MISSING_PROJECT_TEMPLATE_ID;
+                        currentData["UPDATE_STATUS"] = 
+                        CONSTANTS.apiResponses.MISSING_PROJECT_TEMPLATE_ID;
                     } else {
 
                         const template = 
@@ -472,12 +482,13 @@ module.exports = class ProjectTemplatesHelper {
                                 
                             let templateData = await this.templateData(
                                 _.omit(currentData,["_SYSTEM_ID"]),
-                                csvInformation,
+                                csvInformation.data,
                                 userId
                             );
 
                             templateData.updatedBy = userId;
 
+                            let projectTemplateUpdated = 
                             await database.models.projectTemplates.findOneAndUpdate({
                                 _id : currentData._SYSTEM_ID
                             },{
@@ -486,21 +497,55 @@ module.exports = class ProjectTemplatesHelper {
                                     new : true
                             });
 
+                            if( !projectTemplateUpdated._id ) {
+                                currentData["UPDATE_STATUS"] = 
+                                constants.apiResponses.PROJECT_TEMPLATE_NOT_UPDATED;
+                            }
+
+                            // Add projects count to categories
+                            if( 
+                                templateData.categories && 
+                                templateData.categories.length > 0 
+                            ) {
+                                
+                                let categories = 
+                                templateData.categories.map(category => {
+                                    return category._id;
+                                });
+
+                                let updatedCategories = 
+                                await libraryCategoriesHelper.update({
+                                    _id : { $in : categories }
+                                },{
+                                    $inc : { noOfProjects : 1 }
+                                });
+
+                                if( !updatedCategories.success ) {
+                                    currentData["UPDATE_STATUS"] = updatedCategories.message;
+                                }
+                            }
+
+                            // Remove project count from existing categories
                             if( 
                                 template[0].categories && 
                                 template[0].categories.length > 0 
                             ) {
                                 
-                                const categories = 
+                                const categoriesIds = 
                                 template[0].categories.map(category=>{
                                     return category._id;    
                                 });
 
-                                await database.models.projectCategories.updateMany({
-                                    _id : { $in : categories }
+                                let categoriesUpdated = 
+                                await libraryCategoriesHelper.update({
+                                    _id : { $in : categoriesIds }
                                 },{
-                                    $inc : { projectsCount : -1 }
+                                    $inc : { noOfProjects : -1 }
                                 });
+
+                                if( !categoriesUpdated.success ) {
+                                    currentData["UPDATE_STATUS"] = updatedCategories.message;
+                                }
                             }
 
                             currentData["UPDATE_STATUS"] = CONSTANTS.common.SUCCESS;
@@ -557,11 +602,10 @@ module.exports = class ProjectTemplatesHelper {
                     await kendraService.solutionDocuments({
                         externalId : solutionId
                     },["_id","externalId","programId","programExternalId"]);
-    
-                    if( !solutionData.success ) {
-                       throw new Error(CONSTANTS.apiResponses.SOLUTION_NOT_FOUND)
-                    }
 
+                    if( !solutionData.success ) {
+                        throw new Error(CONSTANTS.apiResponses.SOLUTION_NOT_FOUND)
+                    }
                     newProjectTemplate.solutionId = solutionData.data[0]._id;
                     newProjectTemplate.solutionExternalId = solutionData.data[0].externalId;
                     newProjectTemplate.programId = solutionData.data[0].programId;
@@ -569,11 +613,8 @@ module.exports = class ProjectTemplatesHelper {
                 } 
 
                 newProjectTemplate.parentTemplateId = projectTemplateData[0]._id;
-
                 let updationKeys = Object.keys(updateData);
-
                 if( updationKeys.length > 0 ) {
-
                     updationKeys.forEach(singleKey=>{
                         if( newProjectTemplate[singleKey] ) {
                             newProjectTemplate[singleKey] = updateData[singleKey];
@@ -581,9 +622,8 @@ module.exports = class ProjectTemplatesHelper {
                     })
                 }
 
-                let tasksIds, newProjectTemplateTask, duplicateTemplateTask;
-                let newTaskId = [];
-
+                let tasksIds;
+                
                 if(projectTemplateData[0].tasks){
                     tasksIds = projectTemplateData[0].tasks;
                 }
@@ -597,48 +637,18 @@ module.exports = class ProjectTemplatesHelper {
                     throw new Error(CONSTANTS.apiResponses.PROJECT_TEMPLATES_NOT_CREATED)
                 }
 
+                 //duplicate task
                 if(Array.isArray(tasksIds) && tasksIds.length > 0 ){
 
-                    await Promise.all(tasksIds.map(async taskId => {
-                       
-                       let taskData = await database.models.projectTemplateTasks.findOne(
-                        {
-                            _id : taskId
-                        }).lean();
+                    await this.duplicateTemplateTasks(tasksIds,duplicateTemplateDocument._id);
 
-                        if(taskData){
-
-                            newProjectTemplateTask = {...taskData};
-                            taskData.projectTemplateId = duplicateTemplateDocument._id;
-                            taskData.externalId = taskData.externalId +"-"+ UTILS.epochTime();
-                            duplicateTemplateTask = 
-                                await database.models.projectTemplateTasks.create(
-                                  _.omit(taskData, ["_id"])
-                                );
-                            newTaskId.push(duplicateTemplateTask._id);
-                        }
-
-                    }))
-
-                    if(newTaskId && newTaskId.length > 0){
-                        await database.models.projectTemplates.findOneAndUpdate(
-                        {
-                            _id : duplicateTemplateDocument._id
-                        },
-                        {
-                            $set : {
-                                    tasks : newTaskId
-                            }
-                        }).lean();
-
-                    }
                 }
-
+                
                 await this.ratings(
                     projectTemplateData[0]._id,
                     updateData.rating,
                     userToken
-                );
+                );  
 
                 return resolve({
                     success: true,
@@ -647,6 +657,7 @@ module.exports = class ProjectTemplatesHelper {
                        _id : duplicateTemplateDocument._id 
                     }
                 })
+
             } catch (error) {
                 return resolve({
                     success: false,
@@ -654,8 +665,9 @@ module.exports = class ProjectTemplatesHelper {
                     data: false
                 });
             }
-        })
+    })
     }
+
 
      /**
       * Create ratings.
@@ -671,6 +683,13 @@ module.exports = class ProjectTemplatesHelper {
             try {
                 
                 let userProfileData = await kendraService.getProfile(userToken);
+
+                if( !userProfileData.success ) {
+                    throw {
+                        status : HTTP_STATUS_CODE['bad_request'].status,
+                        message : CONSTANTS.apiResponses.USER_PROFILE_NOT_FOUND
+                    }
+                }
 
                 let templateData = 
                 await this.templateDocument({
@@ -692,7 +711,6 @@ module.exports = class ProjectTemplatesHelper {
                 let projectIndex = -1;
 
                 if( 
-                    userProfileData.success && 
                     userProfileData.data &&
                     userProfileData.data.ratings && 
                     userProfileData.data.ratings.length > 0 
@@ -760,6 +778,110 @@ module.exports = class ProjectTemplatesHelper {
                 );
 
             } catch (error) {
+                return resolve({
+                    success : false,
+                    message : error.message,
+                    status : error.status ? error.status : HTTP_STATUS_CODE['internal_server_error'].status
+                });
+            }
+        })
+    }
+
+     /**
+      * Project template tasks
+      * @method
+      * @name duplicateTemplateTasks
+      * @param {Array} taskIds - Task ids
+      * @returns {Object} Duplicated tasks.
+     */
+
+    static duplicateTemplateTasks( taskIds=[], duplicateTemplateId ) {
+        return new Promise(async (resolve, reject) => {
+            try {
+
+                let newProjectTemplateTask, duplicateTemplateTask,newProjectTemplateChildTask,duplicateChildTemplateTask;
+                let newTaskId = [];
+
+                await Promise.all(taskIds.map(async taskId => {
+
+                    let taskData = await database.models.projectTemplateTasks.findOne(
+                        {
+                            _id : taskId
+                        }).lean();
+
+                        if(taskData){
+                            //duplicate task
+                            newProjectTemplateTask = {...taskData};
+                            newProjectTemplateTask.projectTemplateId = duplicateTemplateId;
+                            newProjectTemplateTask.externalId = taskData.externalId +"-"+ UTILS.epochTime();
+                            duplicateTemplateTask = 
+                                await database.models.projectTemplateTasks.create(
+                                  _.omit(newProjectTemplateTask, ["_id"])
+                                );
+                            newTaskId.push(duplicateTemplateTask._id);
+                            //duplicate child task
+                            if(duplicateTemplateTask.children && duplicateTemplateTask.children.length > 0){
+                                let childTaskIdArray = [];
+                                let childTaskIds = duplicateTemplateTask.children;
+                          
+                                if(childTaskIds && childTaskIds.length > 0){
+                                    await Promise.all(childTaskIds.map(async childtaskId => {
+                                        let childTaskData = await database.models.projectTemplateTasks.findOne(
+                                        {
+                                            _id : childtaskId
+                                        }).lean();
+                                        
+                                        if(childTaskData){
+                                            newProjectTemplateChildTask = {...childTaskData};
+                                            newProjectTemplateChildTask.projectTemplateId = duplicateTemplateId;
+                                            newProjectTemplateChildTask.parentId = duplicateTemplateTask._id;
+                                            newProjectTemplateChildTask.externalId = childTaskData.externalId +"-"+ UTILS.epochTime();
+                                            duplicateChildTemplateTask = 
+                                                await database.models.projectTemplateTasks.create(
+                                                  _.omit(newProjectTemplateChildTask, ["_id"])
+                                                );
+
+                                            childTaskIdArray.push(duplicateChildTemplateTask._id);
+                                        }
+                                    }))
+
+                                    if(childTaskIdArray && childTaskIdArray.length > 0){
+                                        let updateTaskData = await database.models.projectTemplateTasks.findOneAndUpdate(
+                                        {
+                                            _id : duplicateTemplateTask._id
+                                        },
+                                        {
+                                            $set : {
+                                                    children : childTaskIdArray
+                                            }
+                                        }).lean();
+                                    }
+                                }
+                            }
+                        }
+                }))
+
+                let updateDuplicateTemplate;
+
+                if(newTaskId && newTaskId.length > 0){
+
+                    updateDuplicateTemplate = await database.models.projectTemplates.findOneAndUpdate(
+                    {
+                        _id : duplicateTemplateId
+                    },
+                    {
+                        $set : {
+                            tasks : newTaskId
+                        }
+                    }).lean();
+                }
+
+                return resolve(
+                   updateDuplicateTemplate
+                );
+                
+
+            } catch (error) {
                 return reject(error);
             }
         })
@@ -789,5 +911,4 @@ function _calculateRating(ratings) {
         noOfRatings : noOfRatings
     } 
 }
-
 

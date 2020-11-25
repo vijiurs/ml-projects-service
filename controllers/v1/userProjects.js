@@ -33,7 +33,7 @@ module.exports = class UserProjects extends Abstract {
     }
 
     static get name() {
-        return "projects";
+        return "userProjects";
     }
 
     /**
@@ -136,14 +136,13 @@ module.exports = class UserProjects extends Abstract {
         return new Promise(async (resolve, reject) => {
             try {
 
-                const projects = await userProjectsHelper.list(
+                let projects = await userProjectsHelper.list(
                     req.userDetails.userInformation.userId
                 );
 
-                return resolve({
-                    message: projects.message,
-                    result: projects.data
-                });
+                projects.result = projects.data;
+
+                return resolve(projects);
 
             } catch (error) {
                 return reject({
@@ -163,7 +162,7 @@ module.exports = class UserProjects extends Abstract {
     * @apiSampleRequest /improvement-project/api/v1/userProjects/metaForm
     * @apiParamExample {json} Response:
     * {
-    * "message": "Successfully fetched projects form",
+    * "message": "Successfully fetched projects metaform",
     * "status": 200,
     * "result": [
         {
@@ -196,11 +195,36 @@ module.exports = class UserProjects extends Abstract {
             "editable": true,
             "input": "select",
             "options": [
-                "Teachers",
-                "Students",
-                "Infrastructure",
-                "Community",
-                "Others"
+                {
+                    "_id": "5fbb2bcc3e7f4958654e351e",
+                    "label": "Teachers",
+                    "value": "teachers"
+                },
+                {
+                    "_id": "5fbb2bcc3e7f4958654e351f",
+                    "label": "Students",
+                    "value": "students"
+                },
+                {
+                    "_id": "5fbb2bcc3e7f4958654e3520",
+                    "label": "Infrastructure",
+                    "value": "infrastructure"
+                },
+                {
+                    "_id": "5fbb2bcc3e7f4958654e3521",
+                    "label": "Community",
+                    "value": "community"
+                },
+                {
+                    "_id": "5fbb2bcc3e7f4958654e3522",
+                    "label": "Education Leader",
+                    "value": "educationLeader"
+                },
+                {
+                    "_id": "",
+                    "label": "Others",
+                    "value": "others"
+                }
             ],
             "validation": {
                 "required": false
@@ -225,10 +249,8 @@ module.exports = class UserProjects extends Abstract {
                 const formsData = 
                 await userProjectsHelper.metaForm(req.userDetails.userToken);
 
-                return resolve({
-                    message: formsData.message,
-                    result: formsData.data
-                });
+                formsData.result = formsData.data;
+                return resolve(formsData);
 
             } catch (error) {
                 return reject({
@@ -291,12 +313,10 @@ module.exports = class UserProjects extends Abstract {
         return new Promise(async (resolve, reject) => {
             try {
 
-                const formsData = await userProjectsHelper.tasksMetaForm();
+                let formsData = await userProjectsHelper.tasksMetaForm();
 
-                return resolve({
-                    message: formsData.message,
-                    result: formsData.data
-                });
+                formsData.result = formsData.data;
+                return resolve(formsData);
 
             } catch (error) {
                 return reject({
@@ -571,15 +591,14 @@ module.exports = class UserProjects extends Abstract {
         return new Promise(async (resolve, reject) => {
             try {
 
-                const createdProject = await userProjectsHelper.create(
+                let createdProject = await userProjectsHelper.create(
                     req.userDetails.userInformation.userId,
                     req.userDetails.userToken
                 );
 
-                return resolve({
-                    message: createdProject.message,
-                    result: createdProject.data
-                });
+                createdProject.result = createdProject.data;
+
+                return resolve(createdProject);
 
             } catch (error) {
                 return reject({
@@ -679,7 +698,7 @@ module.exports = class UserProjects extends Abstract {
         return new Promise(async (resolve, reject) => {
             try {
 
-                const createdProject = await userProjectsHelper.sync(
+                let createdProject = await userProjectsHelper.sync(
                     req.params._id,
                     req.query.lastDownloadedAt,
                     req.body,
@@ -687,10 +706,9 @@ module.exports = class UserProjects extends Abstract {
                     req.userDetails.userToken
                 );
 
-                return resolve({
-                    message: createdProject.message,
-                    result: createdProject.data
-                });
+                createdProject.result = createdProject.data;
+
+                return resolve(createdProject);
 
             } catch (error) {
                 return reject({
@@ -800,15 +818,14 @@ module.exports = class UserProjects extends Abstract {
         return new Promise(async (resolve, reject) => {
             try {
 
-                const projectDetails = await userProjectsHelper.details(
+                let projectDetails = await userProjectsHelper.details(
                     req.params._id,
                     req.userDetails.userInformation.userId
                 );
 
-                return resolve({
-                    message: projectDetails.message,
-                    result: projectDetails.data
-                });
+                projectDetails.result = projectDetails.data;
+
+                return resolve(projectDetails);
 
             } catch (error) {
                 return reject({
@@ -884,6 +901,128 @@ module.exports = class UserProjects extends Abstract {
                     message: fileUploadUrls.message,
                     result: fileUploadUrls.data
                 });
+
+            } catch (error) {
+                return reject({
+                    status: error.status || HTTP_STATUS_CODE.internal_server_error.status,
+                    message: error.message || HTTP_STATUS_CODE.internal_server_error.message,
+                    errorObject: error
+                });
+            }
+        })
+    }
+
+   /**
+    * @api {post} /improvement-project/api/v1/userProjects/tasksStatus/:projectId
+    * User Project tasks status
+    * @apiVersion 1.0.0
+    * @apiGroup User Projects
+    * @apiSampleRequest /improvement-project/api/v1/userProjects/tasksStatus/5f731631e8d7cd3b88ac0659
+    * @apiParamExample {json} Request:
+    * {
+    *   "taskIds" : [
+           "2f2ef6dd-24e9-40ab-a681-3b3167fcd2c6",
+           "a18ae088-fa11-4ff4-899f-213abefb30f6"
+       ]
+     }
+    * @apiParamExample {json} Response:
+    {
+    "message": "Tasks status fetched successfully",
+    "status": 200,
+    "result": [
+        {
+            "type": "assessment",
+            "status": "started",
+            "_id": "2f2ef6dd-24e9-40ab-a681-3b3167fcd2c6"
+        },
+        {
+            "type": "observation",
+            "status": "started",
+            "_id": "a18ae088-fa11-4ff4-899f-213abefb30f6",
+            "submissionId": "5fbaa71d97ccef111cbb4ee0"
+        }
+    ]
+    }
+    * @apiUse successBody
+    * @apiUse errorBody
+    */
+
+    /**
+      * Tasks status
+      * @method
+      * @name tasksStatus
+      * @param {Object} req - request data.
+      * @param {String} req.params._id - Project id.
+      * @returns {JSON} status of tasks
+     */
+    
+    async tasksStatus(req) {
+        return new Promise(async (resolve, reject) => {
+            try {
+
+                let taskStatus = await userProjectsHelper.tasksStatus(
+                    req.params._id,
+                    req.body.taskIds
+                );
+
+                taskStatus.result = taskStatus.data;
+                
+                return resolve(taskStatus);
+
+            } catch (error) {
+                return reject({
+                    status: error.status || HTTP_STATUS_CODE.internal_server_error.status,
+                    message: error.message || HTTP_STATUS_CODE.internal_server_error.message,
+                    errorObject: error
+                });
+            }
+        })
+    }
+
+     /**
+    * @api {get} /improvement-project/api/v1/userProjects/solutionDetails/:projectId?taskId=:taskId
+    * User project solution details
+    * @apiVersion 1.0.0
+    * @apiGroup User Projects
+    * @apiSampleRequest /improvement-project/api/v1/userProjects/solutionDetails/5fba54dc5bf46b25a926bee5?taskId=347400e7-8a62-4dad-bc24-af7c5bd70ad1
+    * @apiParamExample {json} Response:
+    * {
+    "message" : "Solutions details fetched successfully",
+    "status": 200,
+    "result": {
+        "entityId": "5beaa888af0065f0e0a10515",
+        "programId": "5fba54dc2a1f7b172f066597",
+        "observationId": "5d1a002d2dfd8135bc8e1617",
+        "solutionId": "5d15b0d7463d3a6961f91749"
+    }
+    }
+    * @apiUse successBody
+    * @apiUse errorBody
+    */
+
+    /**
+      * Solutions details information.
+      * @method
+      * @name status
+      * @param {Object} req - request data.
+      * @param {String} req.params._id - Project id.
+      * @param {String} req.query.taskId - task id.
+      * @returns {JSON} Solutions details
+     */
+    
+    async solutionDetails(req) {
+        return new Promise(async (resolve, reject) => {
+            try {
+
+                let solutionDetails = await userProjectsHelper.solutionDetails(
+                    req.userDetails.userToken,
+                    req.params._id,
+                    req.query.taskId
+                );
+
+                solutionDetails.result = solutionDetails.data;
+                
+                return resolve(solutionDetails);
 
             } catch (error) {
                 return reject({

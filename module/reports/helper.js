@@ -55,8 +55,8 @@ module.exports = class ReportsHelper {
                 }
 
                 query['$or'] = [
-                    { "syncedAt": { $gte: new Date(startFrom), $lte: new Date(endOf) } },
-                    { "tasks": { $elemMatch: { syncedAt: { $gte: new Date(startFrom), $lte: new Date(endOf) } } } },
+                    { "lastSync": { $gte: new Date(startFrom), $lte: new Date(endOf) } },
+                    { "tasks": { $elemMatch: { lastSync: { $gte: new Date(startFrom), $lte: new Date(endOf) } } } },
                 ]
 
                 if (programId) {
@@ -399,8 +399,8 @@ module.exports = class ReportsHelper {
                 let startFrom = dateRange.startFrom;
 
                 query['$or'] = [
-                    { "syncedAt": { $gte: new Date(startFrom), $lte: new Date(endOf) } },
-                    { "tasks": { $elemMatch: { syncedAt: { $gte: new Date(startFrom), $lte: new Date(endOf) } } } },
+                    { "lastSync": { $gte: new Date(startFrom), $lte: new Date(endOf) } },
+                    { "tasks": { $elemMatch: { lastSync: { $gte: new Date(startFrom), $lte: new Date(endOf) } } } },
                 ]
 
                 if (programId) {
@@ -421,7 +421,7 @@ module.exports = class ReportsHelper {
                         "endDate"],
                     []
                 );
-
+               
                 if (!projectDetails.length > 0) {
 
                     return resolve({
@@ -433,7 +433,7 @@ module.exports = class ReportsHelper {
                 if (getPdf == true) {
 
                     let types = await this.types();
-                    let returnTypeInfo = types.result.filter(type => {
+                    let returnTypeInfo = types.data.filter(type => {
                         if (type.value == reportType) {
                             return type.label;
                         }

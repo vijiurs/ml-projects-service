@@ -2,7 +2,7 @@
  * name : kendra.js
  * author : Aman Jung Karki
  * Date : 16-July-2020
- * Description : Kendra service related information.
+ * Description : Assessment service related information.
  */
 
 //dependencies
@@ -35,7 +35,7 @@ const getDownloadableUrl = function (bodyData) {
     return new Promise((resolve, reject) => {
         try {
 
-            const kendraCallBack = function (err, response) {
+            const kendraCallBack = function (err, data) {
 
                 let result = {
                     success : true
@@ -44,7 +44,13 @@ const getDownloadableUrl = function (bodyData) {
                 if (err) {
                     result.success = false;
                 } else {
-                    result["data"] = response.body.result;
+                    let response = data.body;
+
+                    if( response.status === HTTP_STATUS_CODE['ok'].status ) {
+                        result["data"] = response.result;
+                    } else {
+                        result.success = false;
+                    }
                 }
 
                 return resolve(result);
@@ -158,9 +164,9 @@ const solutionDocuments = function (
                 }
             };
 
-            request.post(url,options,samikshaCallback);
+            request.post(url,options,kendraCallback);
 
-            function samikshaCallback(err, data) {
+            function kendraCallback(err, data) {
 
                 let result = {
                     success : true
@@ -169,7 +175,13 @@ const solutionDocuments = function (
                 if (err) {
                     result.success = false;
                 } else {
-                    result["data"] = data.body.result;
+                    let response = data.body;
+
+                    if( response.status === HTTP_STATUS_CODE['ok'].status ) {
+                        result["data"] = response.result;
+                    } else {
+                        result.success = false;
+                    }
                 }
 
                 return resolve(result);
@@ -216,9 +228,9 @@ const entityTypesDocuments = function (
                 }
             };
 
-            request.post(url,options,samikshaCallback);
+            request.post(url,options,kendraCallback);
 
-            function samikshaCallback(err, data) {
+            function kendraCallback(err, data) {
 
                 let result = {
                     success : true
@@ -227,7 +239,14 @@ const entityTypesDocuments = function (
                 if (err) {
                     result.success = false;
                 } else {
-                    result["data"] = data.body;
+
+                    let response = data.body;
+
+                    if( response.status === HTTP_STATUS_CODE['ok'].status ) {
+                        result["data"] = response.result;
+                    } else {
+                        result.success = false;
+                    }
                 }
 
                 return resolve(result);
@@ -274,9 +293,9 @@ const rolesDocuments = function (
                 }
             };
 
-            request.post(url,options,samikshaCallback);
+            request.post(url,options,kendraCallback);
 
-            function samikshaCallback(err, data) {
+            function kendraCallback(err, data) {
 
                 let result = {
                     success : true
@@ -285,7 +304,13 @@ const rolesDocuments = function (
                 if (err) {
                     result.success = false;
                 } else {
-                    result["data"] = data.body.result;
+                    let response = data.body;
+
+                    if( response.status === HTTP_STATUS_CODE['ok'].status ) {
+                        result["data"] = response.result;
+                    } else {
+                        result.success = false;
+                    }
                 }
 
                 return resolve(result);
@@ -332,9 +357,9 @@ const formsDocuments = function (
                 }
             };
 
-            request.get(url,options,samikshaCallback);
+            request.get(url,options,kendraCallback);
 
-            function samikshaCallback(err, data) {
+            function kendraCallback(err, data) {
 
                 let result = {
                     success : true
@@ -343,7 +368,13 @@ const formsDocuments = function (
                 if (err) {
                     result.success = false;
                 } else {
-                    result["data"] = data.body.result;
+
+                    let response = data.body;
+                    if( response.status === HTTP_STATUS_CODE['ok'].status ) {
+                        result["data"] = response.result;
+                    } else {
+                        result.success = false;
+                    }
                 }
                 return resolve(result);
             }
@@ -388,9 +419,9 @@ const entityDocuments = function (
                 }
             };
 
-            request.post(url,options,samikshaCallback);
+            request.post(url,options,kendraCallback);
 
-            function samikshaCallback(err, data) {
+            function kendraCallback(err, data) {
 
                 let result = {
                     success : true
@@ -399,7 +430,13 @@ const entityDocuments = function (
                 if (err) {
                     result.success = false;
                 } else {
-                    result["data"] = data.body.result;
+                    
+                    let response = data.body;
+                    if( response.status === HTTP_STATUS_CODE['ok'].status ) {
+                        result["data"] = response.result;
+                    } else {
+                        result.success = false;
+                    }
                 }
 
                 return resolve(result);
@@ -446,9 +483,9 @@ const programsDocuments = function (
                 }
             };
 
-            request.post(url,options,samikshaCallback);
+            request.post(url,options,kendraCallback);
 
-            function samikshaCallback(err, data) {
+            function kendraCallback(err, data) {
 
                 let result = {
                     success : true
@@ -496,9 +533,9 @@ const createUserProgramAndSolution = function ( data,userToken ) {
                 json : data
             };
 
-            request.get(url,options,samikshaCallback);
+            request.get(url,options,kendraCallback);
 
-            function samikshaCallback(err, data) {
+            function kendraCallback(err, data) {
 
                 let result = {
                     success : true
@@ -507,7 +544,13 @@ const createUserProgramAndSolution = function ( data,userToken ) {
                 if (err) {
                     result.success = false;
                 } else {
-                    result["data"] = data.body.result;
+
+                    let response = data.body;
+                    if( response.status === HTTP_STATUS_CODE['ok'].status ) {
+                        result["data"] = response.result;
+                    } else {
+                        result.success = false;
+                    }
                 }
 
                 return resolve(result);
@@ -544,9 +587,9 @@ const getProfile = function ( token ) {
                 }
             };
 
-            request.get(url,options,samikshaCallback);
+            request.get(url,options,kendraCallback);
 
-            function samikshaCallback(err, data) {
+            function kendraCallback(err, data) {
 
                 let result = {
                     success : true
@@ -555,7 +598,14 @@ const getProfile = function ( token ) {
                 if (err) {
                     result.success = false;
                 } else {
-                    result["data"] = JSON.parse(data.body).result;
+                    
+                    let response = JSON.parse(data.body);
+
+                    if( response.status === HTTP_STATUS_CODE['ok'].status ) {
+                        result["data"] = response.result;
+                    } else {
+                        result.success = false;
+                    }
                 }
 
                 return resolve(result);
@@ -594,9 +644,9 @@ const updateUserProfile = function ( token,updateData ) {
                 json : updateData
             };
 
-            request.post(url,options,samikshaCallback);
+            request.post(url,options,kendraCallback);
 
-            function samikshaCallback(err, data) {
+            function kendraCallback(err, data) {
 
                 let result = {
                     success : true
@@ -642,9 +692,9 @@ const userPrivatePrograms = function ( token ) {
                 }
             };
 
-            request.post(url,options,samikshaCallback);
+            request.post(url,options,kendraCallback);
 
-            function samikshaCallback(err, data) {
+            function kendraCallback(err, data) {
 
                 let result = {
                     success : true
@@ -692,9 +742,9 @@ const updateSolution = function ( token,updateData,solutionExternalId ) {
                 json : updateData
             };
 
-            request.post(url,options,samikshaCallback);
+            request.post(url,options,kendraCallback);
 
-            function samikshaCallback(err, data) {
+            function kendraCallback(err, data) {
 
                 let result = {
                     success : true
@@ -740,9 +790,9 @@ const getUserOrganisationsAndRootOrganisations = function ( token ) {
                 }
             };
 
-            request.post(url,options,samikshaCallback);
+            request.post(url,options,kendraCallback);
 
-            function samikshaCallback(err, data) {
+            function kendraCallback(err, data) {
 
                 let result = {
                     success : true
@@ -751,7 +801,14 @@ const getUserOrganisationsAndRootOrganisations = function ( token ) {
                 if (err) {
                     result.success = false;
                 } else {
-                    result["data"] = JSON.parse(data.body).result;
+
+                    let response = JSON.parse(data.body);
+                    if( response.status === HTTP_STATUS_CODE['ok'].status ) {
+                        result["data"] = response.result;
+                    } else {
+                        result.success = false;
+                    }
+
                 }
 
                 return resolve(result);
@@ -819,6 +876,120 @@ const getPreSignedUrl = function (fileNames) {
     })
 }
 
+/**
+  * Update observation
+  * @function
+  * @name updateObservation
+  * @param {String} token - Logged in user token.
+  * @param {Object} updateData - Data to update. 
+  * @returns {JSON} - Observations updated data.
+*/
+
+const updateObservation = function ( token,updateData,observationId ) {
+    return new Promise(async (resolve, reject) => {
+        try {
+            
+            const url = 
+            process.env.KENDRA_APPLICATION_ENDPOINT + process.env.URL_PREFIX + 
+            CONSTANTS.endpoints.UPDATE_OBSERVATION + "/" + observationId;
+
+            const options = {
+                headers : {
+                    "content-type": "application/json",
+                    AUTHORIZATION : process.env.AUTHORIZATION,
+                    "internal-access-token": process.env.INTERNAL_ACCESS_TOKEN,
+                    "x-authenticated-user-token" : token
+                },
+                json : updateData
+            };
+
+            request.post(url,options,kendraCallback);
+
+            function kendraCallback(err, data) {
+
+                let result = {
+                    success : true
+                };
+
+                if (err) {
+                    result.success = false;
+                } else {
+
+                    let response = data.body;
+                    if( response.status === HTTP_STATUS_CODE['ok'].status ) {
+                        result["data"] = response.result;
+                    } else {
+                        result.success = false;
+                    }
+                }
+
+                return resolve(result);
+            }
+
+        } catch (error) {
+            return reject(error);
+        }
+    })
+}
+
+/**
+  * List of observations.
+  * @function
+  * @name observationDocuments
+  * @param {Object} filterData - Filter data.
+  * @param {Array} projection - Projected data. 
+  * @param {Array} skipFields - Field to skip.
+  * @returns {JSON} - List of forms.
+*/
+
+const observationDocuments = function ( 
+    filterData =  "all",
+    projection = "all",
+    skipFields = "none"
+) {
+    return new Promise(async (resolve, reject) => {
+        try {
+            
+            const url = 
+            process.env.KENDRA_APPLICATION_ENDPOINT + process.env.URL_PREFIX + 
+            CONSTANTS.endpoints.LIST_OBSERVATIONS;
+
+            const options = {
+                headers : {
+                    "content-type": "application/json",
+                    AUTHORIZATION : process.env.AUTHORIZATION,
+                    "internal-access-token": process.env.INTERNAL_ACCESS_TOKEN,
+                },
+                 json : {
+                    query : filterData,
+                    projection : projection,
+                    skipFields : skipFields
+                }
+            };
+
+            request.get(url,options,kendraCallback);
+
+            function kendraCallback(err, data) {
+
+                let result = {
+                    success : true
+                };
+
+                if (err) {
+                    result.success = false;
+                } else {
+                    result["data"] = data.body.result;
+                }
+                
+                return resolve(result);
+            }
+
+        } catch (error) {
+            return reject(error);
+        }
+    })
+}
+
 module.exports = {
     getDownloadableUrl : getDownloadableUrl,
     upload : upload,
@@ -834,6 +1005,8 @@ module.exports = {
     userPrivatePrograms : userPrivatePrograms,
     updateSolution : updateSolution,
     getUserOrganisationsAndRootOrganisations : getUserOrganisationsAndRootOrganisations,
-    getPreSignedUrl:getPreSignedUrl
+    getPreSignedUrl : getPreSignedUrl,
+    updateObservation : updateObservation,
+    observationDocuments : observationDocuments
 };
 

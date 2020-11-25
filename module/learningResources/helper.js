@@ -1,0 +1,80 @@
+/**
+ * name : helper.js
+ * author : Aman
+ * created-date : 22-Nov-2020
+ * Description : Learning resources related helper functionality
+ */
+
+/**
+    * LearningResourcesHelper
+    * @class
+*/
+
+module.exports = class LearningResourcesHelper {
+
+    /**
+    * Extract learning resources from csv. 
+    * @method
+    * @name extractLearningResourcesFromCsv 
+    * @param {Object} parsedCsvData - Parsed csv data.
+    * @returns {Array} learning resources data. 
+   */
+
+    static extractLearningResourcesFromCsv( parsedCsvData ) {
+        return new Promise(async (resolve, reject) => {
+            try {
+
+                let learningResources = [];
+
+                for ( 
+                    let resourceCount = 1 ; 
+                    resourceCount < 20 ; 
+                    resourceCount++ 
+                ) {
+                    
+                    let resource = "learningResources" + resourceCount + "-";
+                    let resourceName = resource + "name";
+                    let resourceLink = resource + "link";
+                    let resourceApp = resource + "app";
+                    let resourceId = resource + "id";
+
+                    let resources = {};
+                    
+                    if( parsedCsvData[resourceName] !== undefined ) {
+                        resources["name"] = parsedCsvData[resourceName];
+                        delete parsedCsvData[resourceName];
+                    }
+    
+                    if( parsedCsvData[resourceLink] !== undefined ) {
+                        resources["link"] = parsedCsvData[resourceLink];
+                        delete parsedCsvData[resourceLink];
+                    }
+                    
+                    if( parsedCsvData[resourceApp] !== undefined ) {
+                        resources["app"] = parsedCsvData[resourceApp];
+                        delete parsedCsvData[resourceApp];
+                    }
+
+                    if( parsedCsvData[resourceId] !== undefined ) {
+                        resources["id"] = parsedCsvData[resourceId];
+                        delete parsedCsvData[resourceId];
+                    } 
+
+                    if( Object.keys(resources).length > 0 ) {
+                        learningResources.push(resources);
+                    }
+                }
+
+                return resolve({
+                    success: true,
+                    message : CONSTANTS.apiResponses.DUPLICATE_PROJECT_TEMPLATES_CREATED,
+                    data : learningResources
+                })
+
+            } catch (error) {
+                return reject(error);
+            }
+        })
+    }
+    
+}

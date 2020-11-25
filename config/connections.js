@@ -43,6 +43,9 @@ const configuration = {
   },
   kafka : {
     host: process.env.KAFKA_URL,
+    topics : {
+      submission : process.env.SUBMISSION_TOPIC
+    }
   }
 };
 

@@ -91,19 +91,18 @@ module.exports = class LibraryCategories extends Abstract {
       * List of library categories
       * @method
       * @name list
-      * @returns {JSON} returns a list of library categories.
+      * @returns {Array} Library categories.
      */
 
     async list() {
         return new Promise(async (resolve, reject) => {
             try {
                 
-                const projectCategories = await libraryCategoriesHelper.list();
+                let projectCategories = await libraryCategoriesHelper.list();
 
-                return resolve({
-                    message: projectCategories.message,
-                    result: projectCategories.data
-                });
+                projectCategories.result = projectCategories.data;
+
+                return resolve(projectCategories);
 
             } catch (error) {
                 return reject({
@@ -126,29 +125,31 @@ module.exports = class LibraryCategories extends Abstract {
     * {
     "message": "Successfully fetched projects",
     "status": 200,
-    "result": [
-        {
-            "_id": "5f4c91b0acae343a15c39357",
-            "averageRating": 2.5,
-            "noOfRatings": 4,
-            "name": "Test-template",
-            "externalId": "Test-template1",
-            "description" : "Test template description",
-            "createdAt": "2020-08-31T05:59:12.230Z"
-        }
-    ],
-    "count": 7
+    "result": {
+        "data" : [
+            {
+                "_id": "5f4c91b0acae343a15c39357",
+                "averageRating": 2.5,
+                "noOfRatings": 4,
+                "name": "Test-template",
+                "externalId": "Test-template1",
+                "description" : "Test template description",
+                "createdAt": "2020-08-31T05:59:12.230Z"
+            }
+        ], 
+        "count": 7
+    }
     }
     * @apiUse successBody
     * @apiUse errorBody
     */
 
       /**
-      * List of library projects
+      * List of library categories projects.
       * @method
       * @name projects
       * @param {Object} req - requested data
-      * @returns {JSON} returns a list of library projects.
+      * @returns {Array} Library Categories project.
      */
 
     async projects(req) {
@@ -165,8 +166,8 @@ module.exports = class LibraryCategories extends Abstract {
                 );
                 
                 return resolve({
-                    message: libraryProjects.message,
-                    result: libraryProjects.data
+                    message : libraryProjects.message,
+                    result : libraryProjects.data
                 });
 
             } catch (error) {
@@ -276,15 +277,14 @@ module.exports = class LibraryCategories extends Abstract {
         return new Promise(async (resolve, reject) => {
             try {
                 
-                const libraryProjectDetails = 
+                let libraryProjectDetails = 
                 await libraryCategoriesHelper.projectDetails(
                     req.params._id,
                     req.userDetails.userToken
                 );
-                return resolve({
-                    message: libraryProjectDetails.message,
-                    result: libraryProjectDetails.data
-                });
+
+                libraryProjectDetails.result = libraryProjectDetails.data;
+                return resolve(libraryProjectDetails);
 
             } catch (error) {
                 return reject(error);

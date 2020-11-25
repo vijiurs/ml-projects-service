@@ -67,5 +67,21 @@ module.exports = {
     "REPORT_GENERATED": "Chart report data generated succesfully.",
     "PRESSIGNED_URLS_GENERATED": "File upload urls generated successfully.",
     "FAILED_TO_GENERATE_PRESSIGNED_URLS": "Failed to generate file upload urls.",
-    "TASKS_STATUS_FETCHED" : "Tasks status fetched successfully"
+    "TASKS_STATUS_FETCHED" : "Tasks status fetched successfully",
+    "INVALID_OBSERVATION_ID" : "Invalid observation id",
+    "PROJECT_TEMPLATE_TASKS_NOT_FOUND" : "Could not found project template tasks",
+    "LIBRARY_CATEGORIES_NOT_FOUND" : "Could not found library categories",
+    "SOLUTION_DETAILS_FETCHED" : "Solutions details fetched successfully",
+    "KENDRA_URL_NOT_FETCHED" : "Could not fetch url from kendra service",
+    "USER_PROFILE_NOT_FOUND" : "Not found user profile",
+    "OBSERVATION_NOT_FOUND": "No observation found",
+    "USER_ORGANISATION_NOT_FOUND" : "User organisation details not found",
+    "CATEGORY_NOT_FOUND" : "Not found category",
+    "ENTITY_NOT_FOUND" : "No entity found",
+    "ATTACHMENTS_URL_NOT_FOUND" : "Not found attachments url",
+    "PROJECT_CATEGORIES_UPDATED" : "Successfully updated project categories",
+    "PROJECT_CATEGORIES_NOT_UPDATED" : "Could not updated project categories",
+    "PROJECT_TEMPLATE_NOT_UPDATED" : "Could not update project template",
+    "COULD_NOT_CREATE_ASSESSMENT_SOLUTION" : "Could not create assessment solution",
+    "FAILED_TO_ADD_ENTITY_TO_SOLUTION" : "Failed to add entity to solution"
 };

@@ -1699,6 +1699,7 @@ function _projectInformation(project) {
 
         } catch(error) {
             return resolve({
+                message : error.message,
                 success : false,
                 status : 
                 error.status ? 

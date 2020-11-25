@@ -421,7 +421,7 @@ module.exports = class ReportsHelper {
                         "endDate"],
                     []
                 );
-
+               
                 if (!projectDetails.length > 0) {
 
                     return resolve({
@@ -433,7 +433,7 @@ module.exports = class ReportsHelper {
                 if (getPdf == true) {
 
                     let types = await this.types();
-                    let returnTypeInfo = types.result.filter(type => {
+                    let returnTypeInfo = types.data.filter(type => {
                         if (type.value == reportType) {
                             return type.label;
                         }

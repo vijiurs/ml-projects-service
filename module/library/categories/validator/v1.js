@@ -13,6 +13,11 @@ module.exports = (req) => {
             req.checkParams('_id')
             .exists()
             .withMessage("required category id");
+        },
+        projectDetails: function () {
+            req.checkParams('_id')
+            .exists()
+            .withMessage("required project id");
         }
     }
 

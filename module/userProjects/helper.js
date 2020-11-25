@@ -11,6 +11,7 @@ const kendraService = require(GENERICS_FILES_PATH + "/services/kendra");
 const libraryCategoriesHelper = require(MODULES_BASE_PATH + "/library/categories/helper");
 const projectTemplatesHelper = require(MODULES_BASE_PATH + "/project/templates/helper");
 const projectTemplateTasksHelper = require(MODULES_BASE_PATH + "/project/templateTasks/helper");
+const { result } = require('lodash');
 const { v4: uuidv4 } = require('uuid');
 const assessmentService = require(GENERICS_FILES_PATH + "/services/assessment");
 
@@ -99,7 +100,7 @@ module.exports = class UserProjectsHelper {
                 if (!projects.length > 0) {
 
                     throw {
-                        status : HTTP_STATUS_CODE['bad_request'].status,
+                        status : HTTP_STATUS_CODE['ok'].status,
                         message: CONSTANTS.apiResponses.PROJECT_NOT_FOUND
                     };
                 }
@@ -109,13 +110,14 @@ module.exports = class UserProjectsHelper {
                 let updateLastDownloadedDate = new Date();
 
                 for (let project = 0; project < projects.length; project++) {
-                    let currentProject = await _projectInformation(projects[project]);
+                    let projectInformation = await _projectInformation(projects[project]);
 
-                    currentProject.lastDownloadedAt = updateLastDownloadedDate;
+                    if( !projectInformation.success ) {
+                        return resolve(projectInformation);
+                    }
 
-                    projectIds.push(currentProject._id);
-
-                    delete currentProject.metaInformation;
+                    projectInformation.data.lastDownloadedAt = updateLastDownloadedDate;
+                    projectIds.push(projectInformation.data._id);
                 }
 
                 await database.models.projects.updateMany({
@@ -167,7 +169,7 @@ module.exports = class UserProjectsHelper {
                 if (!forms.success) {
 
                     throw {
-                        status : HTTP_STATUS_CODE['bad_request'].status,
+                        status : HTTP_STATUS_CODE['ok'].status,
                         message: CONSTANTS.apiResponses.PROJECTS_FORM_NOT_FOUND
                     };
 
@@ -245,7 +247,7 @@ module.exports = class UserProjectsHelper {
                 if (!forms.success) {
 
                     throw {
-                        status : HTTP_STATUS_CODE['bad_request'].status,
+                        status : HTTP_STATUS_CODE['ok'].status,
                         message : CONSTANTS.apiResponses.PROJECT_TASKS_FORM_NOT_FOUND
                     }
 
@@ -309,9 +311,15 @@ module.exports = class UserProjectsHelper {
                 let entityDocument = {};
 
                 if (entityIds.length > 0) {
+                    
                     const entitiesData = await _entitiesInformation(entityIds);
+
+                    if( !entitiesData.success ) {
+                        return resolve(entitiesData);
+                    }
+
                     entityDocument =
-                    entitiesData.reduce((ac, entity) => ({ ...ac, [entity._id.toString()]: entity }), {});
+                    entitiesData.data.reduce((ac, entity) => ({ ...ac, [entity._id.toString()]: entity }), {});
                 }
 
                 let templateData = {};
@@ -321,17 +329,17 @@ module.exports = class UserProjectsHelper {
                 if (templateIds.length > 0) {
 
                     const projectTemplates =
-                        await projectTemplatesHelper.templateDocument({
-                            externalId: {
-                                $in: templateIds
-                            },
-                            isReusable: false
-                        }, "all",
-                            [
-                                "ratings",
-                                "noOfRatings",
-                                "averageRating"
-                            ]);
+                    await projectTemplatesHelper.templateDocument({
+                        externalId: {
+                            $in: templateIds
+                        },
+                        isReusable: false
+                    }, "all",
+                    [
+                        "ratings",
+                        "noOfRatings",
+                        "averageRating"
+                    ]);
 
                     if (projectTemplates.length > 0) {
 
@@ -356,27 +364,33 @@ module.exports = class UserProjectsHelper {
                 if (solutionIds.length > 0) {
 
                     let solutionData =
-                        await kendraService.solutionDocuments({
-                            _id: {
-                                $in: solutionIds
-                            }
-                        }, "all", [
-                            "levelToScoreMapping",
-                            "scoringSystem",
-                            "themes",
-                            "flattenedThemes",
-                            "questionSequenceByEcm",
-                            "entityProfileFieldsPerEntityTypes",
-                            "evidenceMethods",
-                            "sections",
-                            "noOfRatingLevels",
-                            "roles",
-                            "captureGpsLocationAtQuestionLevel",
-                            "enableQuestionReadOut"
-                        ]);
+                    await kendraService.solutionDocuments({
+                        _id: {
+                            $in: solutionIds
+                        }
+                    }, "all", [
+                        "levelToScoreMapping",
+                        "scoringSystem",
+                        "themes",
+                        "flattenedThemes",
+                        "questionSequenceByEcm",
+                        "entityProfileFieldsPerEntityTypes",
+                        "evidenceMethods",
+                        "sections",
+                        "noOfRatingLevels",
+                        "roles",
+                        "captureGpsLocationAtQuestionLevel",
+                        "enableQuestionReadOut"
+                    ]);
+
+                    if( !solutionData.success ) {
+                        throw {
+                            message : CONSTANTS.apiResponses.SOLUTION_NOT_FOUND,
+                            status : HTTP_STATUS_CODE['bad_request'].status
+                        }
+                    }
 
                     if (
-                        solutionData.success &&
                         solutionData.data && solutionData.data.length > 0
                     ) {
 
@@ -392,13 +406,20 @@ module.exports = class UserProjectsHelper {
                 if (programIds.length > 0) {
 
                     let programData =
-                        await kendraService.programsDocuments({
-                            _id: {
-                                $in: programIds
-                            }
-                        }, "all", ["components"]);
+                    await kendraService.programsDocuments({
+                        _id: {
+                            $in: programIds
+                        }
+                    }, "all", ["components"]);
 
-                    if (programData.success && programData.data.length > 0) {
+                    if( !programData.success ) {
+                        throw {
+                            message : CONSTANTS.apiResponses.PROGRAM_NOT_FOUND,
+                            status : HTTP_STATUS_CODE['bad_request'].status
+                        }
+                    }
+
+                    if (programData.data && programData.data.length > 0) {
 
                         programData.data.forEach(program => {
                             programs[program.externalId] = program;
@@ -416,12 +437,12 @@ module.exports = class UserProjectsHelper {
 
                     if (!templateData[currentCsvData.templateId]) {
                         currentCsvData["STATUS"] =
-                            CONSTANTS.apiResponses.PROJECT_TEMPLATE_NOT_FOUND;
+                        CONSTANTS.apiResponses.PROJECT_TEMPLATE_NOT_FOUND;
                         continue;
                     }
 
                     let currentTemplateData =
-                        templateData[csvData[pointerToCsvData].templateId];
+                    templateData[csvData[pointerToCsvData].templateId];
 
                     currentTemplateData.userId = csvData[pointerToCsvData]["keycloak-userId"];
                     currentTemplateData.createdBy = userId;
@@ -434,9 +455,9 @@ module.exports = class UserProjectsHelper {
                     ) {
 
                         const tasksAndSubTasks =
-                            await projectTemplateTasksHelper.tasksAndSubTasks(
-                                currentTemplateData._id
-                            );
+                        await projectTemplateTasksHelper.tasksAndSubTasks(
+                            currentTemplateData._id
+                        );
 
                         currentTemplateData.tasks = _projectTask(tasksAndSubTasks);
                     }
@@ -446,17 +467,18 @@ module.exports = class UserProjectsHelper {
                     if (currentTemplateData.solutionExternalId) {
 
                         if (!solutions[currentTemplateData.solutionExternalId]) {
+                            
                             currentCsvData["STATUS"] =
-                                CONSTANTS.apiResponses.SOLUTION_NOT_FOUND;
+                            CONSTANTS.apiResponses.SOLUTION_NOT_FOUND;
                             continue;
                         }
 
                         solutionInformation = solutions[currentTemplateData.solutionExternalId];
                         currentTemplateData.solutionInformation =
-                            _.omit(
-                                solutionInformation,
-                                ["entities", "programId", "programExternalId"]
-                            );
+                        _.omit(
+                            solutionInformation,
+                            ["entities", "programId", "programExternalId"]
+                        );
 
                         currentTemplateData.createdFor = solutionInformation.createdFor;
                         currentTemplateData.rootOrganisations = solutionInformation.rootOrganisations;
@@ -469,18 +491,18 @@ module.exports = class UserProjectsHelper {
 
                         if (!programs[currentTemplateData.programExternalId]) {
                             currentCsvData["STATUS"] =
-                                CONSTANTS.apiResponses.PROGRAM_NOT_FOUND;
+                            CONSTANTS.apiResponses.PROGRAM_NOT_FOUND;
                             continue;
                         }
 
                         currentTemplateData.programInformation =
-                            programs[currentTemplateData.programExternalId];
+                        programs[currentTemplateData.programExternalId];
 
                         delete currentTemplateData.programId;
                         delete currentTemplateData.programExternalId;
                     }
 
-                    if (entityDocument[csvData[pointerToCsvData].entityId]) {
+                    if ( entityDocument[csvData[pointerToCsvData].entityId] ) {
 
                         let entities = [];
 
@@ -488,12 +510,14 @@ module.exports = class UserProjectsHelper {
                             solutionInformation.entities &&
                             solutionInformation.entities.length > 0
                         ) {
+                            
                             let entityIndex =
-                                solutionInformation.entities.findIndex(entity => entity._id === csvData[pointerToCsvData].entityId);
+                            solutionInformation.entities.findIndex(entity => entity._id === csvData[pointerToCsvData].entityId);
 
                             if (entityIndex < 0) {
+                                
                                 entities =
-                                    solutionInformation.entities.push(ObjectId(csvData[pointerToCsvData].entityId))
+                                solutionInformation.entities.push(ObjectId(csvData[pointerToCsvData].entityId))
                             }
                         } else {
                             entities = [ObjectId(csvData[pointerToCsvData].entityId)];
@@ -510,14 +534,14 @@ module.exports = class UserProjectsHelper {
                         }
 
                         currentTemplateData.entityInformation =
-                            entityDocument[csvData[pointerToCsvData].entityId];
+                        entityDocument[csvData[pointerToCsvData].entityId];
 
                         delete currentTemplateData.entityType;
                         delete currentTemplateData.entityTypeId;
                     }
 
                     const projectCreation =
-                        await database.models.projects.create(currentTemplateData);
+                    await database.models.projects.create(currentTemplateData);
 
                     currentCsvData["STATUS"] = projectCreation._id;
 
@@ -641,12 +665,12 @@ module.exports = class UserProjectsHelper {
                 }
 
                 let programAndSolutionInformation =
-                    await this.createProgramAndSolution(
-                        requestedData.entityId,
-                        requestedData.programId,
-                        requestedData.programName,
-                        userToken
-                    );
+                await this.createProgramAndSolution(
+                    requestedData.entityId,
+                    requestedData.programId,
+                    requestedData.programName,
+                    userToken
+                );
 
                 if (!programAndSolutionInformation.success) {
                     return resolve(programAndSolutionInformation);
@@ -671,12 +695,12 @@ module.exports = class UserProjectsHelper {
                     );
                 }
 
-                projectCreation = _projectInformation(projectCreation._doc);
+                projectCreation = await _projectInformation(projectCreation._doc);
 
                 return resolve({
                     success : true,
                     message : CONSTANTS.apiResponses.PROJECTS_FETCHED,
-                    data : projectCreation
+                    data : projectCreation.data
                 });
 
             } catch (error) {
@@ -715,7 +739,14 @@ module.exports = class UserProjectsHelper {
                     userToken
                 );
 
-                if (userOrganisations.success) {
+                if( !userOrganisations.success ) {
+                    throw {
+                        message : CONSTANTS.apiResponses.USER_ORGANISATION_NOT_FOUND,
+                        status : HTTP_STATUS_CODE['bad_request'].status
+                    }
+                }
+
+                if (userOrganisations.data) {
                     creationData.createdFor = userOrganisations.data.createdFor;
                     creationData.rootOrganisations = userOrganisations.data.rootOrganisations;
                 }
@@ -732,6 +763,9 @@ module.exports = class UserProjectsHelper {
 
             } catch (error) {
                 return resolve({
+                    status : 
+                    error.status ? 
+                    error.status : HTTP_STATUS_CODE['internal_server_error'].status,
                     success: false,
                     message: error.message,
                     data: {}
@@ -764,10 +798,10 @@ module.exports = class UserProjectsHelper {
 
                 if (!userProject.length > 0) {
 
-                    return resolve({
-                        status : 400,
+                    throw {
+                        status : HTTP_STATUS_CODE['bad_request'].status,
                         message: CONSTANTS.apiResponses.USER_PROJECT_NOT_FOUND
-                    });
+                    };
                 }
 
                 const projectsModel = Object.keys(schemas["projects"].schema);
@@ -775,8 +809,15 @@ module.exports = class UserProjectsHelper {
                 let updateProject = {};
 
                 if (data.categories && data.categories.length > 0) {
-                    updateProject.categories =
-                        await _projectCategories(data.categories);
+                    
+                    let categories =
+                    await _projectCategories(data.categories);
+
+                    if( !categories.success ) {
+                        return resolve(categories);
+                    } 
+
+                    updateProject.categories = categories.data;
                 }
 
                 if (data.startDate) {
@@ -793,12 +834,12 @@ module.exports = class UserProjectsHelper {
                 ) {
 
                     let programAndSolutionInformation =
-                        await this.createProgramAndSolution(
-                            data.entityId,
-                            data.programId,
-                            data.programName,
-                            userToken
-                        );
+                    await this.createProgramAndSolution(
+                        data.entityId,
+                        data.programId,
+                        data.programName,
+                        userToken
+                    );
 
                     if (!programAndSolutionInformation.success) {
                         return resolve(programAndSolutionInformation);
@@ -886,22 +927,21 @@ module.exports = class UserProjectsHelper {
                 }
 
                 let projectUpdated =
-                    await database.models.projects.findOneAndUpdate(
-                        {
-                            _id: userProject[0]._id
-                        },
-                        {
-                            $set: updateProject
-                        }, {
+                await database.models.projects.findOneAndUpdate(
+                    {
+                        _id: userProject[0]._id
+                    },
+                    {
+                        $set: updateProject
+                    }, {
                         new: true
                     }
-                    );
+                );
 
                 if (!projectUpdated._id) {
-                    return resolve({
-                        success: false,
+                    throw {
                         message: CONSTANTS.apiResponses.USER_PROJECT_NOT_UPDATED
-                    })
+                    }
                 }
 
                 return resolve({
@@ -911,6 +951,9 @@ module.exports = class UserProjectsHelper {
 
             } catch (error) {
                 return resolve({
+                    status : 
+                    error.status ? 
+                    error.status : HTTP_STATUS_CODE['internal_server_error'].status,
                     success: false,
                     message: error.message,
                     data: {}
@@ -943,7 +986,12 @@ module.exports = class UserProjectsHelper {
 
                 if (entityId && entityId !== "") {
                     let entitiesData = await _entitiesInformation(entityId);
-                    result["entityInformation"] = entitiesData[0];
+
+                    if( !entitiesData.success ) {
+                        return resolve(entitiesData);
+                    }
+
+                    result["entityInformation"] = entitiesData.data[0];
                 }
 
                 let programAndSolutionData = {
@@ -996,13 +1044,14 @@ module.exports = class UserProjectsHelper {
                 }
 
                 let solutionAndProgramCreation =
-                    await kendraService.createUserProgramAndSolution(
-                        programAndSolutionData,
-                        userToken
-                    );
+                await kendraService.createUserProgramAndSolution(
+                    programAndSolutionData,
+                    userToken
+                );
 
                 if (!solutionAndProgramCreation.success) {
                     throw {
+                        status : HTTP_STATUS_CODE['bad_request'].status,
                         message : CONSTANTS.apiResponses.SOLUTION_PROGRAMS_NOT_CREATED
                     };
                 }
@@ -1030,6 +1079,9 @@ module.exports = class UserProjectsHelper {
 
             } catch (error) {
                 return resolve({
+                    status : 
+                    error.status ? 
+                    error.status : HTTP_STATUS_CODE['internal_server_error'].status,
                     success : false,
                     message : error.message,
                     data : {}
@@ -1071,20 +1123,28 @@ module.exports = class UserProjectsHelper {
                 if (!projectDetails.length > 0) {
 
                     throw {
+                        status : HTTP_STATUS_CODE["bad_request"].status,
                         message: CONSTANTS.apiResponses.PROJECT_NOT_FOUND
                     }
                 }
 
-                let result = _projectInformation(projectDetails[0]);
+                let result = await _projectInformation(projectDetails[0]);
+
+                if( !result.success ) {
+                    return resolve(projectInformation);
+                }
 
                 return resolve({
                     success: true,
                     message: CONSTANTS.apiResponses.PROJECT_DETAILS_FETCHED,
-                    data: result
+                    data: result.data
                 });
 
             } catch (error) {
                 return resolve({
+                    status : 
+                    error.status ? 
+                    error.status : HTTP_STATUS_CODE['internal_server_error'].status,
                     success: false,
                     message: error.message,
                     data: []
@@ -1299,7 +1359,7 @@ module.exports = class UserProjectsHelper {
             });
 
            } catch (error) {
-               return reject({
+               return resolve({
                    success : false,
                    data : []
                });
@@ -1325,11 +1385,12 @@ module.exports = class UserProjectsHelper {
             if( !tasks.success || !tasks.data.length > 0 ) {
                 
                 throw {
+                    status : HTTP_STATUS_CODE['bad_request'].status,
                     message : CONSTANTS.apiResponses.PROJECT_NOT_FOUND
                 };
             }
 
-            let projectTasks = tasks.data;
+            let projectTasks = tasks.data[0].tasks;
             let result = [];
 
             for( let task = 0; task < projectTasks.length ; task ++ ) {
@@ -1429,6 +1490,7 @@ module.exports = class UserProjectsHelper {
 
             if( !project.length > 0 ) {
                 throw {
+                    status : HTTP_STATUS_CODE['bad_request'].status,
                     message : CONSTANTS.apiResponses.USER_PROJECT_NOT_FOUND
                 };
             }
@@ -1453,9 +1515,15 @@ module.exports = class UserProjectsHelper {
                         currentTask.solutionDetails,
                         assessmentOrObservationData.entityId,
                         assessmentOrObservationData.programId,
-                        projectId,
-                        taskId
+                        {
+                            "projectId" : projectId,
+                            "taskId" : taskId
+                        }
                     );
+
+                    if( !duplicateSolution.success ) {
+                        return resolve(duplicateSolution);
+                    }
                     
                     assessmentOrObservationData["solutionId"] = 
                     ObjectId(duplicateSolution.data._id);
@@ -1499,6 +1567,9 @@ module.exports = class UserProjectsHelper {
 
         } catch (error) {
             return resolve({
+                status : 
+                error.status ? 
+                error.status : HTTP_STATUS_CODE['internal_server_error'].status,
                 success : false,
                 message : error.message,
                 data : {}
@@ -1561,8 +1632,7 @@ function _projectInformation(project) {
                             
                             if( !mapTaskIdToAttachment[currentAttachment.sourcePath] ) {
                                 mapTaskIdToAttachment[currentAttachment.sourcePath] = {
-                                    taskId : currentTask._id,
-                                    attachmentId : currentAttachment._id
+                                    taskId : currentTask._id
                                 };
                                 
                             }
@@ -1579,6 +1649,13 @@ function _projectInformation(project) {
                             filePaths : attachments
                         }
                     );
+
+                    if( !attachmentsUrl.success ) {
+                        throw {
+                            status : HTTP_STATUS_CODE['bad_request'].status,
+                            message : CONSTANTS.apiResponses.ATTACHMENTS_URL_NOT_FOUND
+                        }
+                    }
         
                     if( attachmentsUrl.data.length > 0 ) {
                         attachmentsUrl.data.forEach( attachmentUrl => {
@@ -1586,11 +1663,13 @@ function _projectInformation(project) {
                             let taskIndex = 
                             project.tasks.findIndex(task => task._id === mapTaskIdToAttachment[attachmentUrl.filePath].taskId);
         
-                            if( taskIndex > 0 ) {
+                            if( taskIndex > -1 ) {
                                 let attachmentIndex = 
-                                project.tasks[taskIndex].attachments.findIndex(attachment => attachment._id === mapTaskIdToAttachment[attachmentUrl.filePath].attachmentId);
-        
-                                project.tasks[taskIndex].attachments[attachmentIndex].url = attachmentUrl.url;
+                                project.tasks[taskIndex].attachments.findIndex(attachment => attachment.sourcePath === attachmentUrl.filePath);
+
+                                if( attachmentIndex > -1 ) {
+                                    project.tasks[taskIndex].attachments[attachmentIndex].url = attachmentUrl.url;
+                                }
                             }
                         })
                     }
@@ -1613,10 +1692,19 @@ function _projectInformation(project) {
             delete project.solutionInformation;
             delete project.programInformation;
 
-            return resolve(project);
+            return resolve({
+                success : true,
+                data : project
+            });
 
         } catch(error) {
-
+            return resolve({
+                message : error.message,
+                success : false,
+                status : 
+                error.status ? 
+                error.status : HTTP_STATUS_CODE['internal_server_error'].status
+            })
         }
     })
 
@@ -1666,9 +1754,9 @@ function _projectInformation(project) {
   * @returns {Object} Project task.
 */
 
-function _projectTask(task, isImportedFromLibrary = false) {
+function _projectTask(tasks, isImportedFromLibrary = false) {
 
-    task.forEach(singleTask => {
+    tasks.forEach(singleTask => {
 
         singleTask.externalId = singleTask.externalId ? singleTask.externalId : singleTask.name.toLowerCase();
         singleTask.type = singleTask.type ? singleTask.type : CONSTANTS.common.SIMPLE_TASK_TYPE;
@@ -1697,7 +1785,7 @@ function _projectTask(task, isImportedFromLibrary = false) {
 
     })
 
-    return task;
+    return tasks;
 }
 
 /**
@@ -1719,9 +1807,16 @@ function _projectCategories(categories) {
             });
 
             const categoryData =
-                await libraryCategoriesHelper.categoryDocuments({
-                    _id: { $in: categoryIds }
-                }, ["name", "externalId"]);
+            await libraryCategoriesHelper.categoryDocuments({
+                _id: { $in: categoryIds }
+            }, ["name", "externalId"]);
+
+            if( !categoryData.length > 0 ) {
+                throw {
+                    status : HTTP_STATUS_CODE['bad_request'].status,
+                    message: CONSTANTS.apiResponses.CATEGORY_NOT_FOUND
+                }
+            }
 
             let categoryInternalIdToData = {};
 
@@ -1752,10 +1847,20 @@ function _projectCategories(categories) {
                 return categoryData;
             });
 
-            return resolve(categoriesData);
+            return resolve({
+                success : true,
+                data : categoriesData
+            });
 
         } catch (error) {
-            return reject(error);
+            return resolve({
+                message : error.message,
+                status : 
+                error.status ? 
+                error.status : HTTP_STATUS_CODE['internal_server_error'].status,
+                success : false,
+                data : {}
+            });
         }
     })
 }
@@ -1773,14 +1878,21 @@ function _entitiesInformation(entityIds) {
         try {
 
             let entityData =
-                await kendraService.entityDocuments(
-                    {
-                        _id: {
-                            $in: entityIds
-                        }
-                    },
-                    ["metaInformation", "entityType", "entityTypeId"]
-                );
+            await kendraService.entityDocuments(
+                {
+                    _id: {
+                        $in: entityIds
+                    }
+                },
+                ["metaInformation", "entityType", "entityTypeId"]
+            );
+
+            if( !entityData.success ) {
+                throw {
+                    status : HTTP_STATUS_CODE['bad_request'].status,
+                    message: CONSTANTS.apiResponses.ENTITY_NOT_FOUND
+                }
+            }
 
             let entitiesData = [];
 
@@ -1794,10 +1906,20 @@ function _entitiesInformation(entityIds) {
                 });
             }
 
-            return resolve(entitiesData);
+            return resolve({
+                success : true,
+                data : entitiesData
+            });
 
         } catch (error) {
-            return reject(error);
+            return resolve({
+                status : 
+                error.status ? 
+                error.status : HTTP_STATUS_CODE['internal_server_error'].status,
+                success : false,
+                message : error.message,
+                data : []
+            });
         }
     })
 }
@@ -1815,7 +1937,13 @@ function _entitiesInformation(entityIds) {
     * @returns {Object} 
 */
 
-function _assessmentDetails( userToken,solutionDetails,entityId,programId,projectId,taskId ) {
+function _assessmentDetails(
+    userToken,
+    solutionDetails,
+    entityId,
+    programId,
+    project
+) {
     return new Promise(async (resolve, reject) => {
         try {
 
@@ -1834,10 +1962,16 @@ function _assessmentDetails( userToken,solutionDetails,entityId,programId,projec
                             name : ""
                         },
                         entities : [entityId],
-                        projectId : projectId,
-                        taskId : taskId
+                        project : project
                     }
                 );
+
+                if( !result.success ) {
+                    throw {
+                        status : HTTP_STATUS_CODE['bad_request'].status,
+                        message : CONSTANTS.apiResponses.COULD_NOT_CREATE_ASSESSMENT_SOLUTION
+                    }
+                }
 
             } else {
 
@@ -1846,6 +1980,13 @@ function _assessmentDetails( userToken,solutionDetails,entityId,programId,projec
                     solutionDetails._id,
                     [entityId.toString()]
                 );
+
+                if( !result.success ) {
+                    throw {
+                        status : HTTP_STATUS_CODE['bad_request'].status,
+                        message : CONSTANTS.apiResponses.FAILED_TO_ADD_ENTITY_TO_SOLUTION
+                    }
+                }
 
                 await kendraService.updateSolution(
                     userToken,
@@ -1860,9 +2001,17 @@ function _assessmentDetails( userToken,solutionDetails,entityId,programId,projec
 
             }
 
-            return resolve(result);
+            return resolve({
+                success : true,
+                data : result.data
+            });
         } catch(error) {
-            return reject(error);
+            return resolve({
+                message : error.message,
+                success : false,
+                status : error.status ? 
+                error.status : HTTP_STATUS_CODE['internal_server_error'].status
+            });
         }
     })
 }

@@ -430,7 +430,13 @@ const entityDocuments = function (
                 if (err) {
                     result.success = false;
                 } else {
-                    result["data"] = data.body.result;
+                    
+                    let response = data.body;
+                    if( response.status === HTTP_STATUS_CODE['ok'].status ) {
+                        result["data"] = response.result;
+                    } else {
+                        result.success = false;
+                    }
                 }
 
                 return resolve(result);
@@ -538,7 +544,13 @@ const createUserProgramAndSolution = function ( data,userToken ) {
                 if (err) {
                     result.success = false;
                 } else {
-                    result["data"] = data.body.result;
+
+                    let response = data.body;
+                    if( response.status === HTTP_STATUS_CODE['ok'].status ) {
+                        result["data"] = response.result;
+                    } else {
+                        result.success = false;
+                    }
                 }
 
                 return resolve(result);
@@ -789,7 +801,14 @@ const getUserOrganisationsAndRootOrganisations = function ( token ) {
                 if (err) {
                     result.success = false;
                 } else {
-                    result["data"] = JSON.parse(data.body).result;
+
+                    let response = JSON.parse(data.body);
+                    if( response.status === HTTP_STATUS_CODE['ok'].status ) {
+                        result["data"] = response.result;
+                    } else {
+                        result.success = false;
+                    }
+
                 }
 
                 return resolve(result);

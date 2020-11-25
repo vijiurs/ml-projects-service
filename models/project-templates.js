@@ -10,7 +10,7 @@ module.exports = {
         title : {
             type : String,
             required : true,
-            index: true
+            text : true
         },
         externalId : {
             type : String,

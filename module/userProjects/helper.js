@@ -665,12 +665,12 @@ module.exports = class UserProjectsHelper {
                 }
 
                 let programAndSolutionInformation =
-                    await this.createProgramAndSolution(
-                        requestedData.entityId,
-                        requestedData.programId,
-                        requestedData.programName,
-                        userToken
-                    );
+                await this.createProgramAndSolution(
+                    requestedData.entityId,
+                    requestedData.programId,
+                    requestedData.programName,
+                    userToken
+                );
 
                 if (!programAndSolutionInformation.success) {
                     return resolve(programAndSolutionInformation);
@@ -695,12 +695,12 @@ module.exports = class UserProjectsHelper {
                     );
                 }
 
-                projectCreation = _projectInformation(projectCreation._doc);
+                projectCreation = await _projectInformation(projectCreation._doc);
 
                 return resolve({
                     success : true,
                     message : CONSTANTS.apiResponses.PROJECTS_FETCHED,
-                    data : projectCreation
+                    data : projectCreation.data
                 });
 
             } catch (error) {
@@ -991,7 +991,7 @@ module.exports = class UserProjectsHelper {
                         return resolve(entitiesData);
                     }
 
-                    result["entityInformation"] = entitiesData[0];
+                    result["entityInformation"] = entitiesData.data[0];
                 }
 
                 let programAndSolutionData = {
@@ -1515,9 +1515,15 @@ module.exports = class UserProjectsHelper {
                         currentTask.solutionDetails,
                         assessmentOrObservationData.entityId,
                         assessmentOrObservationData.programId,
-                        projectId,
-                        taskId
+                        {
+                            "projectId" : projectId,
+                            "taskId" : taskId
+                        }
                     );
+
+                    if( !duplicateSolution.success ) {
+                        return resolve(duplicateSolution);
+                    }
                     
                     assessmentOrObservationData["solutionId"] = 
                     ObjectId(duplicateSolution.data._id);
@@ -1929,7 +1935,13 @@ function _entitiesInformation(entityIds) {
     * @returns {Object} 
 */
 
-function _assessmentDetails( userToken,solutionDetails,entityId,programId,projectId,taskId ) {
+function _assessmentDetails( 
+    userToken,
+    solutionDetails,
+    entityId,
+    programId,
+    project
+) {
     return new Promise(async (resolve, reject) => {
         try {
 
@@ -1948,10 +1960,16 @@ function _assessmentDetails( userToken,solutionDetails,entityId,programId,projec
                             name : ""
                         },
                         entities : [entityId],
-                        projectId : projectId,
-                        taskId : taskId
+                        project : project
                     }
                 );
+
+                if( !result.success ) {
+                    throw {
+                        status : HTTP_STATUS_CODE['bad_request'].status,
+                        message : CONSTANTS.apiResponses.COULD_NOT_CREATE_ASSESSMENT_SOLUTION
+                    }
+                }
 
             } else {
 
@@ -1960,6 +1978,13 @@ function _assessmentDetails( userToken,solutionDetails,entityId,programId,projec
                     solutionDetails._id,
                     [entityId.toString()]
                 );
+
+                if( !result.success ) {
+                    throw {
+                        status : HTTP_STATUS_CODE['bad_request'].status,
+                        message : CONSTANTS.apiResponses.FAILED_TO_ADD_ENTITY_TO_SOLUTION
+                    }
+                }
 
                 await kendraService.updateSolution(
                     userToken,
@@ -1974,9 +1999,16 @@ function _assessmentDetails( userToken,solutionDetails,entityId,programId,projec
 
             }
 
-            return resolve(result);
+            return resolve({
+                success : true,
+                data : result.data
+            });
         } catch(error) {
-            return reject(error);
+            return resolve({
+                success : false,
+                status : error.status ? 
+                error.status : HTTP_STATUS_CODE['internal_server_error'].status
+            });
         }
     })
 }

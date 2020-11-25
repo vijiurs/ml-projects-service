@@ -326,20 +326,6 @@ module.exports = class ProjectTemplateTasksHelper {
                         CONSTANTS.apiResponses.REQUIRED_SOLUTION_ID;
                     }
 
-                    if( 
-                        allValues.type === CONSTANTS.common.OBSERVATION && 
-                        parsedData.observationId && parsedData.observationId !== ""
-                    ) {
-                       
-                        if( observationData[parsedData.observationId] ) {
-                            allValues.solutionDetails["observationId"] = 
-                            ObjectId(parsedData.observationId)
-                        } else {
-                            parsedData.STATUS = 
-                            CONSTANTS.apiResponses.INVALID_OBSERVATION_ID;
-                        }
-                    } 
-
                 }
 
                 allValues.projectTemplateId = templateId;
@@ -373,7 +359,8 @@ module.exports = class ProjectTemplateTasksHelper {
                         await database.models.projectTemplateTasks.create(allValues);
     
                         if ( !taskData._id ) {
-                            parsedData.STATUS = CONSTANTS.apiResponses.PROJECT_TEMPLATE_TASKS_NOT_CREATED;
+                            parsedData.STATUS = 
+                            CONSTANTS.apiResponses.PROJECT_TEMPLATE_TASKS_NOT_CREATED;
                         } else {
                             parsedData._SYSTEM_ID = taskData._id;
                             parsedData.STATUS = CONSTANTS.apiResponses.SUCCESS;

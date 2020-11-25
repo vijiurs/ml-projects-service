@@ -412,4 +412,46 @@ module.exports = class LibraryCategoriesHelper {
         })
     }
 
+    /**
+      * Update categories
+      * @method
+      * @name update
+      * @param filterQuery - Filter query.
+      * @param updateData - Update data.
+      * @returns {Object} updated data
+     */
+
+    static update(filterQuery,updateData) {    
+        return new Promise(async (resolve, reject) => {
+            try {
+
+                let categoriesUpdated = 
+                await database.models.projectCategories.updateMany(
+                    filterQuery,
+                    updateData
+                );
+
+                if( !categoriesUpdated.ok ) {
+                    throw {
+                        status : HTTP_STATUS_CODE['bad_request'].status,
+                        message : CONSTANTS.apiResponses.PROJECT_CATEGORIES_NOT_UPDATED
+                    }
+                }
+
+                return resolve({
+                    success: true,
+                    message : CONSTANTS.apiResponses.PROJECT_CATEGORIES_UPDATED,
+                    data : categoriesUpdated
+                });
+
+            } catch (error) {   
+                return resolve({
+                    success: false,
+                    message: error.message,
+                    data : {}
+                });
+            }
+        })
+    }
+
 };

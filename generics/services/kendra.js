@@ -468,7 +468,7 @@ const programsDocuments = function (
             
             const url = 
             process.env.KENDRA_APPLICATION_ENDPOINT + process.env.URL_PREFIX + 
-            CONSTANTS.endpoints.FIND_PROGRAMS;
+            CONSTANTS.endpoints.LIST_PROGRAMS;
 
             const options = {
                 headers : {

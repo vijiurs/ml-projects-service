@@ -9,6 +9,8 @@
 const request = require('request');
 const fs = require("fs");
 
+const KENDRA_URL = process.env.KENDRA_APPLICATION_ENDPOINT +  process.env.KENDRA_BASE_URL;
+
 /**
   * Get downloadable file.
   * @function
@@ -19,7 +21,7 @@ const fs = require("fs");
 
 const getDownloadableUrl = function (bodyData) {
 
-    let fileDownloadUrl = process.env.KENDRA_APPLICATION_ENDPOINT; 
+    let fileDownloadUrl = KENDRA_URL; 
     
     if ( process.env.CLOUD_STORAGE === "GC" ) {
         fileDownloadUrl = fileDownloadUrl + CONSTANTS.endpoints.DOWNLOADABLE_GCP_URL;
@@ -81,7 +83,7 @@ const getDownloadableUrl = function (bodyData) {
 
 const upload = function (file,filePath) {
 
-    let fileUploadUrl = process.env.KENDRA_APPLICATION_ENDPOINT; 
+    let fileUploadUrl = KENDRA_URL; 
     let bucketName = "";
 
     if ( process.env.CLOUD_STORAGE === "GC" ) {
@@ -130,70 +132,6 @@ const upload = function (file,filePath) {
 }
 
 /**
-  * List of solutions
-  * @function
-  * @name solutionDocuments
-  * @param {Object} filterData - Filter data.
-  * @param {Array} projection - Projected data. 
-  * @param {Array} skipFields - Field to skip.  
-  * @returns {JSON} - List of solutions
-*/
-
-const solutionDocuments = function ( 
-    filterData =  "all",
-    projection = "all",
-    skipFields = "none"
-) {
-    return new Promise(async (resolve, reject) => {
-        try {
-            
-            const url = 
-            process.env.KENDRA_APPLICATION_ENDPOINT + process.env.URL_PREFIX + 
-            CONSTANTS.endpoints.LIST_SOLUTIONS;
-
-            const options = {
-                headers : {
-                    "content-type": "application/json",
-                    AUTHORIZATION : process.env.AUTHORIZATION,
-                    "internal-access-token": process.env.INTERNAL_ACCESS_TOKEN,
-                },
-                json : {
-                    query : filterData,
-                    projection : projection,
-                    skipFields : skipFields
-                }
-            };
-
-            request.post(url,options,kendraCallback);
-
-            function kendraCallback(err, data) {
-
-                let result = {
-                    success : true
-                };
-
-                if (err) {
-                    result.success = false;
-                } else {
-                    let response = data.body;
-
-                    if( response.status === HTTP_STATUS_CODE['ok'].status ) {
-                        result["data"] = response.result;
-                    } else {
-                        result.success = false;
-                    }
-                }
-
-                return resolve(result);
-            }
-
-        } catch (error) {
-            return reject(error);
-        }
-    })
-}
-
-/**
   * List of entity types.
   * @function
   * @name entityTypesDocuments
@@ -211,9 +149,7 @@ const entityTypesDocuments = function (
     return new Promise(async (resolve, reject) => {
         try {
             
-            const url = 
-            process.env.KENDRA_APPLICATION_ENDPOINT + process.env.URL_PREFIX + 
-            CONSTANTS.endpoints.LIST_ENTITY_TYPES;
+            const url = KENDRA_URL + process.env.URL_PREFIX + CONSTANTS.endpoints.LIST_ENTITY_TYPES;
 
             const options = {
                 headers : {
@@ -276,9 +212,7 @@ const rolesDocuments = function (
     return new Promise(async (resolve, reject) => {
         try {
             
-            const url = 
-            process.env.KENDRA_APPLICATION_ENDPOINT + process.env.URL_PREFIX + 
-            CONSTANTS.endpoints.LIST_USER_ROLES;
+            const url = KENDRA_URL + process.env.URL_PREFIX + CONSTANTS.endpoints.LIST_USER_ROLES;
 
             const options = {
                 headers : {
@@ -323,37 +257,26 @@ const rolesDocuments = function (
 }
 
 /**
-  * List of forms.
+  * Form details.
   * @function
-  * @name formsDocuments
-  * @param {Object} filterData - Filter data.
-  * @param {Array} projection - Projected data. 
-  * @param {Array} skipFields - Field to skip.
-  * @returns {JSON} - List of forms.
+  * @name formDetails
+  * @param {Object} formName - name of the form 
+  * @returns {JSON} - Details of the form.
 */
 
-const formsDocuments = function ( 
-    filterData =  "all",
-    projection = "all",
-    skipFields = "none"
-) {
+const formDetails = function ( formName ) {
     return new Promise(async (resolve, reject) => {
         try {
             
             const url = 
-            process.env.KENDRA_APPLICATION_ENDPOINT + process.env.URL_PREFIX + 
-            CONSTANTS.endpoints.LIST_FORMS;
+            KENDRA_URL + process.env.URL_PREFIX + 
+            CONSTANTS.endpoints.DETAILS_FORM + "/" + formName;
 
             const options = {
                 headers : {
                     "content-type": "application/json",
                     AUTHORIZATION : process.env.AUTHORIZATION,
                     "internal-access-token": process.env.INTERNAL_ACCESS_TOKEN,
-                },
-                 json : {
-                    query : filterData,
-                    projection : projection,
-                    skipFields : skipFields
                 }
             };
 
@@ -369,7 +292,7 @@ const formsDocuments = function (
                     result.success = false;
                 } else {
 
-                    let response = data.body;
+                    let response = JSON.parse(data.body);
                     if( response.status === HTTP_STATUS_CODE['ok'].status ) {
                         result["data"] = response.result;
                     } else {
@@ -396,15 +319,12 @@ const formsDocuments = function (
 
 const entityDocuments = function ( 
     filterData =  "all",
-    projection = "all",
-    skipFields = "none"
+    projection = "all"
 ) {
     return new Promise(async (resolve, reject) => {
         try {
             
-            const url = 
-            process.env.KENDRA_APPLICATION_ENDPOINT + process.env.URL_PREFIX + 
-            CONSTANTS.endpoints.LIST_ENTITIES;
+            const url = KENDRA_URL + process.env.URL_PREFIX + CONSTANTS.endpoints.LIST_ENTITIES;
 
             const options = {
                 headers : {
@@ -413,9 +333,8 @@ const entityDocuments = function (
                     "internal-access-token": process.env.INTERNAL_ACCESS_TOKEN,
                 },
                 json : {
-                    query : filterData,
-                    projection : projection,
-                    skipFields : skipFields
+                    entities : filterData,
+                    fields : projection
                 }
             };
 
@@ -466,9 +385,7 @@ const programsDocuments = function (
     return new Promise(async (resolve, reject) => {
         try {
             
-            const url = 
-            process.env.KENDRA_APPLICATION_ENDPOINT + process.env.URL_PREFIX + 
-            CONSTANTS.endpoints.FIND_PROGRAMS;
+            const url = KENDRA_URL + process.env.URL_PREFIX + CONSTANTS.endpoints.LIST_PROGRAMS;
 
             const options = {
                 headers : {
@@ -519,9 +436,7 @@ const createUserProgramAndSolution = function ( data,userToken ) {
     return new Promise(async (resolve, reject) => {
         try {
             
-            const url = 
-            process.env.KENDRA_APPLICATION_ENDPOINT + process.env.URL_PREFIX + 
-            CONSTANTS.endpoints.CREATE_PROGRAM_AND_SOLUTION;
+            const url = KENDRA_URL + process.env.URL_PREFIX + CONSTANTS.endpoints.CREATE_PROGRAM_AND_SOLUTION;
 
             const options = {
                 headers : {
@@ -574,9 +489,7 @@ const getProfile = function ( token ) {
     return new Promise(async (resolve, reject) => {
         try {
             
-            const url = 
-            process.env.KENDRA_APPLICATION_ENDPOINT + process.env.URL_PREFIX + 
-            CONSTANTS.endpoints.USER_EXTENSION_GET_PROFILE;
+            const url = KENDRA_URL + process.env.URL_PREFIX + CONSTANTS.endpoints.USER_EXTENSION_GET_PROFILE;
 
             const options = {
                 headers : {
@@ -630,8 +543,7 @@ const updateUserProfile = function ( token,updateData ) {
     return new Promise(async (resolve, reject) => {
         try {
             
-            const url = 
-            process.env.KENDRA_APPLICATION_ENDPOINT + process.env.URL_PREFIX + 
+            const url = KENDRA_URL + process.env.URL_PREFIX + 
             CONSTANTS.endpoints.USER_EXTENSION_UPDATE_USER_PROFILE;
 
             const options = {
@@ -679,8 +591,7 @@ const userPrivatePrograms = function ( token ) {
     return new Promise(async (resolve, reject) => {
         try {
             
-            const url = 
-            process.env.KENDRA_APPLICATION_ENDPOINT + process.env.URL_PREFIX + 
+            const url = KENDRA_URL + process.env.URL_PREFIX + 
             CONSTANTS.endpoints.USER_PRIVATE_PROGRAMS;
 
             const options = {
@@ -718,56 +629,6 @@ const userPrivatePrograms = function ( token ) {
 /**
   * Update solution
   * @function
-  * @name updateSolution
-  * @param {String} token - Logged in user token.
-  * @param {Object} updateData - Data to update. 
-  * @returns {JSON} - Update solutions.
-*/
-
-const updateSolution = function ( token,updateData,solutionExternalId ) {
-    return new Promise(async (resolve, reject) => {
-        try {
-            
-            const url = 
-            process.env.KENDRA_APPLICATION_ENDPOINT + process.env.URL_PREFIX + 
-            CONSTANTS.endpoints.UPDATE_SOLUTIONS + "?solutionExternalId=" + solutionExternalId;
-
-            const options = {
-                headers : {
-                    "content-type": "application/json",
-                    AUTHORIZATION : process.env.AUTHORIZATION,
-                    "internal-access-token": process.env.INTERNAL_ACCESS_TOKEN,
-                    "x-authenticated-user-token" : token
-                },
-                json : updateData
-            };
-
-            request.post(url,options,kendraCallback);
-
-            function kendraCallback(err, data) {
-
-                let result = {
-                    success : true
-                };
-
-                if (err) {
-                    result.success = false;
-                } else {
-                    result["data"] = data.body;
-                }
-
-                return resolve(result);
-            }
-
-        } catch (error) {
-            return reject(error);
-        }
-    })
-}
-
-/**
-  * Update solution
-  * @function
   * @name getUserOrganisationsAndRootOrganisations
   * @param {String} token - Logged in user token.
   * @returns {JSON} - Update solutions.
@@ -778,7 +639,7 @@ const getUserOrganisationsAndRootOrganisations = function ( token ) {
         try {
             
             const url = 
-            process.env.KENDRA_APPLICATION_ENDPOINT + process.env.URL_PREFIX + 
+            KENDRA_URL + process.env.URL_PREFIX + 
             CONSTANTS.endpoints.GET_USER_ORGANISATIONS;
 
             const options = {
@@ -831,7 +692,7 @@ const getPreSignedUrl = function (fileNames) {
     return new Promise(async (resolve, reject) => {
         try {
             
-            let filePreSignedUrl = process.env.KENDRA_APPLICATION_ENDPOINT;
+            let filePreSignedUrl = KENDRA_URL;
 
             let bodyData = {
                 fileNames: fileNames
@@ -890,7 +751,7 @@ const updateObservation = function ( token,updateData,observationId ) {
         try {
             
             const url = 
-            process.env.KENDRA_APPLICATION_ENDPOINT + process.env.URL_PREFIX + 
+            KENDRA_URL + process.env.URL_PREFIX + 
             CONSTANTS.endpoints.UPDATE_OBSERVATION + "/" + observationId;
 
             const options = {
@@ -950,9 +811,7 @@ const observationDocuments = function (
     return new Promise(async (resolve, reject) => {
         try {
             
-            const url = 
-            process.env.KENDRA_APPLICATION_ENDPOINT + process.env.URL_PREFIX + 
-            CONSTANTS.endpoints.LIST_OBSERVATIONS;
+            const url = KENDRA_URL + process.env.URL_PREFIX + CONSTANTS.endpoints.LIST_OBSERVATIONS;
 
             const options = {
                 headers : {
@@ -993,17 +852,15 @@ const observationDocuments = function (
 module.exports = {
     getDownloadableUrl : getDownloadableUrl,
     upload : upload,
-    solutionDocuments : solutionDocuments,
     entityTypesDocuments : entityTypesDocuments,
     rolesDocuments : rolesDocuments,
-    formsDocuments : formsDocuments,
+    formDetails : formDetails,
     entityDocuments: entityDocuments,
     programsDocuments : programsDocuments,
     createUserProgramAndSolution : createUserProgramAndSolution,
     getProfile : getProfile,
     updateUserProfile : updateUserProfile,
     userPrivatePrograms : userPrivatePrograms,
-    updateSolution : updateSolution,
     getUserOrganisationsAndRootOrganisations : getUserOrganisationsAndRootOrganisations,
     getPreSignedUrl : getPreSignedUrl,
     updateObservation : updateObservation,

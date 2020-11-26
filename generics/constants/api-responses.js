@@ -78,5 +78,12 @@ module.exports = {
     "USER_ORGANISATION_NOT_FOUND" : "User organisation details not found",
     "CATEGORY_NOT_FOUND" : "Not found category",
     "ENTITY_NOT_FOUND" : "No entity found",
-    "ATTACHMENTS_URL_NOT_FOUND" : "Not found attachments url"
+    "ATTACHMENTS_URL_NOT_FOUND" : "Not found attachments url",
+    "PROJECT_CATEGORIES_UPDATED" : "Successfully updated project categories",
+    "PROJECT_CATEGORIES_NOT_UPDATED" : "Could not updated project categories",
+    "PROJECT_TEMPLATE_NOT_UPDATED" : "Could not update project template",
+    "COULD_NOT_CREATE_ASSESSMENT_SOLUTION" : "Could not create assessment solution",
+    "FAILED_TO_ADD_ENTITY_TO_SOLUTION" : "Failed to add entity to solution",
+    "FAILED_TO_ASSIGNED_ASSESSMENT_TO_USER" : "Failed to assign assessment to user",
+    "SOLUTION_NOT_UPDATED" : "Could not update solution"
 };

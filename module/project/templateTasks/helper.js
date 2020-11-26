@@ -14,6 +14,7 @@
 const projectTemplatesHelper = require(MODULES_BASE_PATH + "/project/templates/helper");
 const kendraService = require(GENERICS_FILES_PATH + "/services/kendra");
 const learningResourcesHelper = require(MODULES_BASE_PATH + "/learningResources/helper");
+const assessmentService = require(GENERICS_FILES_PATH + "/services/assessment");
 
 module.exports = class ProjectTemplateTasksHelper {
 
@@ -161,9 +162,7 @@ module.exports = class ProjectTemplateTasksHelper {
                 if ( solutionIds.length > 0 ) {
                     
                     let solutions = 
-                    await kendraService.solutionDocuments({
-                        externalId : { $in : solutionIds }
-                    },["externalId","isReusable","name"]);
+                    await assessmentService.listSolutions(solutionIds);
 
                     if( !solutions.success ) {
                         throw {
@@ -185,34 +184,34 @@ module.exports = class ProjectTemplateTasksHelper {
                     }
                 }
 
-                let observationData = {};
+                // let observationData = {};
 
-                if ( observationIds.length > 0 ) {
+                // if ( observationIds.length > 0 ) {
                     
-                    let observations = 
-                    await kendraService.observationDocuments({
-                        _id : { $in : observationIds }
-                    },["_id"]);
+                //     let observations = 
+                //     await kendraService.observationDocuments({
+                //         _id : { $in : observationIds }
+                //     },["_id"]);
 
-                    if( !observations.success ) {
-                        throw {
-                            message : CONSTANTS.apiResponses.OBSERVATION_NOT_FOUND,
-                            status : HTTP_STATUS_CODE['bad_request'].status
-                        }
-                    }
+                //     if( !observations.success ) {
+                //         throw {
+                //             message : CONSTANTS.apiResponses.OBSERVATION_NOT_FOUND,
+                //             status : HTTP_STATUS_CODE['bad_request'].status
+                //         }
+                //     }
 
-                    if ( 
-                        observations.data &&
-                        Object.keys(observations.data).length > 0 
-                    ) {
+                //     if ( 
+                //         observations.data &&
+                //         Object.keys(observations.data).length > 0 
+                //     ) {
 
-                        observations.data.forEach(observation => {
-                            if( !observationData[observation._id.toString()]) {
-                                observationData[observation._id.toString()] = true;
-                            }
-                        });
-                    }
-                }
+                //         observations.data.forEach(observation => {
+                //             if( !observationData[observation._id.toString()]) {
+                //                 observationData[observation._id.toString()] = true;
+                //             }
+                //         });
+                //     }
+                // }
 
                 return resolve({
                     success : true,
@@ -220,7 +219,7 @@ module.exports = class ProjectTemplateTasksHelper {
                         tasks : tasks,
                         templateId : templateId,
                         solutionData : solutionData,
-                        observationData : observationData
+                        // observationData : observationData
                     }
                 });
 
@@ -248,7 +247,6 @@ module.exports = class ProjectTemplateTasksHelper {
         data,
         templateId,
         solutionData,
-        observationData,
         update = false
     ) {
         return new Promise(async (resolve, reject) => {
@@ -326,20 +324,6 @@ module.exports = class ProjectTemplateTasksHelper {
                         CONSTANTS.apiResponses.REQUIRED_SOLUTION_ID;
                     }
 
-                    if( 
-                        allValues.type === CONSTANTS.common.OBSERVATION && 
-                        parsedData.observationId && parsedData.observationId !== ""
-                    ) {
-                       
-                        if( observationData[parsedData.observationId] ) {
-                            allValues.solutionDetails["observationId"] = 
-                            ObjectId(parsedData.observationId)
-                        } else {
-                            parsedData.STATUS = 
-                            CONSTANTS.apiResponses.INVALID_OBSERVATION_ID;
-                        }
-                    } 
-
                 }
 
                 allValues.projectTemplateId = templateId;
@@ -373,7 +357,8 @@ module.exports = class ProjectTemplateTasksHelper {
                         await database.models.projectTemplateTasks.create(allValues);
     
                         if ( !taskData._id ) {
-                            parsedData.STATUS = CONSTANTS.apiResponses.PROJECT_TEMPLATE_TASKS_NOT_CREATED;
+                            parsedData.STATUS = 
+                            CONSTANTS.apiResponses.PROJECT_TEMPLATE_TASKS_NOT_CREATED;
                         } else {
                             parsedData._SYSTEM_ID = taskData._id;
                             parsedData.STATUS = CONSTANTS.apiResponses.SUCCESS;
@@ -514,8 +499,7 @@ module.exports = class ProjectTemplateTasksHelper {
                             await this.createOrUpdateTask(
                                 currentData,
                                 csvData.data.templateId,
-                                csvData.data.solutionData,
-                                csvData.data.observationData
+                                csvData.data.solutionData
                             );
 
                             input.push(createdTask);
@@ -629,7 +613,6 @@ module.exports = class ProjectTemplateTasksHelper {
                         _.omit(currentData,["STATUS"]),
                         csvData.data.templateId,
                         csvData.data.solutionData,
-                        csvData.data.observationData,
                         true  
                     );
 

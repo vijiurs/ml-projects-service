@@ -190,10 +190,13 @@ module.exports = class LibraryCategoriesHelper {
 
                 let matchQuery = {
                     $match : {
-                        "categories.externalId" : categoryId,
                         "isReusable" : true
                     }
                 };
+
+                if( categoryId !== "" ) {
+                    matchQuery["$match"]["categories.externalId"] = categoryId;
+                }
 
                 if ( search !== "" ) {
                     matchQuery["$match"]["$or"] = [
@@ -404,6 +407,48 @@ module.exports = class LibraryCategoriesHelper {
             } catch (error) {   
                 return resolve({
                     status : error.status ? error.status : HTTP_STATUS_CODE['internal_server_error'].status,
+                    success: false,
+                    message: error.message,
+                    data : {}
+                });
+            }
+        })
+    }
+
+    /**
+      * Update categories
+      * @method
+      * @name update
+      * @param filterQuery - Filter query.
+      * @param updateData - Update data.
+      * @returns {Object} updated data
+     */
+
+    static update(filterQuery,updateData) {    
+        return new Promise(async (resolve, reject) => {
+            try {
+
+                let categoriesUpdated = 
+                await database.models.projectCategories.updateMany(
+                    filterQuery,
+                    updateData
+                );
+
+                if( !categoriesUpdated.ok ) {
+                    throw {
+                        status : HTTP_STATUS_CODE['bad_request'].status,
+                        message : CONSTANTS.apiResponses.PROJECT_CATEGORIES_NOT_UPDATED
+                    }
+                }
+
+                return resolve({
+                    success: true,
+                    message : CONSTANTS.apiResponses.PROJECT_CATEGORIES_UPDATED,
+                    data : categoriesUpdated
+                });
+
+            } catch (error) {   
+                return resolve({
                     success: false,
                     message: error.message,
                     data : {}

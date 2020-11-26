@@ -98,7 +98,7 @@ module.exports = class LibraryCategories extends Abstract {
         return new Promise(async (resolve, reject) => {
             try {
                 
-                const projectCategories = await libraryCategoriesHelper.list();
+                let projectCategories = await libraryCategoriesHelper.list();
 
                 projectCategories.result = projectCategories.data;
 
@@ -158,7 +158,7 @@ module.exports = class LibraryCategories extends Abstract {
                 
                 const libraryProjects = 
                 await libraryCategoriesHelper.projects(
-                    req.params._id,
+                    req.params._id ? req.params._id : "",
                     req.pageSize,
                     req.pageNo,
                     req.searchText,
@@ -277,7 +277,7 @@ module.exports = class LibraryCategories extends Abstract {
         return new Promise(async (resolve, reject) => {
             try {
                 
-                const libraryProjectDetails = 
+                let libraryProjectDetails = 
                 await libraryCategoriesHelper.projectDetails(
                     req.params._id,
                     req.userDetails.userToken

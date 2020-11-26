@@ -8,11 +8,10 @@
 module.exports = (req) => {
 
     let projectsValidator = {
-
-        projects : function () {
+        projectDetails: function () {
             req.checkParams('_id')
             .exists()
-            .withMessage("required category id");
+            .withMessage("required project id");
         }
     }
 

@@ -16,6 +16,7 @@ const libraryCategoriesHelper = require(MODULES_BASE_PATH + "/library/categories
 const kendraService = require(GENERICS_FILES_PATH + "/services/kendra");
 const kafkaProducersHelper = require(GENERICS_FILES_PATH + "/kafka/producers");
 const learningResourcesHelper = require(MODULES_BASE_PATH + "/learningResources/helper");
+const assessmentService = require(GENERICS_FILES_PATH + "/services/assessment");
 
 module.exports = class ProjectTemplatesHelper {
 
@@ -167,9 +168,7 @@ module.exports = class ProjectTemplatesHelper {
                 if( entityTypes.length > 0 ) {
                     
                     let entityTypesDocument = 
-                    await kendraService.entityTypesDocuments({
-                        name : { $in : entityTypes }
-                    },["name"]);
+                    await kendraService.entityTypesDocuments();
 
                     if( !entityTypesDocument.success ) {
                         throw {
@@ -229,13 +228,7 @@ module.exports = class ProjectTemplatesHelper {
 
                 if( parsedData.categories && parsedData.categories.length > 0 ) {
 
-                    await database.models.projectCategories.updateMany({
-                        externalId : { $in : parsedData.categories }
-                    },{
-                        $inc : { noOfProjects : 1 }
-                    });
-
-                    parsedData.categories.forEach(category=>{
+                    parsedData.categories.forEach( category => {
                         if( csvInformation.categories[category] ) {
                             return categories.push(
                                 csvInformation.categories[category]
@@ -250,9 +243,9 @@ module.exports = class ProjectTemplatesHelper {
                 
                 if( parsedData.recommendedFor && parsedData.recommendedFor.length > 0 ) {
                     parsedData.recommendedFor.forEach(recommended => {
-                        if( csvInformation.roles[recommended.toUpperCase()] ) {
+                        if( csvInformation.roles[recommended] ) {
                             return recommendedFor.push(
-                                csvInformation.roles[recommended.toUpperCase()]
+                                csvInformation.roles[recommended]
                             );
                         }
                     });
@@ -373,23 +366,47 @@ module.exports = class ProjectTemplatesHelper {
                             
                             currentData["_SYSTEM_ID"] = createdTemplate._id;
 
+                            if( 
+                                templateData.categories && 
+                                templateData.categories.length > 0 
+                            ) {
+                                
+                                let categories = templateData.categories.map(category => {
+                                    return category._id;
+                                });
+
+                                let updatedCategories = 
+                                await libraryCategoriesHelper.update({
+                                    _id : { $in : categories }
+                                },{
+                                    $inc : { noOfProjects : 1 }
+                                });
+
+                                if( !updatedCategories.success ) {
+                                    currentData["_SYSTEM_ID"] = updatedCategories.message;
+                                }
+                            }
+
                             const kafkaMessage = 
                             await kafkaProducersHelper.pushProjectToKafka({
-                                internal: false,
-                                text: 
+                                internal : false,
+                                text : 
                                 templateData.categories.length === 1 ?  
                                 `A new project has been added under ${templateData.categories[0].name} category in library.` : 
                                 `A new project has been added in library`,
-                                type: "information",
-                                action: "mapping",
-                                payload: {
+                                type : "information",
+                                action : "mapping",
+                                payload : {
                                     project_id: createdTemplate._id
                                 },
                                 is_read : false,
                                 internal : false,
-                                title: "New project Available!",
-                                created_at: new Date(),
-                                type: process.env.IMPROVEMENT_PROJECT_APPLICATION_APP_TYPE
+                                title : "New project Available!",
+                                created_at : new Date(),
+                                appType : process.env.IMPROVEMENT_PROJECT_APPLICATION_APP_TYPE,
+                                inApp:false,
+                                push: true,
+                                pushToTopic: true
                             });
 
                             if (kafkaMessage.status !== CONSTANTS.common.SUCCESS) {
@@ -464,12 +481,13 @@ module.exports = class ProjectTemplatesHelper {
                                 
                             let templateData = await this.templateData(
                                 _.omit(currentData,["_SYSTEM_ID"]),
-                                csvInformation,
+                                csvInformation.data,
                                 userId
                             );
 
                             templateData.updatedBy = userId;
 
+                            let projectTemplateUpdated = 
                             await database.models.projectTemplates.findOneAndUpdate({
                                 _id : currentData._SYSTEM_ID
                             },{
@@ -478,21 +496,55 @@ module.exports = class ProjectTemplatesHelper {
                                     new : true
                             });
 
+                            if( !projectTemplateUpdated._id ) {
+                                currentData["UPDATE_STATUS"] = 
+                                constants.apiResponses.PROJECT_TEMPLATE_NOT_UPDATED;
+                            }
+
+                            // Add projects count to categories
+                            if( 
+                                templateData.categories && 
+                                templateData.categories.length > 0 
+                            ) {
+                                
+                                let categories = 
+                                templateData.categories.map(category => {
+                                    return category._id;
+                                });
+
+                                let updatedCategories = 
+                                await libraryCategoriesHelper.update({
+                                    _id : { $in : categories }
+                                },{
+                                    $inc : { noOfProjects : 1 }
+                                });
+
+                                if( !updatedCategories.success ) {
+                                    currentData["UPDATE_STATUS"] = updatedCategories.message;
+                                }
+                            }
+
+                            // Remove project count from existing categories
                             if( 
                                 template[0].categories && 
                                 template[0].categories.length > 0 
                             ) {
                                 
-                                const categories = 
+                                const categoriesIds = 
                                 template[0].categories.map(category=>{
                                     return category._id;    
                                 });
 
-                                await database.models.projectCategories.updateMany({
-                                    _id : { $in : categories }
+                                let categoriesUpdated = 
+                                await libraryCategoriesHelper.update({
+                                    _id : { $in : categoriesIds }
                                 },{
                                     $inc : { noOfProjects : -1 }
                                 });
+
+                                if( !categoriesUpdated.success ) {
+                                    currentData["UPDATE_STATUS"] = updatedCategories.message;
+                                }
                             }
 
                             currentData["UPDATE_STATUS"] = CONSTANTS.common.SUCCESS;
@@ -546,9 +598,7 @@ module.exports = class ProjectTemplatesHelper {
                 if( solutionId !== "" ) {
                     
                     let solutionData = 
-                    await kendraService.solutionDocuments({
-                        externalId : solutionId
-                    },["_id","externalId","programId","programExternalId"]);
+                    await kendraService.listSolutions([solutionId]);
 
                     if( !solutionData.success ) {
                         throw new Error(CONSTANTS.apiResponses.SOLUTION_NOT_FOUND)

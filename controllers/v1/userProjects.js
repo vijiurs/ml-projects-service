@@ -136,7 +136,7 @@ module.exports = class UserProjects extends Abstract {
         return new Promise(async (resolve, reject) => {
             try {
 
-                const projects = await userProjectsHelper.list(
+                let projects = await userProjectsHelper.list(
                     req.userDetails.userInformation.userId
                 );
 
@@ -313,7 +313,7 @@ module.exports = class UserProjects extends Abstract {
         return new Promise(async (resolve, reject) => {
             try {
 
-                const formsData = await userProjectsHelper.tasksMetaForm();
+                let formsData = await userProjectsHelper.tasksMetaForm();
 
                 formsData.result = formsData.data;
                 return resolve(formsData);
@@ -591,7 +591,7 @@ module.exports = class UserProjects extends Abstract {
         return new Promise(async (resolve, reject) => {
             try {
 
-                const createdProject = await userProjectsHelper.create(
+                let createdProject = await userProjectsHelper.create(
                     req.userDetails.userInformation.userId,
                     req.userDetails.userToken
                 );
@@ -698,7 +698,7 @@ module.exports = class UserProjects extends Abstract {
         return new Promise(async (resolve, reject) => {
             try {
 
-                const createdProject = await userProjectsHelper.sync(
+                let createdProject = await userProjectsHelper.sync(
                     req.params._id,
                     req.query.lastDownloadedAt,
                     req.body,
@@ -818,7 +818,7 @@ module.exports = class UserProjects extends Abstract {
         return new Promise(async (resolve, reject) => {
             try {
 
-                const projectDetails = await userProjectsHelper.details(
+                let projectDetails = await userProjectsHelper.details(
                     req.params._id,
                     req.userDetails.userInformation.userId
                 );
@@ -960,7 +960,7 @@ module.exports = class UserProjects extends Abstract {
         return new Promise(async (resolve, reject) => {
             try {
 
-                const taskStatus = await userProjectsHelper.tasksStatus(
+                let taskStatus = await userProjectsHelper.tasksStatus(
                     req.params._id,
                     req.body.taskIds
                 );
@@ -1014,7 +1014,7 @@ module.exports = class UserProjects extends Abstract {
         return new Promise(async (resolve, reject) => {
             try {
 
-                const solutionDetails = await userProjectsHelper.solutionDetails(
+                let solutionDetails = await userProjectsHelper.solutionDetails(
                     req.userDetails.userToken,
                     req.params._id,
                     req.query.taskId

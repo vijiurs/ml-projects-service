@@ -478,6 +478,65 @@ const updateSolution = function ( token,updateData,solutionExternalId ) {
     })
 }
 
+/**
+  * Create observation
+  * @function
+  * @name createObservation
+  * @param {String} token - logged in user token.
+  * @param {String} solutionId - solution id.
+  * @param {Object} data - body data
+  * @returns {JSON} - Create observation.
+*/
+
+const createObservation = function (token,solutionId,data) {
+    return new Promise(async (resolve, reject) => {
+        try {
+
+            let createdObservationUrl =  
+            ASSESSMENT_URL + process.env.URL_PREFIX + 
+            CONSTANTS.endpoints.CREATE_OBSERVATIONS + "?solutionId=" + solutionId;
+
+            const options = {
+                headers : {
+                    "content-type": "application/json",
+                    AUTHORIZATION : process.env.AUTHORIZATION,
+                    "internal-access-token": process.env.INTERNAL_ACCESS_TOKEN,
+                    "x-authenticated-user-token" : token,
+                },
+                json : {
+                   data : data
+                }
+            };
+            
+            request.post(createdObservationUrl,options,assessmentCallback);
+
+            function assessmentCallback(err, data) {
+
+                let result = {
+                    success : true
+                };
+
+                if (err) {
+                    result.success = false;
+                } else {
+
+                    let response = data.body;
+                    if( response.status === HTTP_STATUS_CODE['ok'].status ) {
+                        result["data"] = response.result;
+                    } else {
+                        result.success = false;
+                    }
+                    
+                }
+                return resolve(result);
+            }
+
+        } catch (error) {
+            return reject(error);
+        }
+    })
+}
+
 module.exports = {
     createAssessmentSolutionFromTemplate : createAssessmentSolutionFromTemplate,
     createObservationFromSolutionTemplate : createObservationFromSolutionTemplate,
@@ -486,5 +545,6 @@ module.exports = {
     createEntityAssessors : createEntityAssessors,
     observationDetails : observationDetails,
     listSolutions : listSolutions,
-    updateSolution : updateSolution
+    updateSolution : updateSolution,
+    createObservation : createObservation
 }

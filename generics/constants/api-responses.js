@@ -85,5 +85,6 @@ module.exports = {
     "COULD_NOT_CREATE_ASSESSMENT_SOLUTION" : "Could not create assessment solution",
     "FAILED_TO_ADD_ENTITY_TO_SOLUTION" : "Failed to add entity to solution",
     "FAILED_TO_ASSIGNED_ASSESSMENT_TO_USER" : "Failed to assign assessment to user",
-    "SOLUTION_NOT_UPDATED" : "Could not update solution"
+    "SOLUTION_NOT_UPDATED" : "Could not update solution",
+    "OBSERVATION_NOT_CREATED" : "Could not create observation"
 };

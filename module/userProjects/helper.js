@@ -155,15 +155,7 @@ module.exports = class UserProjectsHelper {
         return new Promise(async (resolve, reject) => {
             try {
 
-                let forms =
-                await kendraService.formsDocuments(
-                    {
-                        name: "projects"
-                    }, 
-                    [
-                        "value"
-                    ]
-                );
+                let forms = await kendraService.formDetails("projects");
 
                 if (!forms.success) {
 
@@ -200,7 +192,7 @@ module.exports = class UserProjectsHelper {
                     value: CONSTANTS.common.OTHERS.toLowerCase()
                 });
 
-                let formsData = forms.data[0].value;
+                let formsData = forms.data;
 
                 formsData[formsData.length - 1].options = categoriesData;
 
@@ -234,14 +226,7 @@ module.exports = class UserProjectsHelper {
         return new Promise(async (resolve, reject) => {
             try {
 
-                let forms =
-                    await kendraService.formsDocuments(
-                        {
-                            name: "projectTasks"
-                        }, [
-                        "value"
-                    ]
-                    );
+                let forms = await kendraService.formDetails("projectTasks");
 
                 if (!forms.success) {
 
@@ -249,13 +234,12 @@ module.exports = class UserProjectsHelper {
                         status : HTTP_STATUS_CODE['ok'].status,
                         message : CONSTANTS.apiResponses.PROJECT_TASKS_FORM_NOT_FOUND
                     }
-
                 }
 
                 return resolve({
                     success: true,
                     message: CONSTANTS.apiResponses.PROJECT_TASKS_METAFORM_FETCHED,
-                    data: forms.data[0].value
+                    data: forms.data
                 });
 
             } catch (error) {
@@ -363,24 +347,7 @@ module.exports = class UserProjectsHelper {
                 if (solutionIds.length > 0) {
 
                     let solutionData =
-                    await kendraService.solutionDocuments({
-                        _id: {
-                            $in: solutionIds
-                        }
-                    }, "all", [
-                        "levelToScoreMapping",
-                        "scoringSystem",
-                        "themes",
-                        "flattenedThemes",
-                        "questionSequenceByEcm",
-                        "entityProfileFieldsPerEntityTypes",
-                        "evidenceMethods",
-                        "sections",
-                        "noOfRatingLevels",
-                        "roles",
-                        "captureGpsLocationAtQuestionLevel",
-                        "enableQuestionReadOut"
-                    ]);
+                    await assessmentService.listSolutions(solutionIds);
 
                     if( !solutionData.success ) {
                         throw {
@@ -523,13 +490,20 @@ module.exports = class UserProjectsHelper {
                         }
 
                         if (entities.length > 0) {
-                            await kendraService.updateSolution(
+                            await assessmentService.updateSolution(
                                 userToken,
                                 {
                                     entities: entities
                                 },
                                 solutionInformation.externalId
                             )
+
+                            if( !solutionUpdated.success ) {
+                                throw {
+                                    status : HTTP_STATUS_CODE['bad_request'].status,
+                                    message : CONSTANTS.apiResponses.SOLUTION_NOT_UPDATED
+                                }
+                            }
                         }
 
                         currentTemplateData.entityInformation =
@@ -1533,7 +1507,7 @@ module.exports = class UserProjectsHelper {
                         assessmentOrObservationData.entityId,
                         assessmentOrObservationData.programId,
                         {
-                            "projectId" : projectId,
+                            "_id" : projectId,
                             "taskId" : taskId
                         }
                     );
@@ -1992,6 +1966,21 @@ function _assessmentDetails(
 
             } else {
 
+                let assignedAssessmentToUser = 
+                await assessmentService.createEntityAssessors(
+                    userToken,
+                    programId,
+                    solutionDetails._id,
+                    [entityId]
+                );
+
+                if( !assignedAssessmentToUser.success ) {
+                    throw {
+                        status : HTTP_STATUS_CODE['bad_request'].status,
+                        message : CONSTANTS.apiResponses.FAILED_TO_ASSIGNED_ASSESSMENT_TO_USER
+                    }
+                }
+
                 result = await assessmentService.addEntityToAssessmentSolution(
                     userToken,
                     solutionDetails._id,
@@ -2005,14 +1994,21 @@ function _assessmentDetails(
                     }
                 }
 
-                await kendraService.updateSolution(
+                let solutionUpdated = 
+                await assessmentService.updateSolution(
                     userToken,
                     {
-                        taskId : taskId,
-                        projectId : ObjectId(projectId)
+                        "project" : project
                     },
                     solutionDetails.externalId
                 );
+
+                if( !solutionUpdated.success ) {
+                    throw {
+                        status : HTTP_STATUS_CODE['bad_request'].status,
+                        message : CONSTANTS.apiResponses.SOLUTION_NOT_UPDATED
+                    }
+                }
 
                 result["data"]["_id"] = solutionDetails._id;
 
@@ -2022,6 +2018,7 @@ function _assessmentDetails(
                 success : true,
                 data : result.data
             });
+
         } catch(error) {
             return resolve({
                 message : error.message,
@@ -2071,12 +2068,15 @@ function _observationDetails( userToken,solutionDetails,entityId,programId,proje
                     }
                 );
             } else {
-
-                result = await assessmentService.addEntityToObservation(
-                    userToken,
-                    solutionDetails.observationId,
-                    [entityId.toString()]
-                );
+                
+                result = await assessmentService.createObservation(
+                    userToken
+                )
+                // result = await assessmentService.addEntityToObservation(
+                //     userToken,
+                //     solutionDetails.observationId,
+                //     [entityId.toString()]
+                // ); 
 
                 await kendraService.updateSolution(
                     userToken,

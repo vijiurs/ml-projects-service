@@ -1,5 +1,7 @@
 var fs = require("fs");
 let _ = require("lodash");
+const { v4: uuidv4 } = require('uuid');
+const moment = require('moment');
 
 module.exports = {
   async up(db) {
@@ -28,7 +30,7 @@ module.exports = {
       } else {
 
         let program = {
-          "externalId": userId + "1",
+          "externalId": uuidv4(),
           "name": "Improvement Private Program",
           "description": "Improvement Private Program",
           "owner": userId,
@@ -50,6 +52,10 @@ module.exports = {
           "imageCompression": {
           },
           components: [],
+          "createdAt": moment().format(),
+          "updatedAt": moment().format(),
+          "createdBy": "SYSTEM",
+          "updatedBy": "SYSTEM",
         }
         let programDoc = await db.collection('programs').insertOne(program);
         return programDoc.insertedId;
@@ -92,7 +98,7 @@ module.exports = {
           });
 
           if (solutionIds && solutionIds.length > 0) {
-            let programUpdate = await db.collection('programs').findOneAndUpdate({ _id: userProgramCreation }, { $push: { components: solutionIds } });
+            let programUpdate = await db.collection('programs').findOneAndUpdate({ _id: userProgramCreation }, { $push: { components: { $each : solutionIds } } });
           }
           let userProjects = await db.collection('userProjects').updateMany({ createdType: "by reference", userId: userId }, { $set: { programId: userProgramCreation } });
           let solutionUpdate = await db.collection('solutions').updateMany({ _id: { $in: solutionIds } }, { $set: { programId: userProgramCreation } });

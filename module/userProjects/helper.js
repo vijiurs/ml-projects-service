@@ -2068,17 +2068,9 @@ function _observationDetails( userToken,solutionDetails,entityId,programId,proje
                     }
                 );
             } else {
-                
-                result = await assessmentService.createObservation(
-                    userToken
-                )
-                // result = await assessmentService.addEntityToObservation(
-                //     userToken,
-                //     solutionDetails.observationId,
-                //     [entityId.toString()]
-                // ); 
 
-                await kendraService.updateSolution(
+                let solutionUpdated = 
+                await assessmentService.updateSolution(
                     userToken,
                     {
                         taskId : taskId,
@@ -2087,19 +2079,42 @@ function _observationDetails( userToken,solutionDetails,entityId,programId,proje
                     solutionDetails.externalId
                 );
 
-                await kendraService.updateObservation(
-                    userToken,
-                    {
-                        taskId : taskId,
-                        projectId : ObjectId(projectId)
-                    },
-                    solutionDetails.observationId
-                )
-
-                if( result.success ) {
-                    result.data["observationId"] = solutionDetails.observationId;
-                    result.data["solutionId"] = solutionDetails._id;
+                if( !solutionUpdated.success ) {
+                    throw {
+                        status : HTTP_STATUS_CODE['bad_request'].status,
+                        message : CONSTANTS.apiResponses.SOLUTION_NOT_UPDATED
+                    }
                 }
+
+                let startDate = new Date();
+                let endDate = new Date();
+                endDate.setFullYear(endDate.getFullYear() + 1);
+                
+                let observationData = {
+                    name : solutionDetails.name,
+                    description : solutionDetails.name,
+                    status : CONSTANTS.common.PUBLISHED_STATUS,
+                    startDate : startDate,
+                    endDate : endDate,
+                    entities : [entityId],
+                    project : project
+                };
+
+                let obsservationCreated = await assessmentService.createObservation(
+                    userToken,
+                    solutionDetails._id,
+                    observationData
+                );
+
+                if( !obsservationCreated.success ) {
+                    throw {
+                        status : HTTP_STATUS_CODE['bad_request'].status,
+                        message : CONSTANTS.apiResponses.OBSERVATION_NOT_CREATED
+                    }
+                }
+                
+                result.data["observationId"] = obsservationCreated._id;
+                result.data["solutionId"] = solutionDetails._id;
             }
 
             return resolve(result);

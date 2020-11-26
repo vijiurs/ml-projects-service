@@ -133,7 +133,6 @@ module.exports = class Reports {
       * Get entity types
       * @method
       * @name types
-      * @param {Object} req - request data.
       * @returns {JSON} enity report details.
     */
     async types(req) {

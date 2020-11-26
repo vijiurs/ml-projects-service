@@ -143,7 +143,9 @@ module.exports = class ProjectTemplates extends Abstract {
     * @apiSampleRequest /improvement-project/api/v1/project/templates/importProjectTemplate/template-1
     * @apiParamExample {json} Request: 
     * {
-    * "externalId" : "template1"
+    * "externalId" : "template1",
+      "isReusable" : false,
+      "rating" : 5
     * }
     * @apiParamExample {json} Response:
     * {
@@ -161,6 +163,8 @@ module.exports = class ProjectTemplates extends Abstract {
       * Import templates from existsing project templates.
       * @method
       * @name importProjectTemplate
+      * @param {Object} req - request data.
+      * @param {String} req.params._id - project Template ExternalId.
       * @returns {JSON} returns imported project templates.
      */
 

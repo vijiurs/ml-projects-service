@@ -94,7 +94,7 @@ module.exports = {
 
         var templateExternalId;
         if (templateId) {
-          var templateData = await db.collection('projectTemplate').findOne({ _id: templateId });
+          var templateData = await db.collection('projectTemplates').findOne({ _id: templateId });
           if (templateData) {
             templateExternalId = templateData.externalId;
           }

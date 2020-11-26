@@ -13,7 +13,7 @@ module.exports = {
       for (i = 0; i < impTemplates.length; i++) {
 
         let templateCreation = await createNewTemplate(impTemplates[i]);
-        let templateDoc = await db.collection('projectTemplate').insertOne(templateCreation);
+        let templateDoc = await db.collection('projectTemplates').insertOne(templateCreation);
         let solutions = await db.collection('solutions').find({ type: "improvementproject", "baseProjectDetails": { $elemMatch: { "_id": impTemplates[i]._id } } }).toArray();
         let baseProjectDetails = [];
         templateDoc.ops[0] = templateDoc.ops[0];

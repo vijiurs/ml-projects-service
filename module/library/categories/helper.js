@@ -229,7 +229,8 @@ module.exports = class LibraryCategoriesHelper {
                         "noOfRatings" : 1,
                         "averageRating" : 1,
                         "createdAt" : 1,
-                        "description" : 1
+                        "description" : 1,
+                        "categories" : 1
                     }
                 },{
                     $facet : {

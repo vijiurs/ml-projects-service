@@ -304,7 +304,7 @@ module.exports = class UserProjects extends Abstract {
       /**
       * Projects tasks meta form.
       * @method
-      * @name metaForm
+      * @name tasksMetaForm
       * @param {Object} req - request data.
       * @returns {JSON} Projects tasks meta form.
      */
@@ -531,6 +531,7 @@ module.exports = class UserProjects extends Abstract {
       * @method
       * @name importFromLibrary
       * @param {Object} req - request data.
+      * @param {String} req.params._id - project Template Id.
       * @returns {JSON} import project from library.
      */
 
@@ -581,7 +582,7 @@ module.exports = class UserProjects extends Abstract {
     /**
       * Create project.
       * @method
-      * @name sync
+      * @name create
       * @param {Object} req - request data.
       * @param {String} req.params._id - Project id.
       * @returns {JSON} Create project.
@@ -887,6 +888,7 @@ module.exports = class UserProjects extends Abstract {
  * @name getFileUploadUrl
  * @param {*} req 
  *  api is to get getFileUploadUrl Urls of files
+ * @returns {JSON} returns file upload url.
  */
 
     async getFileUploadUrl(req) {

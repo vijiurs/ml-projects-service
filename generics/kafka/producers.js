@@ -20,7 +20,7 @@ const pushProjectToKafka = function (message) {
       try {
 
           let kafkaPushStatus = await pushMessageToKafka([{
-            topic: process.env.IMPROVEMENT_PROJECT_NOTIFICATIONS_TOPIC,
+            topic: process.env.NOTIFICATIONS_TOPIC,
             messages: JSON.stringify(message)
           }]);
 

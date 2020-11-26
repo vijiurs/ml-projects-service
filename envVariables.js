@@ -128,11 +128,15 @@ let enviromentVariables = {
     "message" : "Required",
     "optional" : false
   },
-  "IMPROVEMENT_PROJECT_NOTIFICATIONS_TOPIC" : {
+  "NOTIFICATIONS_TOPIC" : {
     "message" : "Required",
     "optional" : false
   },
-  "IMPROVEMENT_PROJECT_APPLICATION_APP_TYPE" : {
+  "IMPROVEMENT_PROJECT_APP_TYPE" : {
+    "message" : "Required",
+    "optional" : false
+  },
+  "IMPROVEMENT_PROJECT_APP_NAME" : {
     "message" : "Required",
     "optional" : false
   }

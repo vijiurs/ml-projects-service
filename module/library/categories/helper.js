@@ -190,10 +190,13 @@ module.exports = class LibraryCategoriesHelper {
 
                 let matchQuery = {
                     $match : {
-                        "categories.externalId" : categoryId,
                         "isReusable" : true
                     }
                 };
+
+                if( categoryId !== "" ) {
+                    matchQuery["$match"]["categories.externalId"] = categoryId;
+                }
 
                 if ( search !== "" ) {
                     matchQuery["$match"]["$or"] = [

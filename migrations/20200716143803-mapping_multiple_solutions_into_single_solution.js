@@ -39,9 +39,10 @@ module.exports = {
             projectIds.push(docs.projectId);
           });
 
-          let updateProgram = await db.collection("programs").updateOne({ _id: existProgramId }, { $push:{ component: toKeepSolutionId } });
-          let updateUserProjects= await db.collection("userProjects").updateMany({ _id:{ $in: projectIds } }, { $set:{ solutionId: toKeepSolutionId } });
+          let updateProgram = await db.collection("programs").updateOne({ _id: existProgramId }, { $push:{ component: { $each: toKeepSolutionId } } });
+          let updateUserProjects= await db.collection("userProjects").updateMany({ _id:{ $in: projectIds } }, { $set:{ solutionId: document.projects[0].solutionId } });
           let removeUnusedSolution = await db.collection("solutions").remove({ _id:{ $in: unUsedSolutions } });
+          
         }
       };
 

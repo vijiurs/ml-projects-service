@@ -1,3 +1,4 @@
+var moment = require('moment');
 module.exports = {
   async up(db) {
     global.migrationMsg = "Create Project attributes"
@@ -77,6 +78,8 @@ module.exports = {
     });
 
     await db.collection('projectAttributes').insertMany(attributes);
+    await db.collection('projectAttributes').createIndex({ externalId: 1 },{ unique:true });
+
 
   },
 

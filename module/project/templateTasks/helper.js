@@ -14,6 +14,7 @@
 const projectTemplatesHelper = require(MODULES_BASE_PATH + "/project/templates/helper");
 const kendraService = require(GENERICS_FILES_PATH + "/services/kendra");
 const learningResourcesHelper = require(MODULES_BASE_PATH + "/learningResources/helper");
+const assessmentService = require(GENERICS_FILES_PATH + "/services/assessment");
 
 module.exports = class ProjectTemplateTasksHelper {
 
@@ -161,9 +162,7 @@ module.exports = class ProjectTemplateTasksHelper {
                 if ( solutionIds.length > 0 ) {
                     
                     let solutions = 
-                    await kendraService.solutionDocuments({
-                        externalId : { $in : solutionIds }
-                    },["externalId","isReusable","name"]);
+                    await assessmentService.listSolutions(solutionIds);
 
                     if( !solutions.success ) {
                         throw {
@@ -220,7 +219,7 @@ module.exports = class ProjectTemplateTasksHelper {
                         tasks : tasks,
                         templateId : templateId,
                         solutionData : solutionData,
-                        observationData : observationData
+                        // observationData : observationData
                     }
                 });
 
@@ -248,7 +247,6 @@ module.exports = class ProjectTemplateTasksHelper {
         data,
         templateId,
         solutionData,
-        observationData,
         update = false
     ) {
         return new Promise(async (resolve, reject) => {
@@ -501,8 +499,7 @@ module.exports = class ProjectTemplateTasksHelper {
                             await this.createOrUpdateTask(
                                 currentData,
                                 csvData.data.templateId,
-                                csvData.data.solutionData,
-                                csvData.data.observationData
+                                csvData.data.solutionData
                             );
 
                             input.push(createdTask);
@@ -616,7 +613,6 @@ module.exports = class ProjectTemplateTasksHelper {
                         _.omit(currentData,["STATUS"]),
                         csvData.data.templateId,
                         csvData.data.solutionData,
-                        csvData.data.observationData,
                         true  
                     );
 

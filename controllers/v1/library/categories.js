@@ -158,7 +158,7 @@ module.exports = class LibraryCategories extends Abstract {
                 
                 const libraryProjects = 
                 await libraryCategoriesHelper.projects(
-                    req.params._id,
+                    req.params._id ? req.params._id : "",
                     req.pageSize,
                     req.pageNo,
                     req.searchText,

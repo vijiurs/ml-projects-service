@@ -16,6 +16,7 @@ const libraryCategoriesHelper = require(MODULES_BASE_PATH + "/library/categories
 const kendraService = require(GENERICS_FILES_PATH + "/services/kendra");
 const kafkaProducersHelper = require(GENERICS_FILES_PATH + "/kafka/producers");
 const learningResourcesHelper = require(MODULES_BASE_PATH + "/learningResources/helper");
+const assessmentService = require(GENERICS_FILES_PATH + "/services/assessment");
 
 module.exports = class ProjectTemplatesHelper {
 
@@ -167,9 +168,7 @@ module.exports = class ProjectTemplatesHelper {
                 if( entityTypes.length > 0 ) {
                     
                     let entityTypesDocument = 
-                    await kendraService.entityTypesDocuments({
-                        name : { $in : entityTypes }
-                    },["name"]);
+                    await kendraService.entityTypesDocuments();
 
                     if( !entityTypesDocument.success ) {
                         throw {
@@ -599,9 +598,7 @@ module.exports = class ProjectTemplatesHelper {
                 if( solutionId !== "" ) {
                     
                     let solutionData = 
-                    await kendraService.solutionDocuments({
-                        externalId : solutionId
-                    },["_id","externalId","programId","programExternalId"]);
+                    await kendraService.listSolutions([solutionId]);
 
                     if( !solutionData.success ) {
                         throw new Error(CONSTANTS.apiResponses.SOLUTION_NOT_FOUND)

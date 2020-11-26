@@ -15,7 +15,6 @@ module.exports = {
     LIST_SOLUTIONS : "/solutions/list",
     LIST_USER_ROLES : "/user-roles/list",
     LIST_ENTITY_TYPES : "/entity-types/list",
-    LIST_FORMS : "/forms/list",
     CREATE_PROGRAM_AND_SOLUTION : "/users/createProgramAndSolution",
     LIST_ENTITIES : "/entities/listByEntityIds",
     USER_EXTENSION_GET_PROFILE : "/user-extension/getProfile",
@@ -35,4 +34,7 @@ module.exports = {
     ADD_ENTITIES_TO_SOLUTIONS : "/solutions/addEntities",
     UPDATE_OBSERVATION : "/observations/update",
     LIST_OBSERVATIONS : "/observations/list",
+    CREATE_ENTITY_ASSESSORS : "/entityAssessors/create",
+    CREATE_OBSERVATIONS : "/observations/create",
+    DETAILS_FORM : "/forms/details"
 };

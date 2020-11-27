@@ -1,6 +1,7 @@
 
 const { v4: uuidv4 } = require('uuid');
 var moment = require('moment');
+var mongoose = require('mongoose');
 var totalTasks = 0;
 module.exports = {
   async up(db) {
@@ -14,15 +15,28 @@ module.exports = {
 
         let templateCreation = await createNewTemplate(impTemplates[i]);
         let templateDoc = await db.collection('projectTemplates').insertOne(templateCreation);
-        let solutions = await db.collection('solutions').find({ type: "improvementproject", "baseProjectDetails": { $elemMatch: { "_id": impTemplates[i]._id } } }).toArray();
+        let solutions = await db.collection('solutions').find({ "baseProjectDetails": { $elemMatch: { "_id": mongoose.Types.ObjectId(impTemplates[i]._id) } } }).toArray();
         let baseProjectDetails = [];
         templateDoc.ops[0] = templateDoc.ops[0];
         templateDoc.ops[0]['_id'] = templateDoc.insertedId;
+
+       
         await db.collection('projectTemplateTasks').updateMany({  _id: { $in: templateCreation.taskSequence } },{ $set:{ "projectTemplateId": templateDoc.insertedId  } });
         baseProjectDetails[0] = templateDoc.ops[0];
+
+      
         await Promise.all(solutions.map(async function (solution) {
-          await db.collection('solutions').updateOne({ _id: solution._id }, { $set: { "baseProjectDetails": baseProjectDetails } });
+          await db.collection('solutions').updateOne({ _id: solution._id }, { $set:
+            { 
+            "type":"improvementProject",
+            "subType":"improvementProject",
+            "baseProjectDetails": baseProjectDetails,
+            "isReusable" : false
+           } 
+        });
         }));
+
+       
       };
     }
 
@@ -35,12 +49,11 @@ module.exports = {
         if (doc.tasks && doc.tasks.length > 0) {
           taskIds = await projectTemplateTasks(doc.tasks);
         }
-        
+
         let categoryDocs;
         if (categories && categories.length > 0) {
-          categoryDocs = await db.collection('projectCategories').find({ "name": { $in: categories } }, { externalId: 1 }).toArray();
+          categoryDocs = await db.collection('projectCategories').find({ "externalId": { $in: categories } }, { externalId: 1 }).toArray();
         }
-
 
         let projectCategories = [];
         if (categoryDocs && categoryDocs.length > 0) {
@@ -49,8 +62,23 @@ module.exports = {
           });
         }
 
+        let templateResources = [];
+        if(doc.resources && doc.resources.length > 0){
+          doc.resources.map(resource =>{
+            try {
+              let id = resource.split(resource.link);
+              templateResources.push({
+              name:resource.name,
+              link:resource.link,
+              id:id[id.length-1]
+            });
+            } catch (error) {
+            }
+          })
+        }
+
         let template = {
-          name: doc.title,
+          title: doc.title,
           externalId: uuidv4(),
           categories: projectCategories, // old - category category of the project ex: teacher, school etc..
           duration: {
@@ -67,30 +95,58 @@ module.exports = {
           status: "published", // draft, published
           isDeleted: false, // true, false 
           recommendedFor: [],
-          protocols: doc.protocols, // Do we require this ?
           tasks: taskIds,
           createdAt: moment().format(),
           updatedAt: moment().format(), // new field
           createdBy: "SYSTEM",
           updatedBy: "SYSTEM", // new field
-          resources: doc.resources,
+          learningResources:templateResources,
           isReusable: true,
           entityType: [], // multiple,
           taskSequence: taskIds,
           metaInformation: {
-            primaryAudience: doc.primaryAudience, // Do we require this ? or can we use recommended for ? ex : headmaster, teachers etc.
-            rationale: doc.rationale, // Do we require this ?
-            risks: doc.risks, // Do we require this ?
-            problemDefinition: doc.problemDefinition, // Do we require this ? 
-            prerequisites: doc.prerequisites, // Do we require this ? 
-            assumptions: doc.assumptions, // Do we require this ? 
-            supportingDocuments: doc.supportingDocuments, // Do we require this ? 
-            approaches: doc.approaches, // Do we require this ? 
-            successIndicators: doc.successIndicators, // Do we require this ? 
-            suggestedProject: doc.suggestedProject, // Do we require this ?
-            vision: doc.vision, // Do we require this ? 
           }
         }
+
+        if(doc.vision){
+          template['metaInformation']['vision'] = doc.vision;
+        }
+        if(doc.suggestedProject){
+          template['metaInformation']['suggestedProject'] = doc.suggestedProject;
+        }
+        if(doc.successIndicators){
+          template['metaInformation']['successIndicators'] = doc.successIndicators;
+        }
+        if(doc.supportingDocuments){
+          template['metaInformation']['supportingDocuments'] = doc.supportingDocuments;
+        }
+        if(doc.problemDefinition){
+          template['metaInformation']['problemDefinition'] = doc.problemDefinition;
+        }
+
+        if(doc.assumptions){
+          template['metaInformation']['assumptions'] = doc.assumptions;
+        }
+
+        if(doc.prerequisites){
+          template['metaInformation']['prerequisites'] = doc.prerequisites;
+        }
+        if(doc.risks){
+          template['metaInformation']['risks'] = doc.risks;
+        }
+        if(doc.rationale){
+          template['metaInformation']['rationale'] = doc.rationale;
+        }
+        if(doc.primaryAudience){
+          template['metaInformation']['primaryAudience'] = doc.primaryAudience;
+        }
+        if(doc.approaches){
+          template['metaInformation']['approaches'] = doc.approaches;
+        }
+        if(doc.protocols){
+          template['protocols'] = doc.protocols;
+        }       
+
         return template;
 
       } catch (error) {
@@ -135,12 +191,17 @@ module.exports = {
     let taskResources = [];
     if(task.resources && task.resources.length > 0){
       task.resources.map(resource =>{
-        let id = resource.split(resource.link);
+        try {
+          let id = resource.split(resource.link);
         taskResources.push({
           name:resource.name,
           link:resource.link,
           id:id[id.length-1]
         });
+        } catch (error) {
+          
+        }
+        
       })
     }
 
@@ -157,7 +218,7 @@ module.exports = {
         "taskSequence" : [],
         "learningResources" : taskResources,
         "deleted": task.deleted ? task.deleted : false,
-        "type" : "improvementProject",
+        "type" : "simple",
         "externalId" : uuidv4(),
         "description" : ""
       }

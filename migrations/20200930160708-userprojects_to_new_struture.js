@@ -1,4 +1,5 @@
 var _ = require("lodash");
+var moment = require('moment');
 const { v4: uuidv4 } = require('uuid');
 module.exports = {
   async up(db) {
@@ -98,15 +99,17 @@ module.exports = {
           if (templateData) {
             templateExternalId = templateData.externalId;
           }
+         }
+        
+
+        if(solutionInformation && solutionInformation.baseProjectDetails && solutionInformation.baseProjectDetails != null){
+          delete solutionInformation.baseProjectDetails;
         }
-        // if(solutionInformation.baseProjectDetails && solutionInformation.baseProjectDetails != null){
-        //   delete solutionInformation.baseProjectDetails;
-        // }
         
         var taksInfo = [];
         tasks.map(function (task) {
 
-          var taskType = "improvementProject";
+          var taskType = "simple";
           var hasSubTasks = false;
           if (task.subTasks && task.subTasks.length > 0) {
             hasSubTasks = true;
@@ -115,12 +118,14 @@ module.exports = {
           var attachments = [];
           if (task.attachments && task.attachments.length > 0) {
             task.attachments.map(attachment => {
-              attachments.push({
-                "name": attachment.name,
-                "type": attachment.type,
-                "isUploaded": true,
-                "sourcePath": attachment.sourcePath
-              });
+              if(attachment.sourcePath){
+                attachments.push({
+                  "name": attachment.name,
+                  "type": attachment.type,
+                  "isUploaded": true,
+                  "sourcePath": attachment.sourcePath
+                });
+              }
             });
           }
 
@@ -129,12 +134,17 @@ module.exports = {
           let taskResources = [];
           if(task.resources && task.resources.length > 0){
             task.resources.map(resource =>{
-              let id = resource.split(resource.link);
-              taskResources.push({
+              let taskmapResource = {
                 name:resource.name,
-                link:resource.link,
-                id:id[id.length-1]
-              });
+                link:resource.link
+              }
+              let id;
+              try {
+                 id = resource.split(resource.link);
+                 taskmapResource['id']= id[id.length-1];
+              } catch (error) {
+              }
+              taskResources.push(taskmapResource);
             })
           }
           
@@ -150,11 +160,10 @@ module.exports = {
             "type": taskType,
             "name": task.title,
             "externalId": task._id,
-            "updatedAt": task.lastSync,
-            "createdAt": task.createdAt,
+            "updatedAt": task.updatedAt ?  task.updatedAt :  moment().format(),
+            "createdAt": task.createdAt ? task.createdAt : moment().format(),
             "status": getStatus(task.status),
-            "isImportedFromLibrary": project.createdType ? (project.createdType == "by reference") ? true : false : false,
-            "attachments": attachments,
+             "attachments": attachments,
             "remarks": task.remarks ? task.remarks : "",
             "assignee": task.assigneeName ? task.assigneeName : "",
             "learningResources": taskResources,
@@ -163,9 +172,13 @@ module.exports = {
           }
           taskData['children'] = [];
 
+          
+          let importFromLibrary = false;
           if (templateId) {
             taskData['projectTemplateId'] = templateId;
+            importFromLibrary = true;
           }
+          taskData["isImportedFromLibrary"] = importFromLibrary;
 
           if (task.subTasks) {
             task.subTasks.map(function (subTask) {
@@ -175,19 +188,19 @@ module.exports = {
                 "_id": subTaskId,
                 "startDate": subTask.startDate,
                 "endDate": subTask.endDate,
-                "isDeleted": subTask.isDeleted,
-                "isDeleteable": subTask.isDeleted,
+                "isDeleted": subTask.isDeleted ? subTask.isDeleted :false,
+                "isDeleteable": subTask.isDeleted ? subTask.isDeleted :false,
                 "taskSequence": [],
                 "children": [],
                 "visibleIf": [],
-                "deleted": subTask.isDeleted,
+                "deleted": subTask.isDeleted ? subTask.isDeleted : false,
                 "type": "single",
                 "name": subTask.title,
                 "externalId": subTask._id,
-                "updatedAt": subTask.lastSync,
+                "updatedAt": subTask.updatedAt ? subTask.updatedAt :  moment().format(),
                 "createdAt": task.createdAt,
                 "status": getStatus(subTask.status),
-                "syncedAt": subTask.lastSync
+                "syncedAt": subTask.lastSync ?  subTask.lastSync :  moment().format()
               }
               if (templateId) {
                 subTaskInfo['projectTemplateId'] = templateId;
@@ -202,12 +215,19 @@ module.exports = {
         if(project.resources && project.resources.length > 0){
           
           project.resources.map(projectResource =>{
-            let id = projectResource.split(projectResource.link);
-            projectsResources.push({
+
+            let resourceMap = {
               name:projectResource.name,
               link:projectResource.link,
-              id:id[id.length-1]
-            });
+            }
+            let id;
+            try {
+              id = projectResource.split(projectResource.link);   
+              resourceMap['id'] = id[id.length-1];
+
+            } catch (error) {
+            }
+            projectsResources.push(resourceMap);
             
           })
         }
@@ -216,7 +236,7 @@ module.exports = {
 
           "userId": project.userId,
           "createdFor": [process.env.ROOT_ORGANISATION_ID],
-          "isDeleted": project.isDeleted,
+          "isDeleted": project.isDeleted ? project.isDeleted : false,
           "categories": categories,
           "createdBy": project.userId,
           "tasks": taksInfo,
@@ -230,16 +250,17 @@ module.exports = {
             "primaryAudience": project.primaryAudience
           },
           "status": getStatus(project.status),
-          "updatedAt": project.lastSync,
-          "syncedAt": project.lastSync,
-          "createdAt": project.createdAt,
+          "updatedAt": project.lastSync ? project.lastSync :  moment().format(),
+          "syncedAt": project.lastSync ? project.lastSync :  moment().format(),
+          "createdAt": project.createdAt ? project.createdAt : moment().format(),
           "solutionInformation": solutionInformation,
           "programInformation": programInformation,
           "taskReport": getTaskReport(taksInfo),
           "taskSequence": [],
           "projectTemplateId": templateId,
           "projectTemplateExternalId": templateExternalId,
-          "learningResources": projectsResources
+          "learningResources": projectsResources,
+          "isImportedFromLibrary" : templateId ? true : false
         }
 
         if (entityInfo && entityInfo._id) {

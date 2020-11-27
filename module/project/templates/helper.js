@@ -403,10 +403,11 @@ module.exports = class ProjectTemplatesHelper {
                                 internal : false,
                                 title : "New project Available!",
                                 created_at : new Date(),
-                                appType : process.env.IMPROVEMENT_PROJECT_APPLICATION_APP_TYPE,
+                                appType : process.env.IMPROVEMENT_PROJECT_APP_TYPE,
                                 inApp:false,
                                 push: true,
-                                pushToTopic: true
+                                pushToTopic: true,
+                                topicName : process.env.NODE_ENV + "-" + process.env.IMPROVEMENT_PROJECT_APP_NAME + process.env.TOPIC_FOR_ALL_USERS
                             });
 
                             if (kafkaMessage.status !== CONSTANTS.common.SUCCESS) {

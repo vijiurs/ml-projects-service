@@ -86,5 +86,9 @@ module.exports = {
     "FAILED_TO_ADD_ENTITY_TO_SOLUTION" : "Failed to add entity to solution",
     "FAILED_TO_ASSIGNED_ASSESSMENT_TO_USER" : "Failed to assign assessment to user",
     "SOLUTION_NOT_UPDATED" : "Could not update solution",
-    "OBSERVATION_NOT_CREATED" : "Could not create observation"
+    "OBSERVATION_NOT_CREATED" : "Could not create observation",
+    "UPDATE_QUERY_REQUIRED" : "Update query is required",
+    "UPDATE_OBJECT_REQUIRED" : "Update object is required",
+    "FAILED_TO_UPDATE" : "Failed to update the document",
+    "UPDATED_DOCUMENT_SUCCESSFULLY" : "Document updated successfully"
 };

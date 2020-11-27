@@ -57,7 +57,7 @@ module.exports = async function (req, res, next, token = "") {
     return;
   }
 
-  let internalAccessApiPaths = [];
+  let internalAccessApiPaths = ["templates/bulkCreate"];
   let performInternalAccessTokenCheck = false;
   await Promise.all(internalAccessApiPaths.map(async function (path) {
     if (req.path.includes(path)) {

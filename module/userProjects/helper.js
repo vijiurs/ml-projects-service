@@ -635,7 +635,7 @@ module.exports = class UserProjectsHelper {
 
                 let programAndSolutionInformation =
                 await this.createProgramAndSolution(
-                    [requestedData.entityId],
+                    requestedData.entityId ? [requestedData.entityId] : [] ,
                     requestedData.programId,
                     requestedData.programName,
                     userToken

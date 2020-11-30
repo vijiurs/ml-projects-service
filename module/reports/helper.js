@@ -55,6 +55,7 @@ module.exports = class ReportsHelper {
                 }
 
                 query['$or'] = [
+                    { "isDeleted" : false },
                     { "lastSync": { $gte: new Date(startFrom), $lte: new Date(endOf) } },
                     { "tasks": { $elemMatch: { lastSync: { $gte: new Date(startFrom), $lte: new Date(endOf) } } } },
                 ]
@@ -421,6 +422,7 @@ module.exports = class ReportsHelper {
                 let startFrom = dateRange.startFrom;
 
                 query['$or'] = [
+                    { "isDeleted" : false },
                     { "lastSync": { $gte: new Date(startFrom), $lte: new Date(endOf) } },
                     { "tasks": { $elemMatch: { lastSync: { $gte: new Date(startFrom), $lte: new Date(endOf) } } } },
                 ]

@@ -633,7 +633,10 @@ module.exports = class UserProjectsHelper {
                     libraryProjects.data["taskReport"] = taskReport;
                 }
 
-                if( requestedData.programId || requestedData.programName ) {
+                if( 
+                    ( requestedData.programId && requestedData.programId !== "" ) || 
+                    ( requestedData.programName && requestedData.programName !== "" ) 
+                ) {
                     
                     let programAndSolutionInformation =
                     await this.createProgramAndSolution(

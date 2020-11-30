@@ -233,7 +233,6 @@ module.exports = {
         }
 
         var projectNewObj = {
-
           "userId": project.userId,
           "createdFor": [process.env.ROOT_ORGANISATION_ID],
           "isDeleted": project.isDeleted ? project.isDeleted : false,
@@ -257,10 +256,13 @@ module.exports = {
           "programInformation": programInformation,
           "taskReport": getTaskReport(taksInfo),
           "taskSequence": [],
-          "projectTemplateId": templateId,
-          "projectTemplateExternalId": templateExternalId,
           "learningResources": projectsResources,
           "isImportedFromLibrary" : templateId ? true : false
+        }
+
+        if(templateId){
+          projectNewObj["projectTemplateId"] = templateId;
+          projectNewObj["projectTemplateExternalId"] = templateExternalId;
         }
 
         if (entityInfo && entityInfo._id) {

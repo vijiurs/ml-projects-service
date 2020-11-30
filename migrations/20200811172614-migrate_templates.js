@@ -117,7 +117,7 @@ module.exports = {
         if(doc.successIndicators){
           template['metaInformation']['successIndicators'] = doc.successIndicators;
         }
-        if(doc.supportingDocuments){
+        if(doc.supportingDocuments && doc.supportingDocuments.length > 0){
           template['metaInformation']['supportingDocuments'] = doc.supportingDocuments;
         }
         if(doc.problemDefinition){
@@ -137,7 +137,7 @@ module.exports = {
         if(doc.rationale){
           template['metaInformation']['rationale'] = doc.rationale;
         }
-        if(doc.primaryAudience){
+        if(doc.primaryAudience && doc.primaryAudience.length > 0){
           template['metaInformation']['primaryAudience'] = doc.primaryAudience;
         }
         if(doc.approaches){

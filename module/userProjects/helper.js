@@ -633,16 +633,27 @@ module.exports = class UserProjectsHelper {
                     libraryProjects.data["taskReport"] = taskReport;
                 }
 
-                let programAndSolutionInformation =
-                await this.createProgramAndSolution(
-                    [requestedData.entityId],
-                    requestedData.programId,
-                    requestedData.programName,
-                    userToken
-                );
+                if( 
+                    ( requestedData.programId && requestedData.programId !== "" ) || 
+                    ( requestedData.programName && requestedData.programName !== "" ) 
+                ) {
+                    
+                    let programAndSolutionInformation =
+                    await this.createProgramAndSolution(
+                        requestedData.entityId ? [requestedData.entityId] : [] ,
+                        requestedData.programId,
+                        requestedData.programName,
+                        userToken
+                    );
 
-                if (!programAndSolutionInformation.success) {
-                    return resolve(programAndSolutionInformation);
+                    if (!programAndSolutionInformation.success) {
+                        return resolve(programAndSolutionInformation);
+                    }
+
+                    libraryProjects.data = _.merge(
+                        libraryProjects.data,
+                        programAndSolutionInformation.data
+                    )
                 }
 
                 let userOrganisations =
@@ -662,10 +673,7 @@ module.exports = class UserProjectsHelper {
                 libraryProjects.data.status = CONSTANTS.common.NOT_STARTED_STATUS;
 
                 let projectCreation = await database.models.projects.create(
-                    _.merge(
-                        _.omit(libraryProjects.data, ["_id"]),
-                        programAndSolutionInformation.data
-                    )
+                    _.omit(libraryProjects.data, ["_id"])
                 );
 
                 if (requestedData.rating && requestedData.rating > 0) {
@@ -792,36 +800,34 @@ module.exports = class UserProjectsHelper {
                     };
                 }
 
-                const updateData = _.omit(data,["updatedAt","createdAt"])
-
                 const projectsModel = Object.keys(schemas["projects"].schema);
 
                 let updateProject = {};
 
-                if ( updateData.categories && updateData.categories.length > 0 ) {
+                if ( data.categories && data.categories.length > 0 ) {
                     
                     let categories =
-                    await _projectCategories(updateData.categories);
+                    await _projectCategories(data.categories);
 
                     if( !categories.success ) {
                         return resolve(categories);
                     } 
 
-                    updateProject.categories = categories.updateData;
+                    updateProject.categories = categories.data;
                 }
 
-                if ( updateData.startDate ) {
-                    updateProject["startDate"] = updateData.startDate;
+                if ( data.startDate ) {
+                    updateProject["startDate"] = data.startDate;
                 }
 
-                if ( updateData.endDate ) {
-                    updateProject["endDate"] = updateData.endDate;
+                if ( data.endDate ) {
+                    updateProject["endDate"] = data.endDate;
                 }
 
                 let createNewProgramAndSolution = false;
                 let solutionExists = false;
                 
-                if( updateData.programId && updateData.programId !== "" ) {
+                if( data.programId && data.programId !== "" ) {
 
                     // Check if program already existed in project and if its not an existing program.
 
@@ -830,14 +836,14 @@ module.exports = class UserProjectsHelper {
                     } else if( 
                         userProject[0].programInformation &&
                         userProject[0].programInformation._id && 
-                        userProject[0].programInformation._id.toString() !== updateData.programId
+                        userProject[0].programInformation._id.toString() !== data.programId
                     ) {
                         // Not an existing program.
 
                         solutionExists = true;
                     } 
 
-                } else if( updateData.programName ) {
+                } else if( data.programName ) {
                     
                     if( !userProject[0].solutionInformation ) {
                         createNewProgramAndSolution = true;
@@ -849,14 +855,14 @@ module.exports = class UserProjectsHelper {
 
                 let addOrUpdateEntityToProject = false; 
 
-                if( updateData.entityId ) {
+                if( data.entityId ) {
 
                     // If entity is not present in project or new entity is updated.
                     if( 
                         !userProject[0].entityInformation ||
                         (
                             userProject[0].entityInformation && 
-                            userProject[0].entityInformation._id !== updateData.entityId
+                            userProject[0].entityInformation._id !== data.entityId
                         )
                     ) {
                         addOrUpdateEntityToProject = true;
@@ -866,7 +872,7 @@ module.exports = class UserProjectsHelper {
                 if( addOrUpdateEntityToProject ) {
                        
                     let entityInformation = 
-                    await _entitiesInformation(updateData.entityId);
+                    await _entitiesInformation(data.entityId);
 
                     if( !entityInformation.success ) {
                         return resolve(entityInformation);
@@ -906,7 +912,7 @@ module.exports = class UserProjectsHelper {
                         await assessmentService.addEntitiesToSolution(
                             userToken,
                             userProject[0].solutionInformation._id,
-                            [ObjectId(updateData.entityId)]
+                            [ObjectId(data.entityId)]
                         );
 
                         if( !solutionUpdated.success ) {
@@ -937,9 +943,9 @@ module.exports = class UserProjectsHelper {
                     
                     let programAndSolutionInformation = 
                     await this.createProgramAndSolution(
-                        updateData.entityId ? [updateProject.entityInformation._id] : [],
-                        updateData.programId,
-                        updateData.programName,
+                        data.entityId ? [updateProject.entityInformation._id] : [],
+                        data.programId,
+                        data.programName,
                         userToken,
                         userProject[0].solutionInformation && userProject[0].solutionInformation._id ?
                         userProject[0].solutionInformation._id : ""
@@ -973,12 +979,12 @@ module.exports = class UserProjectsHelper {
                 let booleanData = this.booleanData(schemas["projects"].schema);
                 let mongooseIdData = this.mongooseIdData(schemas["projects"].schema);
 
-                if (updateData.tasks) {
+                if (data.tasks) {
 
                     let taskReport = {};
 
                     updateProject.tasks = await _projectTask(
-                        updateData.tasks
+                        data.tasks
                     );
 
                     if (
@@ -1021,7 +1027,7 @@ module.exports = class UserProjectsHelper {
                     updateProject["taskReport"] = taskReport;
                 }
 
-                Object.keys(updateData).forEach(updateData => {
+                Object.keys(data).forEach(updateData => {
                     if (
                         !updateProject[updateData] &&
                         projectsModel.includes(updateData)
@@ -1030,12 +1036,12 @@ module.exports = class UserProjectsHelper {
                         if (booleanData.includes(updateData)) {
 
                             updateProject[updateData] =
-                                UTILS.convertStringToBoolean(updateData[updateData]);
+                            UTILS.convertStringToBoolean(data[updateData]);
 
                         } else if (mongooseIdData.includes(updateData)) {
-                            updateProject[updateData] = ObjectId(updateData[updateData]);
+                            updateProject[updateData] = ObjectId(data[updateData]);
                         } else {
-                            updateProject[updateData] = updateData[updateData];
+                            updateProject[updateData] = data[updateData];
                         }
                     }
                 });
@@ -1043,8 +1049,8 @@ module.exports = class UserProjectsHelper {
                 updateProject.updatedBy = userId;
                 updateProject.updatedAt = updateProject.lastSync = new Date();
 
-                if (updateData.learningResources) {
-                    updateProject.learningResources = updateData.learningResources;
+                if (data.learningResources) {
+                    updateProject.learningResources = data.learningResources;
                 }
 
                 let projectUpdated =

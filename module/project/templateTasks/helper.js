@@ -422,12 +422,12 @@ module.exports = class ProjectTemplateTasksHelper {
                                 }
                             }
                         }
-    
-                        await database.models.projectTemplates.findOneAndUpdate({
-                            _id : templateId
-                        },{
-                            $addToSet : { tasks : ObjectId(taskData._id) }
-                        });
+
+                        await projectTemplatesHelper.updateProjectTemplateDocument
+                        (
+                            { _id : templateId },
+                            { $addToSet : { tasks : ObjectId(taskData._id) } }
+                        )
                     }
                 }
 

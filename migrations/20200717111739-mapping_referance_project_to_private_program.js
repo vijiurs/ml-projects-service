@@ -101,7 +101,7 @@ module.exports = {
             let programUpdate = await db.collection('programs').findOneAndUpdate({ _id: userProgramCreation }, { $push: { components: { $each : solutionIds } } });
           }
           let userProjects = await db.collection('userProjects').updateMany({ createdType: "by reference", userId: userId }, { $set: { programId: userProgramCreation } });
-          let solutionUpdate = await db.collection('solutions').updateMany({ _id: { $in: solutionIds } }, { $set: { programId: userProgramCreation } });
+          let solutionUpdate = await db.collection('solutions').updateMany({ _id: { $in: solutionIds } }, { $set: { programId: userProgramCreation,"isReusable" : false } });
           let tasksUpdate = await db.collection('userProjectsTasks').updateMany({ projectId:{ $in:projectIds } }, { $set: { programId: userProgramCreation } });
 
         };

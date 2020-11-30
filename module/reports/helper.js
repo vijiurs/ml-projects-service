@@ -95,11 +95,22 @@ module.exports = class ReportsHelper {
 
                     if (getPdf == true) {
 
+                        delete tasksReport['total'];
+                        let reportTaskData = {};
+                        Object.keys(tasksReport).map(taskData=>{
+                            reportTaskData[UTILS.camelCaseToTitleCase(taskData)] = tasksReport[taskData];
+                        })
+                       
+                        let categoryData = {};
+                        Object.keys(categories).map(category=>{
+                            categoryData[UTILS.camelCaseToTitleCase(category)] = categories[category];
+                        });
+
                         let pdfRequest = {
                             "sharedBy": userName,
                             "reportType": pdfReportString,
-                            categories: categories,
-                            tasks: tasksReport,
+                            categories: categoryData,
+                            tasks: reportTaskData,
                             projects: projectReport
                         }
 
@@ -197,14 +208,25 @@ module.exports = class ReportsHelper {
 
                 }));
 
-               
+
                 if (getPdf == true) {
+
+                    delete tasksReport['total'];
+                    let reportTaskData = {};
+                    Object.keys(tasksReport).map(taskData=>{
+                        reportTaskData[UTILS.camelCaseToTitleCase(taskData)] = tasksReport[taskData];
+                    })
+                   
+                    let categoryData = {};
+                    Object.keys(categories).map(category=>{
+                        categoryData[UTILS.camelCaseToTitleCase(category)] = categories[category];
+                    })
 
                     let pdfRequest = {
                         "sharedBy": userName,
                         "reportType": pdfReportString,
-                        categories: categories,
-                        tasks: tasksReport,
+                        categories: categoryData,
+                        tasks: reportTaskData,
                         projects: projectReport
                     }
                     if (programId != "") {
@@ -421,7 +443,7 @@ module.exports = class ReportsHelper {
                         "endDate"],
                     []
                 );
-               
+
                 if (!projectDetails.length > 0) {
 
                     return resolve({
@@ -542,9 +564,9 @@ module.exports = class ReportsHelper {
                         })
                     )
                     resolve({
-                        success: true, 
+                        success: true,
                         message: CONSTANTS.apiResponses.REPORT_GENERATED,
-                        data: chartObject 
+                        data: chartObject
                     })
                 }
 

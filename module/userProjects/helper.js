@@ -636,7 +636,7 @@ module.exports = class UserProjectsHelper {
                 if( data.entityId && data.entityId !== "" ) {
                    
                     let entityInformation = 
-                    await _entitiesInformation(data.entityId);
+                    await _entitiesInformation([data.entityId]);
     
                     if( !entityInformation.success ) {
                         return resolve(entityInformation);
@@ -884,7 +884,7 @@ module.exports = class UserProjectsHelper {
                 if( addOrUpdateEntityToProject ) {
                        
                     let entityInformation = 
-                    await _entitiesInformation(data.entityId);
+                    await _entitiesInformation([data.entityId]);
 
                     if( !entityInformation.success ) {
                         return resolve(entityInformation);
@@ -2031,11 +2031,7 @@ function _entitiesInformation(entityIds) {
 
             let entityData =
             await kendraService.entityDocuments(
-                {
-                    _id: {
-                        $in: entityIds
-                    }
-                },
+                entityIds,
                 ["metaInformation", "entityType", "entityTypeId"]
             );
 

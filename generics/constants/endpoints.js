@@ -36,5 +36,8 @@ module.exports = {
     LIST_OBSERVATIONS : "/observations/list",
     CREATE_ENTITY_ASSESSORS : "/entityAssessors/create",
     CREATE_OBSERVATIONS : "/observations/create",
-    DETAILS_FORM : "/forms/details"
+    DETAILS_FORM : "/forms/details",
+    LIST_PROGRAMS_BY_IDS : "/programs/listByIds",
+    REMOVE_SOLUTIONS_FROM_PROGRAM : "/programs/removeSolutions",
+    REMOVE_ENTITY_FROM_SOLUTION : "/solutions/removeEntities"
 };

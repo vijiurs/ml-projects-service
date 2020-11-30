@@ -680,7 +680,10 @@ module.exports = class UserProjects extends Abstract {
     * @apiParamExample {json} Response:
     * {
     * "message": "Project updated successfully",
-    * "status": 200
+    * "status": 200,
+    * "result" : {
+    *   "programId" : "5fb669f223575a2f0cef3b33"
+    * }
     * }
     * @apiUse successBody
     * @apiUse errorBody

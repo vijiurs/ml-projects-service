@@ -633,16 +633,24 @@ module.exports = class UserProjectsHelper {
                     libraryProjects.data["taskReport"] = taskReport;
                 }
 
-                let programAndSolutionInformation =
-                await this.createProgramAndSolution(
-                    requestedData.entityId ? [requestedData.entityId] : [] ,
-                    requestedData.programId,
-                    requestedData.programName,
-                    userToken
-                );
+                if( requestedData.programId || requestedData.programName ) {
+                    
+                    let programAndSolutionInformation =
+                    await this.createProgramAndSolution(
+                        requestedData.entityId ? [requestedData.entityId] : [] ,
+                        requestedData.programId,
+                        requestedData.programName,
+                        userToken
+                    );
 
-                if (!programAndSolutionInformation.success) {
-                    return resolve(programAndSolutionInformation);
+                    if (!programAndSolutionInformation.success) {
+                        return resolve(programAndSolutionInformation);
+                    }
+
+                    libraryProjects.data = _.merge(
+                        libraryProjects.data,
+                        programAndSolutionInformation.data
+                    )
                 }
 
                 let userOrganisations =
@@ -662,10 +670,7 @@ module.exports = class UserProjectsHelper {
                 libraryProjects.data.status = CONSTANTS.common.NOT_STARTED_STATUS;
 
                 let projectCreation = await database.models.projects.create(
-                    _.merge(
-                        _.omit(libraryProjects.data, ["_id"]),
-                        programAndSolutionInformation.data
-                    )
+                    _.omit(libraryProjects.data, ["_id"])
                 );
 
                 if (requestedData.rating && requestedData.rating > 0) {

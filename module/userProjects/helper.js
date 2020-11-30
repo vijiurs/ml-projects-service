@@ -633,10 +633,10 @@ module.exports = class UserProjectsHelper {
                     libraryProjects.data["taskReport"] = taskReport;
                 }
 
-                if( data.entityId && data.entityId !== "" ) {
+                if( requestedData.entityId && requestedData.entityId !== "" ) {
                    
                     let entityInformation = 
-                    await _entitiesInformation([data.entityId]);
+                    await _entitiesInformation([requestedData.entityId]);
     
                     if( !entityInformation.success ) {
                         return resolve(entityInformation);

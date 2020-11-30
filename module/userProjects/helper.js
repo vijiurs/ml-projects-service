@@ -633,6 +633,18 @@ module.exports = class UserProjectsHelper {
                     libraryProjects.data["taskReport"] = taskReport;
                 }
 
+                if( data.entityId && data.entityId !== "" ) {
+                   
+                    let entityInformation = 
+                    await _entitiesInformation(data.entityId);
+    
+                    if( !entityInformation.success ) {
+                        return resolve(entityInformation);
+                    }
+    
+                    libraryProjects.data["entityInformation"] = entityInformation.data[0];
+                }
+
                 if( 
                     ( requestedData.programId && requestedData.programId !== "" ) || 
                     ( requestedData.programName && requestedData.programName !== "" ) 
@@ -1673,8 +1685,7 @@ module.exports = class UserProjectsHelper {
                         {
                             "_id" : projectId,
                             "taskId" : taskId
-                        },
-                        taskId
+                        }
                     );
 
                     if( !observationData.success ) {
@@ -2193,7 +2204,7 @@ function _assessmentDetails(
     * @returns {Object} 
 */
 
-function _observationDetails( userToken,solutionDetails,entityId,programId,project,taskId ) {
+function _observationDetails( userToken,solutionDetails,entityId,programId,project ) {
     return new Promise(async (resolve, reject) => {
         try {
 
@@ -2213,8 +2224,7 @@ function _observationDetails( userToken,solutionDetails,entityId,programId,proje
                         },
                         status : CONSTANTS.common.PUBLISHED_STATUS,
                         entities : [entityId],
-                        project : project,
-                        taskId : taskId
+                        project : project
                     }
                 );
 

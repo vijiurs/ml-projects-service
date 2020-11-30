@@ -1067,7 +1067,12 @@ module.exports = class UserProjectsHelper {
 
                 return resolve({
                     success: true,
-                    message: CONSTANTS.apiResponses.USER_PROJECT_UPDATED
+                    message: CONSTANTS.apiResponses.USER_PROJECT_UPDATED,
+                    result : {
+                        programId : 
+                        projectUpdated.programInformation && projectUpdated.programInformation._id ?
+                        projectUpdated.programInformation._id : ""
+                    } 
                 });
 
             } catch (error) {

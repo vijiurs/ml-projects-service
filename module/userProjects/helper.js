@@ -2183,7 +2183,8 @@ function _assessmentDetails( assessmentData ) {
                 await assessmentService.updateSolution(
                     assessmentData.token,
                     {
-                        "project" : assessmentData.project
+                        "project" : assessmentData.project,
+                        referenceFrom : "project"
                     },
                     assessmentData.solutionDetails.externalId
                 );
@@ -2263,7 +2264,8 @@ function _observationDetails( observationData ) {
                 await assessmentService.updateSolution(
                     observationData.token,
                     {
-                        project : observationData.project
+                        project : observationData.project,
+                        referenceFrom : "project"
                     },
                     observationData.solutionDetails.externalId
                 );

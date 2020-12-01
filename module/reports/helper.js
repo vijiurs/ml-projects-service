@@ -55,7 +55,7 @@ module.exports = class ReportsHelper {
                 }
 
                 query['$or'] = [
-                    { "isDeleted" : false },
+                    { "isDeleted": false },
                     { "lastSync": { $gte: new Date(startFrom), $lte: new Date(endOf) } },
                     { "tasks": { $elemMatch: { lastSync: { $gte: new Date(startFrom), $lte: new Date(endOf) } } } },
                 ]
@@ -92,27 +92,37 @@ module.exports = class ReportsHelper {
                 projectReport[CONSTANTS.common.INPROGRESS_STATUS] = 0;
                 projectReport[CONSTANTS.common.NOT_STARTED_STATUS] = 0;
 
+
+                let types = await this.types();
+                let returnTypeInfo = types.data.filter(type => {
+                    if (type.value == reportType) {
+                        return type.label;
+                    }
+                });
+
                 if (!projectDetails.length > 0) {
 
                     if (getPdf == true) {
 
                         delete tasksReport['total'];
                         let reportTaskData = {};
-                        Object.keys(tasksReport).map(taskData=>{
+                        Object.keys(tasksReport).map(taskData => {
                             reportTaskData[UTILS.camelCaseToTitleCase(taskData)] = tasksReport[taskData];
                         })
-                       
+
                         let categoryData = {};
-                        Object.keys(categories).map(category=>{
+                        Object.keys(categories).map(category => {
                             categoryData[UTILS.camelCaseToTitleCase(category)] = categories[category];
                         });
 
                         let pdfRequest = {
+                            "reportType": returnTypeInfo[0].label,
                             "sharedBy": userName,
-                            "reportType": pdfReportString,
+                            "reportTitle": pdfReportString,
                             categories: categoryData,
                             tasks: reportTaskData,
-                            projects: projectReport
+                            projects: projectReport,
+
                         }
 
                         let response = await dhitiService.entityReport(userToken, pdfRequest);
@@ -214,18 +224,26 @@ module.exports = class ReportsHelper {
 
                     delete tasksReport['total'];
                     let reportTaskData = {};
-                    Object.keys(tasksReport).map(taskData=>{
+                    Object.keys(tasksReport).map(taskData => {
                         reportTaskData[UTILS.camelCaseToTitleCase(taskData)] = tasksReport[taskData];
                     })
-                   
+
                     let categoryData = {};
-                    Object.keys(categories).map(category=>{
+                    Object.keys(categories).map(category => {
                         categoryData[UTILS.camelCaseToTitleCase(category)] = categories[category];
                     })
 
+                    let types = await this.types();
+                    let returnTypeInfo = types.data.filter(type => {
+                        if (type.value == reportType) {
+                            return type.label;
+                        }
+                    });
+
                     let pdfRequest = {
+                        "reportType": returnTypeInfo[0].label,
                         "sharedBy": userName,
-                        "reportType": pdfReportString,
+                        "reportTitle": pdfReportString,
                         categories: categoryData,
                         tasks: reportTaskData,
                         projects: projectReport
@@ -422,7 +440,7 @@ module.exports = class ReportsHelper {
                 let startFrom = dateRange.startFrom;
 
                 query['$or'] = [
-                    { "isDeleted" : false },
+                    { "isDeleted": false },
                     { "lastSync": { $gte: new Date(startFrom), $lte: new Date(endOf) } },
                     { "tasks": { $elemMatch: { lastSync: { $gte: new Date(startFrom), $lte: new Date(endOf) } } } },
                 ]

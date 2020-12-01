@@ -1625,6 +1625,7 @@ module.exports = class UserProjectsHelper {
                     "tasks._id" : taskId
                 },[
                     "entityInformation._id",
+                    "entityInformation.entityType",
                     "tasks.type",
                     "tasks._id",
                     "tasks.solutionDetails",
@@ -1709,6 +1710,8 @@ module.exports = class UserProjectsHelper {
                 });
 
             }
+
+            assessmentOrObservationData["entityType"] = project[0].entityInformation.entityType;
 
             return resolve({
                 success: true,

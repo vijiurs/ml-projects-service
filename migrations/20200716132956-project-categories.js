@@ -6,19 +6,19 @@ module.exports = {
 
     let projectCategories = [
       {
-        name : "Teachers",
+        name : "TEACHER",
         externalId : "teachers",
         createdAt : new Date(),
         updatedAt : new Date(),
         updatedBy : "SYSTEM",
         createdBy : "SYSTEM",
-        icon : "teachers.png",
+        icon : "teacher.png",
         isDeleted : false,
         isVisible : true,
         status : "active"
       },
       {
-        name : "Students",
+        name : "STUDENTS",
         externalId : "students",
         createdAt : new Date(),
         updatedAt : new Date(),
@@ -30,7 +30,7 @@ module.exports = {
         status : "active"
       },
       {
-        name : "Infrastructure",
+        name : "INFRASTRUCTURE",
         externalId : "infrastructure",
         createdAt : new Date(),
         updatedAt : new Date(),
@@ -42,7 +42,7 @@ module.exports = {
         status : "active"
       },
       {
-        name : "Community",
+        name : "COMMUNITY",
         externalId : "community",
         createdAt : new Date(),
         updatedAt : new Date(),
@@ -54,13 +54,25 @@ module.exports = {
         status : "active"
       },
       {
-        name : "Education Leader",
+        name : "EDUCATION LEADER",
         externalId : "educationLeader",
         createdAt : new Date(),
         updatedAt : new Date(),
         updatedBy : "SYSTEM",
         createdBy : "SYSTEM",
         icon : "educationLeader.png",
+        isDeleted : false,
+        isVisible : true,
+        status : "active"
+      },
+      {
+        name : "SCHOOL PROCESS",
+        externalId : "schoolProcess",
+        createdAt : new Date(),
+        updatedAt : new Date(),
+        updatedBy : "SYSTEM",
+        createdBy : "SYSTEM",
+        icon : "sp.png",
         isDeleted : false,
         isVisible : true,
         status : "active"

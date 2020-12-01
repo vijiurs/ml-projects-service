@@ -1651,54 +1651,86 @@ module.exports = class UserProjectsHelper {
             if( currentTask.submissionDetails ) {
                 assessmentOrObservationData = currentTask.submissionDetails;
             } else {
+
+                let solutionDetails = currentTask.solutionDetails;
+
+                let assessmentOrObservation = {
+                    token : userToken,
+                    solutionDetails : solutionDetails,
+                    entityId : assessmentOrObservationData.entityId,
+                    programId :  assessmentOrObservationData.programId,
+                    project :  {
+                        "_id" : projectId,
+                        "taskId" : taskId
+                    }
+                };
+
+                let assignedAssessmentOrObservation = 
+                solutionDetails.type === CONSTANTS.common.ASSESSMENT ? 
+                await _assessmentDetails(assessmentOrObservation) : 
+                await _observationDetails(assessmentOrObservation);
                 
-                if( 
-                    currentTask.solutionDetails.type === CONSTANTS.common.ASSESSMENT 
-                ) {
-                    
-                    let duplicateSolution = await _assessmentDetails(
-                        userToken,
-                        currentTask.solutionDetails,
-                        assessmentOrObservationData.entityId,
-                        assessmentOrObservationData.programId,
-                        {
-                            "_id" : projectId,
-                            "taskId" : taskId
-                        }
-                    );
-
-                    if( !duplicateSolution.success ) {
-                        return resolve(duplicateSolution);
-                    }
-                    
-                    assessmentOrObservationData["solutionId"] = 
-                    ObjectId(duplicateSolution.data._id);
-
-                } else if( 
-                    currentTask.solutionDetails.type === CONSTANTS.common.OBSERVATION 
-                ) {
-                    
-                    let observationData = await _observationDetails(
-                        userToken,
-                        currentTask.solutionDetails,
-                        assessmentOrObservationData.entityId,
-                        assessmentOrObservationData.programId,
-                        {
-                            "_id" : projectId,
-                            "taskId" : taskId
-                        }
-                    );
-
-                    if( !observationData.success ) {
-                        return resolve(observationData);
-                    }
-
-                    assessmentOrObservationData["observationId"] = 
-                    ObjectId(observationData.data.observationId);
-
-                    assessmentOrObservationData["solutionId"] = 
-                    ObjectId(observationData.data._id);
+                if( !assignedAssessmentOrObservation.success ) {
+                    return resolve(assignedAssessmentOrObservation);
                 }
+
+                assessmentOrObservationData = 
+                _.merge(assessmentOrObservationData,assignedAssessmentOrObservation.data);
+
+                if( !currentTask.solutionDetails.isReusable ) {
+                    assessmentOrObservationData["programId"] = 
+                    currentTask.solutionDetails.programId;
+                }
+
+
+
+                // if( 
+                //     currentTask.solutionDetails.type === CONSTANTS.common.ASSESSMENT 
+                // ) {
+                    
+                //     assignedAssessmentOrObservation = await _assessmentDetails(
+                //         userToken,
+                //         currentTask.solutionDetails,
+                //         assessmentOrObservationData.entityId,
+                //         assessmentOrObservationData.programId,
+                //         {
+                //             "_id" : projectId,
+                //             "taskId" : taskId
+                //         }
+                //     );
+
+                //     if( !assignedAssessmentOrObservation.success ) {
+                //         return resolve(assignedAssessmentOrObservation);
+                //     }
+
+                // } else if( 
+                //     currentTask.solutionDetails.type === CONSTANTS.common.OBSERVATION 
+                // ) {
+                    
+                //     assignedAssessmentOrObservation = await _observationDetails(
+                //         userToken,
+                //         currentTask.solutionDetails,
+                //         assessmentOrObservationData.entityId,
+                //         assessmentOrObservationData.programId,
+                //         {
+                //             "_id" : projectId,
+                //             "taskId" : taskId
+                //         }
+                //     );
+
+                //     if( !assignedAssessmentOrObservation.success ) {
+                //         return resolve(assignedAssessmentOrObservation);
+                //     }
+
+                //     assessmentOrObservationData["observationId"] = 
+                //     ObjectId(observationData.data.observationId);
+
+                //     assessmentOrObservationData["solutionId"] = 
+                //     ObjectId(observationData.data._id);
+                // }
+
+                // assessmentOrObservationData["solutionId"] = 
+                // ObjectId(assignedAssessmentOrObservation.data._id);
 
                 await database.models.projects.findOneAndUpdate({
                     "_id" : projectId,
@@ -2079,59 +2111,51 @@ function _entitiesInformation(entityIds) {
     * Assessment details
     * @method
     * @name _assessmentDetails 
-    * @param {String} userToken - Logged in user token.
-    * @param {Object} solutionDetails - Solution details.
-    * @param {String} entityId - Entity id.
-    * @param {String} programId - Program id.
-    * @param {String} projectId - Project id.
-    * @param {String} taskId - Tasks id.
+    * @param {Object} assessmentData - Assessment data.
     * @returns {Object} 
 */
 
-function _assessmentDetails(
-    userToken,
-    solutionDetails,
-    entityId,
-    programId,
-    project
-) {
+function _assessmentDetails( assessmentData ) {
     return new Promise(async (resolve, reject) => {
         try {
 
             let result = {};
 
-            if( solutionDetails.isReusable ) {
+            if( assessmentData.solutionDetails.isReusable ) {
                 
-                result = await assessmentService.createAssessmentSolutionFromTemplate(
-                    userToken,
-                    solutionDetails._id,
+                let createdAssessment = 
+                await assessmentService.createAssessmentSolutionFromTemplate(
+                    assessmentData.token,
+                    assessmentData.solutionDetails._id,
                     {
-                        name : solutionDetails.name + "-" + UTILS.epochTime(),
-                        description : solutionDetails.name + "-" + UTILS.epochTime(),
+                        name : assessmentData.solutionDetails.name + "-" + UTILS.epochTime(),
+                        description : assessmentData.solutionDetails.name + "-" + UTILS.epochTime(),
                         program : {
-                            _id : programId,
+                            _id : assessmentData.programId,
                             name : ""
                         },
-                        entities : [entityId],
-                        project : project
+                        entities : [assessmentData.entityId],
+                        project : assessmentData.project
                     }
                 );
 
-                if( !result.success ) {
+                if( !createdAssessment.success ) {
                     throw {
                         status : HTTP_STATUS_CODE['bad_request'].status,
                         message : CONSTANTS.apiResponses.COULD_NOT_CREATE_ASSESSMENT_SOLUTION
                     }
                 }
 
+                result["solutionId"] = createdAssessment.data._id;
+
             } else {
 
                 let assignedAssessmentToUser = 
                 await assessmentService.createEntityAssessors(
-                    userToken,
-                    programId,
-                    solutionDetails._id,
-                    [entityId]
+                    assessmentData.token,
+                    assessmentData.solutionDetails.programId,
+                    assessmentData.solutionDetails._id,
+                    [assessmentData.entityId]
                 );
 
                 if( !assignedAssessmentToUser.success ) {
@@ -2141,13 +2165,14 @@ function _assessmentDetails(
                     }
                 }
 
-                result = await assessmentService.addEntitiesToSolution(
-                    userToken,
-                    solutionDetails._id,
-                    [entityId.toString()]
+                let entitiesAddedToSolution = 
+                await assessmentService.addEntitiesToSolution(
+                    assessmentData.token,
+                    assessmentData.solutionDetails._id,
+                    [assessmentData.entityId.toString()]
                 );
 
-                if( !result.success ) {
+                if( !entitiesAddedToSolution.success ) {
                     throw {
                         status : HTTP_STATUS_CODE['bad_request'].status,
                         message : CONSTANTS.apiResponses.FAILED_TO_ADD_ENTITY_TO_SOLUTION
@@ -2156,11 +2181,11 @@ function _assessmentDetails(
 
                 let solutionUpdated = 
                 await assessmentService.updateSolution(
-                    userToken,
+                    assessmentData.token,
                     {
-                        "project" : project
+                        "project" : assessmentData.project
                     },
-                    solutionDetails.externalId
+                    assessmentData.solutionDetails.externalId
                 );
 
                 if( !solutionUpdated.success ) {
@@ -2170,13 +2195,12 @@ function _assessmentDetails(
                     }
                 }
 
-                result["data"]["_id"] = solutionDetails._id;
-
+                result["solutionId"] = assessmentData.solutionDetails._id;
             }
 
             return resolve({
                 success : true,
-                data : result.data
+                data : result
             });
 
         } catch(error) {
@@ -2194,55 +2218,54 @@ function _assessmentDetails(
     * Observation details
     * @method
     * @name _observationDetails 
-    * @param {String} userToken - Logged in user token.
-    * @param {Object} solutionDetails - Solution details.
-    * @param {String} entityId - Entity id.
-    * @param {String} programId - Program id.
-    * @param {Object} project - Project.
-    * @param {String} taskId - Tasks id.
+    * @param {Object} observationData - Observation data.
     * @returns {Object} 
 */
 
-function _observationDetails( userToken,solutionDetails,entityId,programId,project ) {
+function _observationDetails( observationData ) {
     return new Promise(async (resolve, reject) => {
         try {
 
             let result = {};
 
-            if( solutionDetails.isReusable ) {
+            if( observationData.solutionDetails.isReusable ) {
                 
-                result = await assessmentService.createObservationFromSolutionTemplate(
-                    userToken,
-                    solutionDetails._id,
+                let observationCreatedFromTemplate = 
+                await assessmentService.createObservationFromSolutionTemplate(
+                    observationData.token,
+                    observationData.solutionDetails._id,
                     {
-                        name : solutionDetails.name + "-" + UTILS.epochTime(),
-                        description : solutionDetails.name + "-" + UTILS.epochTime(),
+                        name : observationData.solutionDetails.name + "-" + UTILS.epochTime(),
+                        description : observationData.solutionDetails.name + "-" + UTILS.epochTime(),
                         program : {
-                            _id : programId,
+                            _id : observationData.programId,
                             name : ""
                         },
                         status : CONSTANTS.common.PUBLISHED_STATUS,
-                        entities : [entityId],
-                        project : project
+                        entities : [observationData.entityId],
+                        project : observationData.project
                     }
                 );
 
-                if( !result.success ) {
+                if( !observationCreatedFromTemplate.success ) {
                     throw {
                         status : HTTP_STATUS_CODE['bad_request'].status,
                         message : CONSTANTS.apiResponses.OBSERVATION_NOT_CREATED
                     }
                 }
 
+                result["solutionId"] = observationCreatedFromTemplate.data._id;
+                result["observationId"] = observationCreatedFromTemplate.data.observationId;
+
             } else {
 
                 let solutionUpdated = 
                 await assessmentService.updateSolution(
-                    userToken,
+                    observationData.token,
                     {
-                        project : project
+                        project : observationData.project
                     },
-                    solutionDetails.externalId
+                    observationData.solutionDetails.externalId
                 );
 
                 if( !solutionUpdated.success ) {
@@ -2256,36 +2279,48 @@ function _observationDetails( userToken,solutionDetails,entityId,programId,proje
                 let endDate = new Date();
                 endDate.setFullYear(endDate.getFullYear() + 1);
                 
-                let observationData = {
-                    name : solutionDetails.name,
-                    description : solutionDetails.name,
+                let observation = {
+                    name : observationData.solutionDetails.name,
+                    description : observationData.solutionDetails.name,
                     status : CONSTANTS.common.PUBLISHED_STATUS,
                     startDate : startDate,
                     endDate : endDate,
-                    entities : [entityId],
-                    project : project
+                    entities : [observationData.entityId],
+                    project : observationData.project
                 };
 
-                result = await assessmentService.createObservation(
-                    userToken,
-                    solutionDetails._id,
-                    observationData
+                let observationCreated = await assessmentService.createObservation(
+                    observationData.token,
+                    observationData.solutionDetails._id,
+                    observation
                 );
 
-                if( !result.success ) {
+                if( !observationCreated.success ) {
                     throw {
                         status : HTTP_STATUS_CODE['bad_request'].status,
                         message : CONSTANTS.apiResponses.OBSERVATION_NOT_CREATED
                     }
                 }
+
+                result["solutionId"] = observationData.solutionDetails._id;
+                result["observationId"] = observationCreated.data._id;
                 
-                result.data["observationId"] = result.data._id;
-                result.data["_id"] = solutionDetails._id;
+                // result.data["observationId"] = result.data._id;
+                // result.data["_id"] = solutionDetails._id;
             }
 
-            return resolve(result);
+            return resolve({
+                success : true,
+                data : result
+            });
+
         } catch(error) {
-            return reject(error);
+            return resolve({
+                message : error.message,
+                success : false,
+                status : error.status ? 
+                error.status : HTTP_STATUS_CODE['internal_server_error'].status
+            });
         }
     })
 }

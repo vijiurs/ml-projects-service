@@ -280,21 +280,6 @@ module.exports = class ProjectTemplateTasksHelper {
                                 solutionData[parsedData.solutionId],
                                 ["_id","isReusable","externalId","name","programId","type","subType"]
                             )
-
-                            // allValues.solutionDetails._id =
-                            // ObjectId(solutionData[parsedData.solutionId]._id);
-
-                            // allValues.solutionDetails.isReusable = 
-                            // solutionData[parsedData.solutionId].isReusable;
-
-                            // allValues.solutionDetails.externalId = 
-                            // solutionData[parsedData.solutionId].externalId;
-
-                            // allValues.solutionDetails.name = 
-                            // solutionData[parsedData.solutionId].name;
-
-                            // allValues.solutionDetails.programId = 
-                            // ObjectId(solutionData[parsedData.solutionId].programId);
                         }
 
                     } else {

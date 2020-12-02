@@ -596,21 +596,24 @@ module.exports = class ProjectTemplatesHelper {
                 projectTemplateData[0].externalId +"-"+ UTILS.epochTime();
                 newProjectTemplate.createdBy = newProjectTemplate.updatedBy = userId;
 
-                if( solutionId !== "" ) {
-                    
-                    let solutionData = 
-                    await kendraService.listSolutions([solutionId]);
-
-                    if( !solutionData.success ) {
-                        throw new Error(CONSTANTS.apiResponses.SOLUTION_NOT_FOUND)
+                let solutionData = 
+                await assessmentService.listSolutions([solutionId]);
+                
+                if( !solutionData.success ) {
+                    throw {
+                        message : CONSTANTS.apiResponses.SOLUTION_NOT_FOUND,
+                        status : HTTP_STATUS_CODE['bad_request'].status
                     }
-                    newProjectTemplate.solutionId = solutionData.data[0]._id;
-                    newProjectTemplate.solutionExternalId = solutionData.data[0].externalId;
-                    newProjectTemplate.programId = solutionData.data[0].programId;
-                    newProjectTemplate.programExternalId = solutionData.data[0].programExternalId;
-                } 
+                }
+
+                newProjectTemplate.solutionId = solutionData.data[0]._id;
+                newProjectTemplate.solutionExternalId = solutionData.data[0].externalId;
+                newProjectTemplate.programId = solutionData.data[0].programId;
+                newProjectTemplate.programExternalId = solutionData.data[0].programExternalId;
+
 
                 newProjectTemplate.parentTemplateId = projectTemplateData[0]._id;
+
                 let updationKeys = Object.keys(updateData);
                 if( updationKeys.length > 0 ) {
                     updationKeys.forEach(singleKey=>{
@@ -638,7 +641,10 @@ module.exports = class ProjectTemplatesHelper {
                  //duplicate task
                 if(Array.isArray(tasksIds) && tasksIds.length > 0 ){
 
-                    await this.duplicateTemplateTasks(tasksIds,duplicateTemplateDocument._id);
+                    await this.duplicateTemplateTasks(
+                        tasksIds,
+                        duplicateTemplateDocument._id
+                    );
 
                 }
                 
@@ -665,7 +671,6 @@ module.exports = class ProjectTemplatesHelper {
             }
     })
     }
-
 
      /**
       * Create ratings.

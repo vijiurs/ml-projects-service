@@ -575,16 +575,21 @@ const userPrivatePrograms = function ( token ) {
   * @function
   * @name getUserOrganisationsAndRootOrganisations
   * @param {String} token - Logged in user token.
+  * @param {String} userId - User id.
   * @returns {JSON} - Update solutions.
 */
 
-const getUserOrganisationsAndRootOrganisations = function ( token ) {
+const getUserOrganisationsAndRootOrganisations = function ( token,userId = "" ) {
     return new Promise(async (resolve, reject) => {
         try {
             
-            const url = 
+            let url = 
             KENDRA_URL + process.env.URL_PREFIX + 
             CONSTANTS.endpoints.GET_USER_ORGANISATIONS;
+
+            if( userId !== "" ) {
+                url = url + "/" + userId;
+            }
 
             const options = {
                 headers : {

@@ -366,7 +366,6 @@ module.exports = class UserProjects extends Abstract {
 
                 const projects = await userProjectsHelper.bulkCreate(
                     projectsData,
-                    req.userDetails.userInformation.userId,
                     req.userDetails.userToken
                 );
 

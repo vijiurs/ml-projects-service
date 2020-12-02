@@ -6,7 +6,7 @@ module.exports = {
 
     let projectCategories = [
       {
-        name : "TEACHER",
+        name : "Teachers",
         externalId : "teachers",
         createdAt : new Date(),
         updatedAt : new Date(),
@@ -18,7 +18,7 @@ module.exports = {
         status : "active"
       },
       {
-        name : "STUDENTS",
+        name : "Students",
         externalId : "students",
         createdAt : new Date(),
         updatedAt : new Date(),
@@ -30,7 +30,7 @@ module.exports = {
         status : "active"
       },
       {
-        name : "INFRASTRUCTURE",
+        name : "Infrastructure",
         externalId : "infrastructure",
         createdAt : new Date(),
         updatedAt : new Date(),
@@ -42,7 +42,7 @@ module.exports = {
         status : "active"
       },
       {
-        name : "COMMUNITY",
+        name : "Community",
         externalId : "community",
         createdAt : new Date(),
         updatedAt : new Date(),
@@ -54,7 +54,7 @@ module.exports = {
         status : "active"
       },
       {
-        name : "EDUCATION LEADER",
+        name : "Education Leader",
         externalId : "educationLeader",
         createdAt : new Date(),
         updatedAt : new Date(),
@@ -66,7 +66,7 @@ module.exports = {
         status : "active"
       },
       {
-        name : "SCHOOL PROCESS",
+        name : "School Process",
         externalId : "schoolProcess",
         createdAt : new Date(),
         updatedAt : new Date(),
@@ -81,10 +81,15 @@ module.exports = {
 
     for( let category = 0 ; category < projectCategories.length; category++ ) {
 
+      let uploadUrl = 
       await kendraServiceHelper.upload(
         `public/assets/projectCategories/${projectCategories[category].icon}`,
         `static/projectCategories/${projectCategories[category].icon}`
       );
+
+      if( !uploadUrl.success ) {
+        return ("Could not upload url");
+      }
 
       projectCategories[category].icon = "static/projectCategories/" + projectCategories[category].icon; 
     }

@@ -571,10 +571,17 @@ const listProgramsBasedOnIds = function ( programIds ) {
                     success : true
                 };
 
-                if (err) {
+                 if (err) {
                     result.success = false;
                 } else {
-                    result["data"] = data.body.result;
+                    
+                    let response = data.body;
+                    
+                    if( response.status === HTTP_STATUS_CODE['ok'].status ) {
+                        result["data"] = response.result;
+                    } else {
+                        result.success = false;
+                    }
                 }
 
                 return resolve(result);

@@ -16,7 +16,7 @@ module.exports = {
     LIST_USER_ROLES : "/user-roles/list",
     LIST_ENTITY_TYPES : "/entity-types/list",
     CREATE_PROGRAM_AND_SOLUTION : "/users/createProgramAndSolution",
-    LIST_ENTITIES : "/entities/listByEntityIds",
+    LIST_ENTITIES : "/entities/listByIds",
     USER_EXTENSION_GET_PROFILE : "/user-extension/getProfile",
     USER_EXTENSION_UPDATE_USER_PROFILE : "/user-extension/update",
     USER_PRIVATE_PROGRAMS : "/users/privatePrograms",

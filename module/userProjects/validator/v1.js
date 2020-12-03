@@ -29,6 +29,11 @@ module.exports = (req) => {
         solutionDetails : function () {
             req.checkParams('_id').exists().withMessage("required project id");
             req.checkQuery('taskId').exists().withMessage("required task id");
+        },
+        bulkCreateByUserRoleAndEntity :  function () {
+            req.checkBody('templateId').exists().withMessage("required template id");
+            req.checkBody('entityId').exists().withMessage("required entity id");
+            req.checkBody('role').exists().withMessage("required role");
         }
     }
 

@@ -738,6 +738,65 @@ const getPreSignedUrl = function (fileNames) {
 }
 
 
+/**
+  * Get list of users by entity and role.
+  * @function
+  * @name getUsersByEntityAndRole
+  * @param {String} entityId - entity id.
+  * @param {String} role - role. 
+  * @returns {JSON} - List of users and entityId.
+*/
+
+const getUsersByEntityAndRole = function ( 
+   entityId = "",
+   role = "",
+   token = ""
+) {
+    return new Promise(async (resolve, reject) => {
+        try {
+            
+            const url = KENDRA_URL + process.env.URL_PREFIX + CONSTANTS.endpoints.GET_USERS_BY_ENTITY_AND_ROLE + "/" + entityId + "?role=" + role;
+           
+            const options = {
+                headers : {
+                    "content-type": "application/json",
+                    AUTHORIZATION : process.env.AUTHORIZATION,
+                    "internal-access-token": process.env.INTERNAL_ACCESS_TOKEN,
+                    "x-authenticated-user-token" : token
+                }
+            };
+
+            request.post(url,options,kendraCallback);
+
+            function kendraCallback(err, data) {
+
+                let result = {
+                    success : true
+                };
+
+                if (err) {
+                    result.success = false;
+                } else {
+                   
+                    let response = JSON.parse(data.body);
+
+                    if( response.status === HTTP_STATUS_CODE['ok'].status ) {
+                        result["data"] = response.result;
+                    } else {
+                        result.success = false;
+                    }
+                }
+
+                return resolve(result);
+            }
+
+        } catch (error) {
+            return reject(error);
+        }
+    })
+}
+
+
 module.exports = {
     getDownloadableUrl : getDownloadableUrl,
     upload : upload,
@@ -751,6 +810,7 @@ module.exports = {
     updateUserProfile : updateUserProfile,
     userPrivatePrograms : userPrivatePrograms,
     getUserOrganisationsAndRootOrganisations : getUserOrganisationsAndRootOrganisations,
-    getPreSignedUrl : getPreSignedUrl
+    getPreSignedUrl : getPreSignedUrl,
+    getUsersByEntityAndRole : getUsersByEntityAndRole
 };
 

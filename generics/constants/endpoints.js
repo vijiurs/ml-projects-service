@@ -36,5 +36,6 @@ module.exports = {
     LIST_OBSERVATIONS : "/observations/list",
     CREATE_ENTITY_ASSESSORS : "/entityAssessors/create",
     CREATE_OBSERVATIONS : "/observations/create",
-    DETAILS_FORM : "/forms/details"
+    DETAILS_FORM : "/forms/details",
+    GET_USERS_BY_ENTITY_AND_ROLE : "/entities/getUsersByEntityAndRole" //Kendra service
 };

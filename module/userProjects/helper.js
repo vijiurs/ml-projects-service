@@ -1569,6 +1569,58 @@ module.exports = class UserProjectsHelper {
     })
   }
 
+
+    /**
+      * Bulk create user projects By entityId and role.
+      * @method
+      * @name bulkCreateByUserRoleAndEntity - Bulk create user projects by entity and role.
+      * @param {Object} userProjectData - user project data
+      * @param {String} userId - logged in user id.
+      * @param {String} userToken - logged in user token.
+      * @returns {Object}  Bulk create user projects.
+     */
+
+    static bulkCreateByUserRoleAndEntity(userProjectData, userId, userToken) {
+        return new Promise(async (resolve, reject) => {
+            try {
+
+
+                let userAndEntityList = await kendraService.getUsersByEntityAndRole
+                (
+                    userProjectData.entityId,
+                    userProjectData.role,
+                    userToken
+                )
+                
+                if (!userAndEntityList.success && !userAndEntityList.data) {
+                    throw new Error(CONSTANTS.apiResponses.USERS_AND_ENTITIES_NOT_FOUND);
+                }
+
+                let userProjectBulkCreationData = [];
+              
+                await Promise.all(userAndEntityList.data.map (async user=> {
+                    userProjectBulkCreationData.push({
+                        "templateId": userProjectData.templateId,
+                        "keycloak-userId":  user.userId,
+                        "entityId": user.entityId
+                    })
+                }));
+               
+                let userProjects = await this.bulkCreate
+                (
+                    userProjectBulkCreationData,
+                    userId,
+                    userToken
+                )
+
+                return resolve(userProjects);
+
+            } catch (error) {
+                return reject(error);
+            }
+        })
+    }
+
 };
 
 /**

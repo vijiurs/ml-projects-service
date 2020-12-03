@@ -1036,4 +1036,55 @@ module.exports = class UserProjects extends Abstract {
         })
     }
 
+
+      /**
+    * @api {post} /improvement-project/api/v1/userProjects/bulkCreateByUserRoleAndEntity 
+    * Bulk create user projects by entity and role.
+    * @apiVersion 1.0.0
+    * @apiGroup User Projects
+    * @apiSampleRequest /improvement-project/api/v1/userProjects/bulkCreateByUserRoleAndEntity
+    * @apiParamExample {json} Request:
+    * {
+    *  "templateId": "5f2449eb626a540f40817ef5",
+    *  "entityId": "5f2449eb626a540f40817ef5",
+    *  "role": "CRP",
+    *  "programExternalId": "TAF-pgm",
+    *  "solutionExternalId": "TAF-solution"
+     }
+    * @apiUse successBody
+    * @apiUse errorBody
+    */
+
+    /**
+      * Bulk create user projects by entity and role.
+      * @method
+      * @name bulkCreateByUserRoleAndEntity
+      * @param {Object} req - request data.
+      * @param {String} req.body.entityId - entityId 
+      * @param {String} req.body.role - role 
+      * @returns {CSV} Assigned projects to user.
+     */
+
+    async bulkCreateByUserRoleAndEntity(req) {
+        return new Promise(async (resolve, reject) => {
+            try {
+
+                let projects = await userProjectsHelper.bulkCreateByUserRoleAndEntity(
+                    req.body,
+                    req.userDetails.userInformation.userId,
+                    req.userDetails.userToken
+                );
+
+                return resolve(projects);
+
+            } catch (error) {
+                return reject({
+                    status: error.status || HTTP_STATUS_CODE.internal_server_error.status,
+                    message: error.message || HTTP_STATUS_CODE.internal_server_error.message,
+                    errorObject: error
+                });
+            }
+        })
+    }
+
 };

@@ -12,7 +12,7 @@ module.exports = {
         updatedAt : new Date(),
         updatedBy : "SYSTEM",
         createdBy : "SYSTEM",
-        icon : "teachers.png",
+        icon : "teacher.png",
         isDeleted : false,
         isVisible : true,
         status : "active"
@@ -64,15 +64,32 @@ module.exports = {
         isDeleted : false,
         isVisible : true,
         status : "active"
+      },
+      {
+        name : "School Process",
+        externalId : "schoolProcess",
+        createdAt : new Date(),
+        updatedAt : new Date(),
+        updatedBy : "SYSTEM",
+        createdBy : "SYSTEM",
+        icon : "sp.png",
+        isDeleted : false,
+        isVisible : true,
+        status : "active"
       }
     ];
 
     for( let category = 0 ; category < projectCategories.length; category++ ) {
 
+      let uploadUrl = 
       await kendraServiceHelper.upload(
         `public/assets/projectCategories/${projectCategories[category].icon}`,
         `static/projectCategories/${projectCategories[category].icon}`
       );
+
+      if( !uploadUrl.success ) {
+        return ("Could not upload url");
+      }
 
       projectCategories[category].icon = "static/projectCategories/" + projectCategories[category].icon; 
     }

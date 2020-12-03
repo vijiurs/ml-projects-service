@@ -6,7 +6,7 @@ module.exports = {
     let solutions = await db.collection('solutions').aggregate([
       { $unwind: "$baseProjectDetails" },
         { $lookup: {from: "userProjects", localField: "_id", foreignField: "solutionId", as: "projects"} },
-      {$match: {projects: { $ne: [] },  $and : [ { "projects.createdType": { $ne :"by self" }} ,{"projects.createdType":{ $ne :"by reference" }}] }   },
+      {$match: {projects: { $ne: [] },  $and : [ { "projects.createdType": { $ne :"by self" } } ,{"projects.createdType":{ $ne :"by reference" }}] }   },
        {
           $group:{
               _id:{ programId:{ "programId":"$programId" },baseProjectDetails:{ "baseProjectDetails":"$baseProjectDetails._id" } },
@@ -41,7 +41,7 @@ module.exports = {
 
           let updateProgram = await db.collection("programs").updateOne({ _id: existProgramId }, { $push:{ component: { $each: toKeepSolutionId } } });
           let updateUserProjects= await db.collection("userProjects").updateMany({ _id:{ $in: projectIds } }, { $set:{ solutionId: document.projects[0].solutionId } });
-          let removeUnusedSolution = await db.collection("solutions").remove({ _id:{ $in: unUsedSolutions } });
+          let removeUnusedSolution = await db.collection("solutions").deleteMany({ _id:{ $in: unUsedSolutions } });
           
         }
       };

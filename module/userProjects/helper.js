@@ -260,12 +260,11 @@ module.exports = class UserProjectsHelper {
       * @method
       * @name bulkCreate - Bulk create user projects.
       * @param {Array} csvData - csv data.
-      * @param {String} userId - logged in user id.
       * @param {String} userToken - logged in user token.
       * @returns {Object}  Bulk create user projects.
      */
 
-    static bulkCreate(csvData, userId, userToken) {
+    static bulkCreate(csvData,userToken) {
         return new Promise(async (resolve, reject) => {
             try {
 
@@ -285,10 +284,11 @@ module.exports = class UserProjectsHelper {
                 let entityIds = [];
 
                 csvData.forEach(data => {
-
                     templateIds.push(data.templateId);
-                    entityIds.push(data.entityId);
 
+                    if( data.entityId && data.entityId !== "" ) {
+                        entityIds.push(data.entityId);
+                    }
                 });
 
                 let entityDocument = {};
@@ -296,7 +296,7 @@ module.exports = class UserProjectsHelper {
                 if (entityIds.length > 0) {
                     
                     const entitiesData = await _entitiesInformation(entityIds);
-
+                    
                     if( !entitiesData.success ) {
                         return resolve(entitiesData);
                     }
@@ -324,22 +324,27 @@ module.exports = class UserProjectsHelper {
                         "averageRating"
                     ]);
 
-                    if (projectTemplates.length > 0) {
-
-                        projectTemplates.forEach(template => {
-
-                            templateData[template.externalId] = template;
-
-                            if (template.solutionId) {
-                                solutionIds.push(template.solutionId);
-                            }
-
-                            if (template.programId) {
-                                programIds.push(template.programId);
-                            }
-
-                        })
+                    if( !projectTemplates.length > 0 ) {
+                        throw {
+                            message : CONSTANTS.apiResponses.SOLUTION_NOT_FOUND,
+                            status : HTTP_STATUS_CODE['bad_request'].status
+                        }
                     }
+
+                    projectTemplates.forEach(template => {
+
+                        templateData[template.externalId] = template;
+
+                        if (template.solutionId) {
+                            solutionIds.push(template.solutionExternalId);
+                        }
+
+                        if (template.programId) {
+                            programIds.push(template.programId);
+                        }
+
+                    })
+
                 }
 
                 let solutions = {};
@@ -372,11 +377,7 @@ module.exports = class UserProjectsHelper {
                 if (programIds.length > 0) {
 
                     let programData =
-                    await kendraService.programsDocuments({
-                        _id: {
-                            $in: programIds
-                        }
-                    }, "all", ["components"]);
+                    await assessmentService.listProgramsBasedOnIds(programIds);
 
                     if( !programData.success ) {
                         throw {
@@ -401,18 +402,40 @@ module.exports = class UserProjectsHelper {
 
                     let currentCsvData = csvData[pointerToCsvData];
 
-                    if (!templateData[currentCsvData.templateId]) {
+                    if ( !templateData[currentCsvData.templateId] ) {
                         currentCsvData["STATUS"] =
                         CONSTANTS.apiResponses.PROJECT_TEMPLATE_NOT_FOUND;
+                        input.push(currentCsvData);
                         continue;
                     }
 
-                    let currentTemplateData =
-                    templateData[csvData[pointerToCsvData].templateId];
+                    let currentTemplateData = templateData[currentCsvData.templateId];
 
-                    currentTemplateData.userId = csvData[pointerToCsvData]["keycloak-userId"];
-                    currentTemplateData.createdBy = userId;
-                    currentTemplateData.updatedBy = userId;
+                    currentTemplateData.userId = currentCsvData["keycloak-userId"];
+
+                    currentTemplateData.createdBy = currentTemplateData.userId;
+                    currentTemplateData.updatedBy = currentTemplateData.userId;
+
+                    let userOrganisations = 
+                    await kendraService.getUserOrganisationsAndRootOrganisations(
+                        userToken,
+                        currentTemplateData.userId
+                    );
+
+                    if( !userOrganisations.success ) {
+                        throw {
+                            message : CONSTANTS.apiResponses.USER_ORGANISATION_NOT_FOUND,
+                            status : HTTP_STATUS_CODE['bad_request'].status
+                        }
+                    }
+
+                    currentTemplateData.createdFor = 
+                    userOrganisations.data.createdFor;
+                    
+                    currentTemplateData.rootOrganisations = 
+                    userOrganisations.data.rootOrganisations;
+
+                    let assesmentOrObservationTask = false;
 
                     if (
                         currentTemplateData &&
@@ -425,7 +448,34 @@ module.exports = class UserProjectsHelper {
                             currentTemplateData._id
                         );
 
-                        currentTemplateData.tasks = _projectTask(tasksAndSubTasks);
+                        if( tasksAndSubTasks.length > 0 ) {
+                            currentTemplateData.tasks = _projectTask(tasksAndSubTasks);
+
+                            currentTemplateData.tasks.forEach( task => {
+                                if( 
+                                    task.type === CONSTANTS.common.ASSESSMENT || 
+                                    task.type === CONSTANTS.common.OBSERVATION
+                                ) {
+                                    assesmentOrObservationTask = true;
+                                }
+                            })
+
+
+                            let taskReport = {
+                                total : currentTemplateData.tasks.length
+                            };
+
+                            currentTemplateData.tasks.forEach(task => {
+                                if (!taskReport[task.status]) {
+                                    taskReport[task.status] = 1;
+                                } else {
+                                    taskReport[task.status] += 1;
+                                }
+                            });
+
+                            currentTemplateData["taskReport"] = taskReport;
+
+                        }
                     }
 
                     let solutionInformation = {};
@@ -436,6 +486,7 @@ module.exports = class UserProjectsHelper {
                             
                             currentCsvData["STATUS"] =
                             CONSTANTS.apiResponses.SOLUTION_NOT_FOUND;
+                            input.push(currentCsvData);
                             continue;
                         }
 
@@ -446,9 +497,6 @@ module.exports = class UserProjectsHelper {
                             ["entities", "programId", "programExternalId"]
                         );
 
-                        currentTemplateData.createdFor = solutionInformation.createdFor;
-                        currentTemplateData.rootOrganisations = solutionInformation.rootOrganisations;
-
                         delete currentTemplateData.solutionId;
                         delete currentTemplateData.solutionExternalId;
                     }
@@ -458,6 +506,7 @@ module.exports = class UserProjectsHelper {
                         if (!programs[currentTemplateData.programExternalId]) {
                             currentCsvData["STATUS"] =
                             CONSTANTS.apiResponses.PROGRAM_NOT_FOUND;
+                            input.push(currentCsvData);
                             continue;
                         }
 
@@ -468,7 +517,20 @@ module.exports = class UserProjectsHelper {
                         delete currentTemplateData.programExternalId;
                     }
 
-                    if ( entityDocument[csvData[pointerToCsvData].entityId] ) {
+                    if( assesmentOrObservationTask && !currentCsvData.entityId ) {
+                        currentCsvData["STATUS"] =
+                        CONSTANTS.apiResponses.ENTITY_REQUIRED_FOR_ASSESSMENT_OBSERVATION;
+                        input.push(currentCsvData);
+                        continue;   
+                    }
+
+                    if ( currentCsvData.entityId ) {
+
+                        if( !entityDocument[currentCsvData.entityId] ) {
+                            currentCsvData["STATUS"] =
+                            CONSTANTS.apiResponses.ENTITIES_NOT_FOUND;
+                            continue;  
+                        }
 
                         let entities = [];
 
@@ -483,13 +545,15 @@ module.exports = class UserProjectsHelper {
                             if (entityIndex < 0) {
                                 
                                 entities =
-                                solutionInformation.entities.push(ObjectId(csvData[pointerToCsvData].entityId))
+                                solutionInformation.entities.push(ObjectId(currentCsvData.entityId))
                             }
                         } else {
-                            entities = [ObjectId(csvData[pointerToCsvData].entityId)];
+                            entities = [ObjectId(currentCsvData.entityId)];
                         }
 
                         if (entities.length > 0) {
+                            
+                            let solutionUpdated = 
                             await assessmentService.updateSolution(
                                 userToken,
                                 {
@@ -507,16 +571,21 @@ module.exports = class UserProjectsHelper {
                         }
 
                         currentTemplateData.entityInformation =
-                        entityDocument[csvData[pointerToCsvData].entityId];
+                        entityDocument[currentCsvData.entityId];
 
                         delete currentTemplateData.entityType;
                         delete currentTemplateData.entityTypeId;
                     }
 
+                    currentTemplateData.status = CONSTANTS.common.NOT_STARTED_STATUS;
                     const projectCreation =
                     await database.models.projects.create(currentTemplateData);
 
-                    currentCsvData["STATUS"] = projectCreation._id;
+                    if( projectCreation._id ) {
+                        currentCsvData["STATUS"] = projectCreation._id;
+                    } else {
+                        currentCsvData["STATUS"] = CONSTANTS.apiResponses.PROJECT_NOT_CREATED;
+                    }
 
                     input.push(currentCsvData);
                 }
@@ -637,17 +706,39 @@ module.exports = class UserProjectsHelper {
                     libraryProjects.data["taskReport"] = taskReport;
                 }
 
-                let programAndSolutionInformation =
-                await this.createProgramAndSolution(
-                    libraryProjects.data._id,
-                    requestedData.entityId,
-                    requestedData.programId,
-                    requestedData.programName,
-                    userToken
-                );
+                if( requestedData.entityId && requestedData.entityId !== "" ) {
+                   
+                    let entityInformation = 
+                    await _entitiesInformation([requestedData.entityId]);
+    
+                    if( !entityInformation.success ) {
+                        return resolve(entityInformation);
+                    }
+    
+                    libraryProjects.data["entityInformation"] = entityInformation.data[0];
+                }
 
-                if (!programAndSolutionInformation.success) {
-                    return resolve(programAndSolutionInformation);
+                if( 
+                    ( requestedData.programId && requestedData.programId !== "" ) || 
+                    ( requestedData.programName && requestedData.programName !== "" ) 
+                ) {
+                    
+                    let programAndSolutionInformation =
+                    await this.createProgramAndSolution(
+                        requestedData.entityId ? [requestedData.entityId] : [] ,
+                        requestedData.programId,
+                        requestedData.programName,
+                        userToken
+                    );
+
+                    if (!programAndSolutionInformation.success) {
+                        return resolve(programAndSolutionInformation);
+                    }
+
+                    libraryProjects.data = _.merge(
+                        libraryProjects.data,
+                        programAndSolutionInformation.data
+                    )
                 }
 
                 let userOrganisations =
@@ -667,10 +758,7 @@ module.exports = class UserProjectsHelper {
                 libraryProjects.data.status = CONSTANTS.common.NOT_STARTED_STATUS;
 
                 let projectCreation = await database.models.projects.create(
-                    _.merge(
-                        _.omit(libraryProjects.data, ["_id"]),
-                        programAndSolutionInformation.data
-                    )
+                    _.omit(libraryProjects.data, ["_id"])
                 );
 
                 if (requestedData.rating && requestedData.rating > 0) {
@@ -777,10 +865,17 @@ module.exports = class UserProjectsHelper {
             try {
 
                 const userProject = await this.projectDocument({
-                    _id: projectId,
-                    userId: userId,
-                    lastDownloadedAt: lastDownloadedAt
-                }, ["_id", "tasks"]);
+                    _id : projectId,
+                    userId : userId,
+                    lastDownloadedAt : lastDownloadedAt
+                }, [
+                    "_id", 
+                    "tasks",
+                    "programInformation._id",
+                    "solutionInformation._id",
+                    "solutionInformation.externalId",
+                    "entityInformation._id"
+                ]);
 
                 if (!userProject.length > 0) {
 
@@ -794,7 +889,7 @@ module.exports = class UserProjectsHelper {
 
                 let updateProject = {};
 
-                if (data.categories && data.categories.length > 0) {
+                if ( data.categories && data.categories.length > 0 ) {
                     
                     let categories =
                     await _projectCategories(data.categories);
@@ -806,30 +901,160 @@ module.exports = class UserProjectsHelper {
                     updateProject.categories = categories.data;
                 }
 
-                if (data.startDate) {
+                if ( data.startDate ) {
                     updateProject["startDate"] = data.startDate;
                 }
 
-                if (data.endDate) {
+                if ( data.endDate ) {
                     updateProject["endDate"] = data.endDate;
                 }
 
-                if (
-                    (data.programId && data.programId !== "") ||
-                    (data.programName && data.programName !== "")
-                ) {
+                let createNewProgramAndSolution = false;
+                let solutionExists = false;
+                
+                if( data.programId && data.programId !== "" ) {
 
-                    let programAndSolutionInformation =
+                    // Check if program already existed in project and if its not an existing program.
+
+                    if( !userProject[0].programInformation ) {
+                        createNewProgramAndSolution = true;
+                    } else if( 
+                        userProject[0].programInformation &&
+                        userProject[0].programInformation._id && 
+                        userProject[0].programInformation._id.toString() !== data.programId
+                    ) {
+                        // Not an existing program.
+
+                        solutionExists = true;
+                    } 
+
+                } else if( data.programName ) {
+                    
+                    if( !userProject[0].solutionInformation ) {
+                        createNewProgramAndSolution = true;
+                    } else {
+                        solutionExists = true;
+                        // create new program using current name and add existing solution and remove program from it.
+                    }
+                }
+
+                let addOrUpdateEntityToProject = false; 
+
+                if( data.entityId ) {
+
+                    // If entity is not present in project or new entity is updated.
+                    if( 
+                        !userProject[0].entityInformation ||
+                        (
+                            userProject[0].entityInformation && 
+                            userProject[0].entityInformation._id !== data.entityId
+                        )
+                    ) {
+                        addOrUpdateEntityToProject = true;
+                    } 
+                }
+
+                if( addOrUpdateEntityToProject ) {
+                       
+                    let entityInformation = 
+                    await _entitiesInformation([data.entityId]);
+
+                    if( !entityInformation.success ) {
+                        return resolve(entityInformation);
+                    }
+
+                    updateProject["entityInformation"] = entityInformation.data[0];
+
+                    if( userProject[0].solutionInformation ) {
+
+                        // New entities should not be updated if entityType of
+                        // solution is not match with the entity type of entities.
+                        // Update first solution with new entity type.
+
+                        if(
+                            updateProject.entityInformation.entityType !== userProject[0].solutionInformation.entityType 
+                        ) {
+
+                            let updateSolution = 
+                            await assessmentService.updateSolution(
+                                userToken,
+                                {
+                                    entityType : updateProject.entityInformation.entityType,
+                                    entityTypeId : updateProject.entityInformation.entityTypeId
+                                },
+                                userProject[0].solutionInformation.externalId
+                            );
+
+                            if( !updateSolution.success ) {
+                                throw {
+                                    status : HTTP_STATUS_CODE['bad_request'].status,
+                                    message : CONSTANTS.apiResponses.SOLUTION_NOT_UPDATED
+                                }
+                            }
+                        }
+                        
+                        let solutionUpdated = 
+                        await assessmentService.addEntitiesToSolution(
+                            userToken,
+                            userProject[0].solutionInformation._id,
+                            [ObjectId(data.entityId)]
+                        );
+
+                        if( !solutionUpdated.success ) {
+                            throw {
+                                status : HTTP_STATUS_CODE['bad_request'].status,
+                                message : CONSTANTS.apiResponses.SOLUTION_NOT_UPDATED
+                            }
+                        }
+
+                        let removeEntityFromSolutions = 
+                        await assessmentService.removeEntitiesFromSolution(
+                            userToken,
+                            userProject[0].solutionInformation._id,
+                            [userProject[0].entityInformation._id]
+                        );
+
+                        if( !removeEntityFromSolutions.success ) {
+                            throw {
+                                status : HTTP_STATUS_CODE['bad_request'].status,
+                                message : CONSTANTS.apiResponses.ENTITY_NOT_UPDATED
+                            }
+                        }
+        
+                    }
+                }
+
+                if( createNewProgramAndSolution || solutionExists ) {
+                    
+                    let programAndSolutionInformation = 
                     await this.createProgramAndSolution(
-                        userProject[0]._id,
-                        data.entityId,
+                        data.entityId ? [updateProject.entityInformation._id] : [],
                         data.programId,
                         data.programName,
-                        userToken
+                        userToken,
+                        userProject[0].solutionInformation && userProject[0].solutionInformation._id ?
+                        userProject[0].solutionInformation._id : ""
                     );
 
                     if (!programAndSolutionInformation.success) {
                         return resolve(programAndSolutionInformation);
+                    }
+
+                    if( solutionExists ) {
+                        
+                        let updateProgram = 
+                        await assessmentService.removeSolutionsFromProgram(
+                            userToken,
+                            userProject[0].programInformation._id,
+                            [userProject[0].solutionInformation._id]
+                        );
+    
+                        if( !updateProgram.success ) {
+                            throw {
+                                status : HTTP_STATUS_CODE['bad_request'].status,
+                                message : CONSTANTS.apiResponses.PROGRAM_NOT_UPDATED
+                            }
+                        }
                     }
 
                     updateProject =
@@ -896,7 +1121,7 @@ module.exports = class UserProjectsHelper {
                         if (booleanData.includes(updateData)) {
 
                             updateProject[updateData] =
-                                UTILS.convertStringToBoolean(data[updateData]);
+                            UTILS.convertStringToBoolean(data[updateData]);
 
                         } else if (mongooseIdData.includes(updateData)) {
                             updateProject[updateData] = ObjectId(data[updateData]);
@@ -909,8 +1134,8 @@ module.exports = class UserProjectsHelper {
                 updateProject.updatedBy = userId;
                 updateProject.updatedAt = updateProject.lastSync = new Date();
 
-                if (data.resources) {
-                    updateProject.resources = data.resources;
+                if (data.learningResources) {
+                    updateProject.learningResources = data.learningResources;
                 }
 
                 let projectUpdated =
@@ -933,7 +1158,12 @@ module.exports = class UserProjectsHelper {
 
                 return resolve({
                     success: true,
-                    message: CONSTANTS.apiResponses.USER_PROJECT_UPDATED
+                    message: CONSTANTS.apiResponses.USER_PROJECT_UPDATED,
+                    data : {
+                        programId : 
+                        projectUpdated.programInformation && projectUpdated.programInformation._id ?
+                        projectUpdated.programInformation._id : ""
+                    } 
                 });
 
             } catch (error) {
@@ -961,36 +1191,33 @@ module.exports = class UserProjectsHelper {
     */
 
     static createProgramAndSolution(
-        projectId,
-        entityId = "",
+        entities = [],
         programId = "",
         programName = "",
-        userToken
+        userToken,
+        solutionId
     ) {
         return new Promise(async (resolve, reject) => {
             try {
 
                 let result = {};
 
-                if (entityId && entityId !== "") {
-                    let entitiesData = await _entitiesInformation(entityId);
+                // if (entityId && entityId !== "") {
+                //     let entitiesData = await _entitiesInformation(entityId);
 
-                    if( !entitiesData.success ) {
-                        return resolve(entitiesData);
-                    }
+                //     if( !entitiesData.success ) {
+                //         return resolve(entitiesData);
+                //     }
 
-                    result["entityInformation"] = entitiesData.data[0];
-                }
+                //     result["entityInformation"] = entitiesData.data[0];
+                // }
 
                 let programAndSolutionData = {
-                    entities:
-                    result.entityInformation ?
-                    [ObjectId(result.entityInformation._id)] : [],
+                    entities : entities,
                     type: CONSTANTS.common.IMPROVEMENT_PROJECT,
                     subType: CONSTANTS.common.IMPROVEMENT_PROJECT,
-                    project : {
-                        _id : ObjectId(projectId)
-                    }
+                    isReusable : false,
+                    solutionId : solutionId
                 };
 
                 // <- Dirty fix not required currently
@@ -1471,6 +1698,7 @@ module.exports = class UserProjectsHelper {
                     "tasks._id" : taskId
                 },[
                     "entityInformation._id",
+                    "entityInformation.entityType",
                     "tasks.type",
                     "tasks._id",
                     "tasks.solutionDetails",
@@ -1496,48 +1724,86 @@ module.exports = class UserProjectsHelper {
             if( currentTask.submissionDetails ) {
                 assessmentOrObservationData = currentTask.submissionDetails;
             } else {
-                
-                if( 
-                    currentTask.solutionDetails.type === CONSTANTS.common.ASSESSMENT 
-                ) {
-                    
-                    let duplicateSolution = await _assessmentDetails(
-                        userToken,
-                        currentTask.solutionDetails,
-                        assessmentOrObservationData.entityId,
-                        assessmentOrObservationData.programId,
-                        {
-                            "_id" : projectId,
-                            "taskId" : taskId
-                        }
-                    );
 
-                    if( !duplicateSolution.success ) {
-                        return resolve(duplicateSolution);
+                let solutionDetails = currentTask.solutionDetails;
+
+                let assessmentOrObservation = {
+                    token : userToken,
+                    solutionDetails : solutionDetails,
+                    entityId : assessmentOrObservationData.entityId,
+                    programId :  assessmentOrObservationData.programId,
+                    project :  {
+                        "_id" : projectId,
+                        "taskId" : taskId
                     }
-                    
-                    assessmentOrObservationData["solutionId"] = 
-                    ObjectId(duplicateSolution.data._id);
+                };
 
-                } else if( 
-                    currentTask.solutionDetails.type === CONSTANTS.common.OBSERVATION 
-                ) {
-                    
-                    let observationData = await _observationDetails(
-                        userToken,
-                        currentTask.solutionDetails,
-                        assessmentOrObservationData.entityId,
-                        assessmentOrObservationData.programId,
-                        projectId,
-                        taskId
-                    );
-
-                    assessmentOrObservationData["observationId"] = 
-                    ObjectId(observationData.data.observationId);
-
-                    assessmentOrObservationData["solutionId"] = 
-                    ObjectId(observationData.data.solutionId);
+                let assignedAssessmentOrObservation = 
+                solutionDetails.type === CONSTANTS.common.ASSESSMENT ? 
+                await _assessmentDetails(assessmentOrObservation) : 
+                await _observationDetails(assessmentOrObservation);
+                
+                if( !assignedAssessmentOrObservation.success ) {
+                    return resolve(assignedAssessmentOrObservation);
                 }
+
+                assessmentOrObservationData = 
+                _.merge(assessmentOrObservationData,assignedAssessmentOrObservation.data);
+
+                if( !currentTask.solutionDetails.isReusable ) {
+                    assessmentOrObservationData["programId"] = 
+                    currentTask.solutionDetails.programId;
+                }
+
+
+
+                // if( 
+                //     currentTask.solutionDetails.type === CONSTANTS.common.ASSESSMENT 
+                // ) {
+                    
+                //     assignedAssessmentOrObservation = await _assessmentDetails(
+                //         userToken,
+                //         currentTask.solutionDetails,
+                //         assessmentOrObservationData.entityId,
+                //         assessmentOrObservationData.programId,
+                //         {
+                //             "_id" : projectId,
+                //             "taskId" : taskId
+                //         }
+                //     );
+
+                //     if( !assignedAssessmentOrObservation.success ) {
+                //         return resolve(assignedAssessmentOrObservation);
+                //     }
+
+                // } else if( 
+                //     currentTask.solutionDetails.type === CONSTANTS.common.OBSERVATION 
+                // ) {
+                    
+                //     assignedAssessmentOrObservation = await _observationDetails(
+                //         userToken,
+                //         currentTask.solutionDetails,
+                //         assessmentOrObservationData.entityId,
+                //         assessmentOrObservationData.programId,
+                //         {
+                //             "_id" : projectId,
+                //             "taskId" : taskId
+                //         }
+                //     );
+
+                //     if( !assignedAssessmentOrObservation.success ) {
+                //         return resolve(assignedAssessmentOrObservation);
+                //     }
+
+                //     assessmentOrObservationData["observationId"] = 
+                //     ObjectId(observationData.data.observationId);
+
+                //     assessmentOrObservationData["solutionId"] = 
+                //     ObjectId(observationData.data._id);
+                // }
+
+                // assessmentOrObservationData["solutionId"] = 
+                // ObjectId(assignedAssessmentOrObservation.data._id);
 
                 await database.models.projects.findOneAndUpdate({
                     "_id" : projectId,
@@ -1549,6 +1815,8 @@ module.exports = class UserProjectsHelper {
                 });
 
             }
+
+            assessmentOrObservationData["entityType"] = project[0].entityInformation.entityType;
 
             return resolve({
                 success: true,
@@ -1568,6 +1836,7 @@ module.exports = class UserProjectsHelper {
         }
     })
   }
+  
 
 
     /**
@@ -1639,19 +1908,19 @@ function _projectInformation(project) {
             if( project.entityInformation ) {
                 project.entityId = project.entityInformation._id;
                 project.entityName = project.entityInformation.name;
-                project.entityType = project.entityInformation.entityType;
-                project.entityTypeId = project.entityInformation.entityTypeId;
+                // project.entityType = project.entityInformation.entityType;
+                // project.entityTypeId = project.entityInformation.entityTypeId;
             }
         
-            if( project.solutionInformation ) {
-                project.solutionId = project.solutionInformation._id;
-                project.solutionExternalId = project.solutionInformation.externalId;
-                project.solutionName = project.solutionInformation.name;
-            }
+            // if( project.solutionInformation ) {
+            //     project.solutionId = project.solutionInformation._id;
+            //     project.solutionExternalId = project.solutionInformation.externalId;
+            //     project.solutionName = project.solutionInformation.name;
+            // }
         
             if (project.programInformation ) {
                 project.programId = project.programInformation._id;
-                project.programExternalId = project.programInformation.externalId;
+                // project.programExternalId = project.programInformation.externalId;
                 project.programName = project.programInformation.name;
             }
         
@@ -1922,11 +2191,7 @@ function _entitiesInformation(entityIds) {
 
             let entityData =
             await kendraService.entityDocuments(
-                {
-                    _id: {
-                        $in: entityIds
-                    }
-                },
+                entityIds,
                 ["metaInformation", "entityType", "entityTypeId"]
             );
 
@@ -1971,59 +2236,51 @@ function _entitiesInformation(entityIds) {
     * Assessment details
     * @method
     * @name _assessmentDetails 
-    * @param {String} userToken - Logged in user token.
-    * @param {Object} solutionDetails - Solution details.
-    * @param {String} entityId - Entity id.
-    * @param {String} programId - Program id.
-    * @param {String} projectId - Project id.
-    * @param {String} taskId - Tasks id.
+    * @param {Object} assessmentData - Assessment data.
     * @returns {Object} 
 */
 
-function _assessmentDetails(
-    userToken,
-    solutionDetails,
-    entityId,
-    programId,
-    project
-) {
+function _assessmentDetails( assessmentData ) {
     return new Promise(async (resolve, reject) => {
         try {
 
             let result = {};
 
-            if( solutionDetails.isReusable ) {
+            if( assessmentData.solutionDetails.isReusable ) {
                 
-                result = await assessmentService.createAssessmentSolutionFromTemplate(
-                    userToken,
-                    solutionDetails._id,
+                let createdAssessment = 
+                await assessmentService.createAssessmentSolutionFromTemplate(
+                    assessmentData.token,
+                    assessmentData.solutionDetails._id,
                     {
-                        name : solutionDetails.name + "-" + UTILS.epochTime(),
-                        description : solutionDetails.name + "-" + UTILS.epochTime(),
+                        name : assessmentData.solutionDetails.name + "-" + UTILS.epochTime(),
+                        description : assessmentData.solutionDetails.name + "-" + UTILS.epochTime(),
                         program : {
-                            _id : programId,
+                            _id : assessmentData.programId,
                             name : ""
                         },
-                        entities : [entityId],
-                        project : project
+                        entities : [assessmentData.entityId],
+                        project : assessmentData.project
                     }
                 );
 
-                if( !result.success ) {
+                if( !createdAssessment.success ) {
                     throw {
                         status : HTTP_STATUS_CODE['bad_request'].status,
                         message : CONSTANTS.apiResponses.COULD_NOT_CREATE_ASSESSMENT_SOLUTION
                     }
                 }
 
+                result["solutionId"] = createdAssessment.data._id;
+
             } else {
 
                 let assignedAssessmentToUser = 
                 await assessmentService.createEntityAssessors(
-                    userToken,
-                    programId,
-                    solutionDetails._id,
-                    [entityId]
+                    assessmentData.token,
+                    assessmentData.solutionDetails.programId,
+                    assessmentData.solutionDetails._id,
+                    [assessmentData.entityId]
                 );
 
                 if( !assignedAssessmentToUser.success ) {
@@ -2033,13 +2290,14 @@ function _assessmentDetails(
                     }
                 }
 
-                result = await assessmentService.addEntityToAssessmentSolution(
-                    userToken,
-                    solutionDetails._id,
-                    [entityId.toString()]
+                let entitiesAddedToSolution = 
+                await assessmentService.addEntitiesToSolution(
+                    assessmentData.token,
+                    assessmentData.solutionDetails._id,
+                    [assessmentData.entityId.toString()]
                 );
 
-                if( !result.success ) {
+                if( !entitiesAddedToSolution.success ) {
                     throw {
                         status : HTTP_STATUS_CODE['bad_request'].status,
                         message : CONSTANTS.apiResponses.FAILED_TO_ADD_ENTITY_TO_SOLUTION
@@ -2048,11 +2306,12 @@ function _assessmentDetails(
 
                 let solutionUpdated = 
                 await assessmentService.updateSolution(
-                    userToken,
+                    assessmentData.token,
                     {
-                        "project" : project
+                        "project" : assessmentData.project,
+                        referenceFrom : "project"
                     },
-                    solutionDetails.externalId
+                    assessmentData.solutionDetails.externalId
                 );
 
                 if( !solutionUpdated.success ) {
@@ -2062,13 +2321,12 @@ function _assessmentDetails(
                     }
                 }
 
-                result["data"]["_id"] = solutionDetails._id;
-
+                result["solutionId"] = assessmentData.solutionDetails._id;
             }
 
             return resolve({
                 success : true,
-                data : result.data
+                data : result
             });
 
         } catch(error) {
@@ -2086,49 +2344,55 @@ function _assessmentDetails(
     * Observation details
     * @method
     * @name _observationDetails 
-    * @param {String} userToken - Logged in user token.
-    * @param {Object} solutionDetails - Solution details.
-    * @param {String} entityId - Entity id.
-    * @param {String} programId - Program id.
-    * @param {String} projectId - Project id.
-    * @param {String} taskId - Tasks id.
+    * @param {Object} observationData - Observation data.
     * @returns {Object} 
 */
 
-function _observationDetails( userToken,solutionDetails,entityId,programId,projectId,taskId ) {
+function _observationDetails( observationData ) {
     return new Promise(async (resolve, reject) => {
         try {
 
             let result = {};
 
-            if( solutionDetails.isReusable ) {
+            if( observationData.solutionDetails.isReusable ) {
                 
-                result = await assessmentService.createObservationFromSolutionTemplate(
-                    userToken,
-                    solutionDetails._id,
+                let observationCreatedFromTemplate = 
+                await assessmentService.createObservationFromSolutionTemplate(
+                    observationData.token,
+                    observationData.solutionDetails._id,
                     {
-                        name : solutionDetails.name + "-" + UTILS.epochTime(),
-                        description : solutionDetails.name + "-" + UTILS.epochTime(),
+                        name : observationData.solutionDetails.name + "-" + UTILS.epochTime(),
+                        description : observationData.solutionDetails.name + "-" + UTILS.epochTime(),
                         program : {
-                            _id : programId,
+                            _id : observationData.programId,
                             name : ""
                         },
                         status : CONSTANTS.common.PUBLISHED_STATUS,
-                        entities : [entityId],
-                        projectId : projectId,
-                        taskId : taskId
+                        entities : [observationData.entityId],
+                        project : observationData.project
                     }
                 );
+
+                if( !observationCreatedFromTemplate.success ) {
+                    throw {
+                        status : HTTP_STATUS_CODE['bad_request'].status,
+                        message : CONSTANTS.apiResponses.OBSERVATION_NOT_CREATED
+                    }
+                }
+
+                result["solutionId"] = observationCreatedFromTemplate.data._id;
+                result["observationId"] = observationCreatedFromTemplate.data.observationId;
+
             } else {
 
                 let solutionUpdated = 
                 await assessmentService.updateSolution(
-                    userToken,
+                    observationData.token,
                     {
-                        taskId : taskId,
-                        projectId : ObjectId(projectId)
+                        project : observationData.project,
+                        referenceFrom : "project"
                     },
-                    solutionDetails.externalId
+                    observationData.solutionDetails.externalId
                 );
 
                 if( !solutionUpdated.success ) {
@@ -2142,36 +2406,48 @@ function _observationDetails( userToken,solutionDetails,entityId,programId,proje
                 let endDate = new Date();
                 endDate.setFullYear(endDate.getFullYear() + 1);
                 
-                let observationData = {
-                    name : solutionDetails.name,
-                    description : solutionDetails.name,
+                let observation = {
+                    name : observationData.solutionDetails.name,
+                    description : observationData.solutionDetails.name,
                     status : CONSTANTS.common.PUBLISHED_STATUS,
                     startDate : startDate,
                     endDate : endDate,
-                    entities : [entityId],
-                    project : project
+                    entities : [observationData.entityId],
+                    project : observationData.project
                 };
 
-                let obsservationCreated = await assessmentService.createObservation(
-                    userToken,
-                    solutionDetails._id,
-                    observationData
+                let observationCreated = await assessmentService.createObservation(
+                    observationData.token,
+                    observationData.solutionDetails._id,
+                    observation
                 );
 
-                if( !obsservationCreated.success ) {
+                if( !observationCreated.success ) {
                     throw {
                         status : HTTP_STATUS_CODE['bad_request'].status,
                         message : CONSTANTS.apiResponses.OBSERVATION_NOT_CREATED
                     }
                 }
+
+                result["solutionId"] = observationData.solutionDetails._id;
+                result["observationId"] = observationCreated.data._id;
                 
-                result.data["observationId"] = obsservationCreated._id;
-                result.data["solutionId"] = solutionDetails._id;
+                // result.data["observationId"] = result.data._id;
+                // result.data["_id"] = solutionDetails._id;
             }
 
-            return resolve(result);
+            return resolve({
+                success : true,
+                data : result
+            });
+
         } catch(error) {
-            return reject(error);
+            return resolve({
+                message : error.message,
+                success : false,
+                status : error.status ? 
+                error.status : HTTP_STATUS_CODE['internal_server_error'].status
+            });
         }
     })
 }

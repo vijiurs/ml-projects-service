@@ -366,7 +366,6 @@ module.exports = class UserProjects extends Abstract {
 
                 const projects = await userProjectsHelper.bulkCreate(
                     projectsData,
-                    req.userDetails.userInformation.userId,
                     req.userDetails.userToken
                 );
 
@@ -680,7 +679,10 @@ module.exports = class UserProjects extends Abstract {
     * @apiParamExample {json} Response:
     * {
     * "message": "Project updated successfully",
-    * "status": 200
+    * "status": 200,
+    * "result" : {
+    *   "programId" : "5fb669f223575a2f0cef3b33"
+    * }
     * }
     * @apiUse successBody
     * @apiUse errorBody

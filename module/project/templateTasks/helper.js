@@ -12,7 +12,6 @@
 
 // Dependencies
 const projectTemplatesHelper = require(MODULES_BASE_PATH + "/project/templates/helper");
-const kendraService = require(GENERICS_FILES_PATH + "/services/kendra");
 const learningResourcesHelper = require(MODULES_BASE_PATH + "/learningResources/helper");
 const assessmentService = require(GENERICS_FILES_PATH + "/services/assessment");
 
@@ -184,42 +183,12 @@ module.exports = class ProjectTemplateTasksHelper {
                     }
                 }
 
-                // let observationData = {};
-
-                // if ( observationIds.length > 0 ) {
-                    
-                //     let observations = 
-                //     await kendraService.observationDocuments({
-                //         _id : { $in : observationIds }
-                //     },["_id"]);
-
-                //     if( !observations.success ) {
-                //         throw {
-                //             message : CONSTANTS.apiResponses.OBSERVATION_NOT_FOUND,
-                //             status : HTTP_STATUS_CODE['bad_request'].status
-                //         }
-                //     }
-
-                //     if ( 
-                //         observations.data &&
-                //         Object.keys(observations.data).length > 0 
-                //     ) {
-
-                //         observations.data.forEach(observation => {
-                //             if( !observationData[observation._id.toString()]) {
-                //                 observationData[observation._id.toString()] = true;
-                //             }
-                //         });
-                //     }
-                // }
-
                 return resolve({
                     success : true,
                     data : {
                         tasks : tasks,
                         templateId : templateId,
-                        solutionData : solutionData,
-                        // observationData : observationData
+                        solutionData : solutionData
                     }
                 });
 
@@ -306,17 +275,11 @@ module.exports = class ProjectTemplateTasksHelper {
                             CONSTANTS.apiResponses.SOLUTION_NOT_FOUND;
                         } else {
 
-                            allValues.solutionDetails._id =
-                            ObjectId(solutionData[parsedData.solutionId]._id);
-
-                            allValues.solutionDetails.isReusable = 
-                            solutionData[parsedData.solutionId].isReusable;
-
-                            allValues.solutionDetails.externalId = 
-                            solutionData[parsedData.solutionId].externalId;
-
-                            allValues.solutionDetails.name = 
-                            solutionData[parsedData.solutionId].name;
+                            allValues.solutionDetails = 
+                            _.pick(
+                                solutionData[parsedData.solutionId],
+                                ["_id","isReusable","externalId","name","programId","type","subType"]
+                            )
                         }
 
                     } else {
@@ -422,12 +385,12 @@ module.exports = class ProjectTemplateTasksHelper {
                                 }
                             }
                         }
-    
-                        await database.models.projectTemplates.findOneAndUpdate({
-                            _id : templateId
-                        },{
-                            $addToSet : { tasks : ObjectId(taskData._id) }
-                        });
+
+                        await projectTemplatesHelper.updateProjectTemplateDocument
+                        (
+                            { _id : templateId },
+                            { $addToSet : { tasks : ObjectId(taskData._id) } }
+                        )
                     }
                 }
 

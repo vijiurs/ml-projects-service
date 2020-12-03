@@ -368,62 +368,6 @@ const entityDocuments = function (
 }
 
 /**
-  * List of programs.
-  * @function
-  * @name programsDocuments
-  * @param {Object} filterData - Filter data.
-  * @param {Array} projection - Projected data. 
-  * @param {Array} skipFields - Field to skip.
-  * @returns {JSON} - List of programs.
-*/
-
-const programsDocuments = function ( 
-    filterData =  "all",
-    projection = "all",
-    skipFields = "none" 
-) {
-    return new Promise(async (resolve, reject) => {
-        try {
-            
-            const url = KENDRA_URL + process.env.URL_PREFIX + CONSTANTS.endpoints.LIST_PROGRAMS;
-
-            const options = {
-                headers : {
-                    "content-type": "application/json",
-                    AUTHORIZATION : process.env.AUTHORIZATION,
-                    "internal-access-token": process.env.INTERNAL_ACCESS_TOKEN
-                },
-                json : {
-                    query : filterData,
-                    projection : projection,
-                    skipFields : skipFields
-                }
-            };
-
-            request.post(url,options,kendraCallback);
-
-            function kendraCallback(err, data) {
-
-                let result = {
-                    success : true
-                };
-
-                if (err) {
-                    result.success = false;
-                } else {
-                    result["data"] = data.body.result;
-                }
-
-                return resolve(result);
-            }
-
-        } catch (error) {
-            return reject(error);
-        }
-    })
-}
-
-/**
   * Create user program and solution.
   * @function
   * @name createUserProgramAndSolution
@@ -489,7 +433,7 @@ const getProfile = function ( token ) {
     return new Promise(async (resolve, reject) => {
         try {
             
-            const url = KENDRA_URL + process.env.URL_PREFIX + CONSTANTS.endpoints.USER_EXTENSION_GET_PROFILE;
+            const url = KENDRA_URL + "api/v2" + CONSTANTS.endpoints.USER_EXTENSION_GET_PROFILE;
 
             const options = {
                 headers : {
@@ -631,16 +575,21 @@ const userPrivatePrograms = function ( token ) {
   * @function
   * @name getUserOrganisationsAndRootOrganisations
   * @param {String} token - Logged in user token.
+  * @param {String} userId - User id.
   * @returns {JSON} - Update solutions.
 */
 
-const getUserOrganisationsAndRootOrganisations = function ( token ) {
+const getUserOrganisationsAndRootOrganisations = function ( token,userId = "" ) {
     return new Promise(async (resolve, reject) => {
         try {
             
-            const url = 
+            let url = 
             KENDRA_URL + process.env.URL_PREFIX + 
             CONSTANTS.endpoints.GET_USER_ORGANISATIONS;
+
+            if( userId !== "" ) {
+                url = url + "/" + userId;
+            }
 
             const options = {
                 headers : {
@@ -804,7 +753,6 @@ module.exports = {
     rolesDocuments : rolesDocuments,
     formDetails : formDetails,
     entityDocuments: entityDocuments,
-    programsDocuments : programsDocuments,
     createUserProgramAndSolution : createUserProgramAndSolution,
     getProfile : getProfile,
     updateUserProfile : updateUserProfile,

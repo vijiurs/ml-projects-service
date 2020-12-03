@@ -132,16 +132,16 @@ const createObservationFromSolutionTemplate = function (token,templateId,bodyDat
 */
 
 /**
-  * Add entity to assessment solution
+  * Add entities to assessment solution
   * @function
-  * @name addEntityToAssessmentSolution
+  * @name addEntitiesToSolution
   * @param {String} token - logged in user token.
   * @param {String} solutionId - solution id.
   * @param {Object} bodyData - Body data
   * @returns {JSON} - Add entity to assessment solution.
 */
 
-const addEntityToAssessmentSolution = function (token,solutionId,bodyData) {
+const addEntitiesToSolution = function (token,solutionId,bodyData) {
     return new Promise(async (resolve, reject) => {
         try {
 
@@ -537,14 +537,175 @@ const createObservation = function (token,solutionId,data) {
     })
 }
 
+/**
+  * List Programs based on ids.
+  * @function
+  * @name listProgramsBasedOnIds
+  * @param {Array} programIds - Array of program ids.
+  * @returns {JSON} - List programs based on ids.
+*/
+
+const listProgramsBasedOnIds = function ( programIds ) {
+    return new Promise(async (resolve, reject) => {
+        try {
+            
+            const url = 
+            ASSESSMENT_URL + process.env.URL_PREFIX + CONSTANTS.endpoints.LIST_PROGRAMS_BY_IDS;
+
+            const options = {
+                headers : {
+                    "content-type": "application/json",
+                    AUTHORIZATION : process.env.AUTHORIZATION,
+                    "internal-access-token": process.env.INTERNAL_ACCESS_TOKEN
+                },
+                json : {
+                    programIds : programIds
+                }
+            };
+
+            request.post(url,options,kendraCallback);
+
+            function kendraCallback(err, data) {
+
+                let result = {
+                    success : true
+                };
+
+                 if (err) {
+                    result.success = false;
+                } else {
+                    
+                    let response = data.body;
+                    
+                    if( response.status === HTTP_STATUS_CODE['ok'].status ) {
+                        result["data"] = response.result;
+                    } else {
+                        result.success = false;
+                    }
+                }
+
+                return resolve(result);
+            }
+
+        } catch (error) {
+            return reject(error);
+        }
+    })
+}
+
+/**
+  * Remove solutions from program.
+  * @function
+  * @name removeSolutionsFromProgram
+  * @param {String} programId - Program id.
+  * @param {Array} solutionIds - Array of solutions ids.
+  * @returns {JSON} - updated program.
+*/
+
+const removeSolutionsFromProgram = function ( token,programId,solutionIds ) {
+    return new Promise(async (resolve, reject) => {
+        try {
+            
+            const url = 
+            ASSESSMENT_URL + process.env.URL_PREFIX + CONSTANTS.endpoints.REMOVE_SOLUTIONS_FROM_PROGRAM + "/" + programId;
+
+            const options = {
+                headers : {
+                    "content-type": "application/json",
+                    AUTHORIZATION : process.env.AUTHORIZATION,
+                    "internal-access-token": process.env.INTERNAL_ACCESS_TOKEN,
+                    "x-authenticated-user-token" : token
+                },
+                json : {
+                    solutionIds : solutionIds
+                }
+            };
+
+            request.post(url,options,kendraCallback);
+
+            function kendraCallback(err, data) {
+
+                let result = {
+                    success : true
+                };
+
+                if (err) {
+                    result.success = false;
+                } else {
+                    result["data"] = data.body.result;
+                }
+
+                return resolve(result);
+            }
+
+        } catch (error) {
+            return reject(error);
+        }
+    })
+}
+
+/**
+  * Remove solutions from program.
+  * @function
+  * @name removeEntitiesFromSolution
+  * @param {String} solutionId - Program id.
+  * @param {Array} entities - Array of solutions ids.
+  * @returns {JSON} - updated program.
+*/
+
+const removeEntitiesFromSolution = function ( token,solutionId,entities ) {
+    return new Promise(async (resolve, reject) => {
+        try {
+            
+            const url = 
+            ASSESSMENT_URL + process.env.URL_PREFIX + CONSTANTS.endpoints.REMOVE_ENTITY_FROM_SOLUTION + "/" + solutionId;
+
+            const options = {
+                headers : {
+                    "content-type": "application/json",
+                    AUTHORIZATION : process.env.AUTHORIZATION,
+                    "internal-access-token": process.env.INTERNAL_ACCESS_TOKEN,
+                    "x-authenticated-user-token" : token
+                },
+                json : {
+                    entities : entities
+                }
+            };
+
+            request.post(url,options,kendraCallback);
+
+            function kendraCallback(err, data) {
+
+                let result = {
+                    success : true
+                };
+
+                if (err) {
+                    result.success = false;
+                } else {
+                    result["data"] = data.body.result;
+                }
+
+                return resolve(result);
+            }
+
+        } catch (error) {
+            return reject(error);
+        }
+    })
+}
+
 module.exports = {
     createAssessmentSolutionFromTemplate : createAssessmentSolutionFromTemplate,
     createObservationFromSolutionTemplate : createObservationFromSolutionTemplate,
     addEntityToObservation : addEntityToObservation,
-    addEntityToAssessmentSolution : addEntityToAssessmentSolution,
+    addEntitiesToSolution : addEntitiesToSolution,
     createEntityAssessors : createEntityAssessors,
     observationDetails : observationDetails,
     listSolutions : listSolutions,
     updateSolution : updateSolution,
-    createObservation : createObservation
+    createObservation : createObservation,
+    listProgramsBasedOnIds : listProgramsBasedOnIds,
+    removeSolutionsFromProgram : removeSolutionsFromProgram,
+    removeEntitiesFromSolution : removeEntitiesFromSolution
 }

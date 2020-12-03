@@ -81,11 +81,19 @@ module.exports = {
     "ATTACHMENTS_URL_NOT_FOUND" : "Not found attachments url",
     "PROJECT_CATEGORIES_UPDATED" : "Successfully updated project categories",
     "PROJECT_CATEGORIES_NOT_UPDATED" : "Could not updated project categories",
-    "PROJECT_TEMPLATE_NOT_UPDATED" : "Could not update project template",
+    "PROJECT_TEMPLATE_NOT_UPDATED" : "Not found project template",
     "COULD_NOT_CREATE_ASSESSMENT_SOLUTION" : "Could not create assessment solution",
     "FAILED_TO_ADD_ENTITY_TO_SOLUTION" : "Failed to add entity to solution",
     "FAILED_TO_ASSIGNED_ASSESSMENT_TO_USER" : "Failed to assign assessment to user",
     "SOLUTION_NOT_UPDATED" : "Could not update solution",
     "OBSERVATION_NOT_CREATED" : "Could not create observation",
-    "USERS_AND_ENTITIES_NOT_FOUND" : "Could not find users for the given entity and role"
+    "USERS_AND_ENTITIES_NOT_FOUND" : "Could not find users for the given entity and role",
+    "PROGRAM_NOT_UPDATED" : "Could not update program",
+    "ENTITY_NOT_UPDATED" : "Could not update entity",
+    "UPDATE_QUERY_REQUIRED" : "Update query is required",
+    "UPDATE_OBJECT_REQUIRED" : "Update object is required",
+    "FAILED_TO_UPDATE" : "Failed to update the document",
+    "UPDATED_DOCUMENT_SUCCESSFULLY" : "Document updated successfully",
+    "ENTITY_REQUIRED_FOR_ASSESSMENT_OBSERVATION" : "Entity is required for assessment or observation task",
+    "PROJECT_NOT_CREATED" : "Could not create project"
 };

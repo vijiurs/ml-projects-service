@@ -90,7 +90,7 @@ module.exports = {
         }
       });
     
-      let removeTemplates = await db.collection("impTemplates").remove({ _id:{ $in : templateIds } });
+      let removeTemplates = await db.collection("impTemplates").deleteMany({ _id:{ $in : templateIds } });
      
       let obj = { projectIds:projectIds,userProgramCreation:userProgramCreation,userId:userId };
       return  obj;

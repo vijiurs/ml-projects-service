@@ -50,7 +50,7 @@ let sendMessageToSlack = function (errorMessage) {
 
         fieldsData.push({
           title: "Environment",
-          value: process.env.NODE_ENV,
+          value: process.env.APPLICATION_ENV,
           short: false
         })
 

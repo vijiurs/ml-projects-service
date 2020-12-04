@@ -1,10 +1,10 @@
 {
-  "name": "sl-unnati-services",
+  "name": "sl-improvement-service",
   "version": "1.0.0",
-  "description": "Unnati services",
+  "description": "Improvement service",
   "main": "app.js",
   "bin": {
-    "unnati-migrations": "module/migrations/bin/migrations.js"
+    "improvement-service-migrations": "module/migrations/bin/migrations.js"
   },
   "scripts": {
     "test": "mocha --timeout 10000",
@@ -13,7 +13,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/shikshalokam/sl-unnati-services.git"
+    "url": "https://github.com/shikshalokam/sl-unnati-service.git"
   },
   "keywords": [
     "shikshalokam"
@@ -21,9 +21,9 @@
   "author": "Shikshalokam <info@shikshalokam.com>",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/shikshalokam/sl-unnati-services/issues"
+    "url": "https://github.com/shikshalokam/sl-unnati-service/issues"
   },
-  "homepage": "https://github.com/shikshalokam/sl-unnati-services#readme",
+  "homepage": "https://github.com/shikshalokam/sl-unnati-service#readme",
   "dependencies": {
     "async": "^3.2.0",
     "body-parser": "^1.19.0",
@@ -41,7 +41,10 @@
     "form-urlencoded": "^4.1.3",
     "fs": "0.0.1-security",
     "fs-extra": "^9.0.1",
+    "json2csv": "^5.0.3",
+    "jsonwebtoken": "^8.5.1",
     "jwt-decode": "^2.2.0",
+    "kafka-node": "^4.1.3",
     "keycloak-auth-utils": "^3.3.0",
     "lodash": "^4.17.15",
     "log": "^1.4.0",
@@ -55,6 +58,7 @@
     "path": "^0.12.7",
     "request": "^2.88.2",
     "require-all": "^3.0.0",
+    "uuid": "^8.3.0",
     "xml-js": "^1.6.11"
   },
   "devDependencies": {

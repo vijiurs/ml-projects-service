@@ -50,34 +50,6 @@ let enviromentVariables = {
     "message" : "Required internal access token",
     "optional" : false
   },
-  "sunbird_url" : {
-    "message" : "Required sunbird url",
-    "optional" : false
-  },
-  "sunbird_keycloak_auth_endpoint" : {
-    "message" : "Required sunbird keycloak auth endpoint",
-    "optional" : false
-  },
-  "sunbird_keycloak_realm" : {
-    "message" : "Required sunbird keycloak realm",
-    "optional" : false
-  },
-  "sunbird_keycloak_client_id" : {
-    "message" : "Required sunbird keycloak client id",
-    "optional" : false
-  },
-  "sunbird_keycloak_public" : {
-    "message" : "Required sunbird keycloak public",
-    "optional" : false
-  },
-  "sunbird_cache_store" : {
-    "message" : "Required sunbird cache store",
-    "optional" : false
-  },
-  "sunbird_cache_ttl" : {
-    "message" : "Required sunbird cache ttl",
-    "optional" : false
-  },
   "MIGRATION_COLLECTION" : {
     "message" : "Required migrations collection name",
     "optional" : false
@@ -100,7 +72,11 @@ let enviromentVariables = {
   },
   "SLACK_TOKEN" : {
     "message" : "Required slack token",
-    "optional" : false
+    "optional" : true,
+    "requiredIf" : {
+      "key": "SLACK_COMMUNICATIONS_ON_OFF",
+      "value" : "ON"
+    }
   },
   "URL_PREFIX" : {
     "message" : "Required",
@@ -125,6 +101,44 @@ let enviromentVariables = {
   "GCP_BUCKET_NAME" : {
     "message" : "Required",
     "optional" : false
+  },
+  "PUBLIC_FOLDER_PATH" : {
+    "message" : "Required",
+    "optional" : false,
+    "default" : "public" 
+  },
+  "CSV_REPORTS_PATH" : {
+    "message" : "Required",
+    "optional" : false,
+    "default" : "reports" 
+  },
+  "SUNBIRD_SERIVCE_HOST" : {
+    "message" : "Required",
+    "optional" : false
+  },
+  "SUNBIRD_SERIVCE_BASE_URL" : {
+    "message" : "Required",
+    "optional" : false
+  },
+  "KAFKA_COMMUNICATIONS_ON_OFF" : {
+    "message" : "Enable/Disable kafka communications",
+    "optional" : false
+  },
+  "KAFKA_URL" : {
+    "message" : "Required",
+    "optional" : false
+  },
+  "NOTIFICATIONS_TOPIC" : {
+    "message" : "Required",
+    "optional" : false
+  },
+  "IMPROVEMENT_PROJECT_APP_TYPE" : {
+    "message" : "Required",
+    "optional" : false
+  },
+  "IMPROVEMENT_PROJECT_APP_NAME" : {
+    "message" : "Required",
+    "optional" : false
   }
 }
 
@@ -136,31 +150,49 @@ module.exports = function() {
     let tableObj = {
       [eachEnvironmentVariable] : ""
     };
+
+    if( 
+      enviromentVariables[eachEnvironmentVariable].requiredIf
+      && process.env[enviromentVariables[eachEnvironmentVariable].requiredIf.key] 
+      && process.env[enviromentVariables[eachEnvironmentVariable].requiredIf.key] === enviromentVariables[eachEnvironmentVariable].requiredIf.value
+    ) {
+      tableObj[eachEnvironmentVariable].optional = false;
+    }
   
-    if( !(process.env[eachEnvironmentVariable]) && !(enviromentVariables[eachEnvironmentVariable].optional)) {
+    if( 
+      !(process.env[eachEnvironmentVariable]) && 
+      !(enviromentVariables[eachEnvironmentVariable].optional)
+    ) {
+      
       success = false;
 
-      if(enviromentVariables[eachEnvironmentVariable] && enviromentVariables[eachEnvironmentVariable].message !== "") {
+      if( 
+        enviromentVariables[eachEnvironmentVariable].default &&
+        enviromentVariables[eachEnvironmentVariable].default != "" 
+      ) {
+        process.env[eachEnvironmentVariable] = 
+        enviromentVariables[eachEnvironmentVariable].default;
+      }
+
+      if(
+        enviromentVariables[eachEnvironmentVariable] && 
+        enviromentVariables[eachEnvironmentVariable].message !== ""
+      ) {
         tableObj[eachEnvironmentVariable] = 
         enviromentVariables[eachEnvironmentVariable].message;
       } else {
         tableObj[eachEnvironmentVariable] = "required";
       }
+
     } else {
 
-      tableObj[eachEnvironmentVariable] = "success";
-
+      tableObj[eachEnvironmentVariable] = "Passed";
+      
       if( 
         enviromentVariables[eachEnvironmentVariable].possibleValues &&
         !enviromentVariables[eachEnvironmentVariable].possibleValues.includes(process.env[eachEnvironmentVariable])
       ) {
-        tableObj[eachEnvironmentVariable] += ` Valid values - ${enviromentVariables[eachEnvironmentVariable].possibleValues.join(", ")}`;
-      } else {
-        
-        if(enviromentVariables[eachEnvironmentVariable].optional) {
-          tableObj[eachEnvironmentVariable] = enviromentVariables[eachEnvironmentVariable].message;
-        }
-
+        tableObj[eachEnvironmentVariable] = ` Valid values - ${enviromentVariables[eachEnvironmentVariable].possibleValues.join(", ")}`;
       }
       
     }

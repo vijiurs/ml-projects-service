@@ -22,6 +22,8 @@ module.exports = function () {
   global.GENERIC_HELPERS_PATH = GENERICS_FILES_PATH + "/helpers";
   global._ = require("lodash");
   global.UTILS = require(GENERIC_HELPERS_PATH + "/utils");
+
+  global.CSV_FILE_STREAM = require(PROJECT_ROOT_DIRECTORY + "/generics/file-stream");
   require("./connections");
 
   global.ENABLE_CONSOLE_LOGGING = process.env.ENABLE_CONSOLE_LOGGING || "OFF";
@@ -104,6 +106,18 @@ module.exports = function () {
     }
   });
 
+
+  // KAFKA CONSUMERS
+
+  fs.readdirSync(PROJECT_ROOT_DIRECTORY + "/generics/kafka/consumers")
+  .forEach(function (file) {
+    if (file.match(/\.js$/) !== null) {
+      var name = file.replace('.js', '');
+       global[name + 'Consumer'] = 
+      require(PROJECT_ROOT_DIRECTORY + "/generics/kafka/consumers/" + file);
+    }
+  });
+
   // Load log file
   global.LOGGER = bunyan.createLogger({
     name: 'information',
@@ -131,13 +145,5 @@ module.exports = function () {
       count: 3 // keep 3 back copies
     }]
   });
-
-  global.SESSIONS = {};
-
-  const projectCategoriesHelper = require(MODULES_BASE_PATH+"/project/categories/helper");
-
-  (async () => {
-    await projectCategoriesHelper.set();
-  })();
 
 };

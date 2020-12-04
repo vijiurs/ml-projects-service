@@ -12,7 +12,7 @@ module.exports = {
         updatedAt : new Date(),
         updatedBy : "SYSTEM",
         createdBy : "SYSTEM",
-        icon : "individualAssessments.png",
+        icon : "teacher.png",
         isDeleted : false,
         isVisible : true,
         status : "active"
@@ -24,7 +24,7 @@ module.exports = {
         updatedAt : new Date(),
         updatedBy : "SYSTEM",
         createdBy : "SYSTEM",
-        icon : "institutionalAssessments.png",
+        icon : "students.png",
         isDeleted : false,
         isVisible : true,
         status : "active"
@@ -36,7 +36,7 @@ module.exports = {
         updatedAt : new Date(),
         updatedBy : "SYSTEM",
         createdBy : "SYSTEM",
-        icon : "observationSolutions.png",
+        icon : "infrastructure.png",
         isDeleted : false,
         isVisible : true,
         status : "active"
@@ -48,7 +48,31 @@ module.exports = {
         updatedAt : new Date(),
         updatedBy : "SYSTEM",
         createdBy : "SYSTEM",
-        icon : "drafts.png",
+        icon : "community.png",
+        isDeleted : false,
+        isVisible : true,
+        status : "active"
+      },
+      {
+        name : "Education Leader",
+        externalId : "educationLeader",
+        createdAt : new Date(),
+        updatedAt : new Date(),
+        updatedBy : "SYSTEM",
+        createdBy : "SYSTEM",
+        icon : "educationLeader.png",
+        isDeleted : false,
+        isVisible : true,
+        status : "active"
+      },
+      {
+        name : "School Process",
+        externalId : "schoolProcess",
+        createdAt : new Date(),
+        updatedAt : new Date(),
+        updatedBy : "SYSTEM",
+        createdBy : "SYSTEM",
+        icon : "sp.png",
         isDeleted : false,
         isVisible : true,
         status : "active"
@@ -57,21 +81,22 @@ module.exports = {
 
     for( let category = 0 ; category < projectCategories.length; category++ ) {
 
+      let uploadUrl = 
       await kendraServiceHelper.upload(
         `public/assets/projectCategories/${projectCategories[category].icon}`,
         `static/projectCategories/${projectCategories[category].icon}`
       );
 
+      if( !uploadUrl.success ) {
+        return ("Could not upload url");
+      }
+
       projectCategories[category].icon = "static/projectCategories/" + projectCategories[category].icon; 
     }
 
     await db.collection('projectCategories').insertMany(projectCategories);
-    await db.collection('projectCategories').createIndex({ externalId : 1 },{ unique: true });
-
-
   },
 
   async down(db) {
-    // return await db.collection('albums').updateOne({artist: 'The Beatles'}, {$set: {blacklisted: false}});
   }
 };

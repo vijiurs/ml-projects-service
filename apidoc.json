@@ -1,7 +1,7 @@
 {
-    "name": "SL-Unnati-service",
+    "name": "sl-improvement-service",
     "version": "0.0.1",
-    "description": "SL unnati API's",
-    "title": "SL unnati API's",
+    "description": "SL Improvement Service APIs",
+    "title": "SL Improvement APIs",
     "url": "https://shikshalokam.org"
 }

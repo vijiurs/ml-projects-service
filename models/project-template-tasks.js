@@ -10,7 +10,8 @@ module.exports = {
     schema: {
         name : {
             type : String,
-            required : true
+            required : true,
+            index: true
         },
         description : {
             type : String,
@@ -30,20 +31,19 @@ module.exports = {
         },
         externalId : {
             type : String,
-            required : true
+            required : true,
+            index: true,
+            unique: true
         },
         type : {
             type : String,
             required : true
         },
-        assessmentDetails : {
+        solutionDetails : {
             type : Object,
             default : {}
         },
-        parentId : {
-            type : "ObjectId",
-            required : true
-        },
+        parentId : "ObjectId",
         projectTemplateId : {
             type : "ObjectId",
             required : true
@@ -60,13 +60,21 @@ module.exports = {
             type : Array,
             default : []
         },
-        contentDetails : {
-            type : Object,
-            default : {}
-        },
         improvementProjectDetails : {
             type : Object,
             default : {}
+        },
+        visibleIf : {
+            type : Array,
+            default : []
+        },
+        hasSubTasks : {
+            type : Boolean,
+            default : false
+        },
+        learningResources : {
+            type : Array,
+            default : []
         }
     }
 };

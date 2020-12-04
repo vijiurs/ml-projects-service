@@ -1,30 +1,16 @@
 /**
- * name : middleware/authenticator.js
+ * name : authenticator.js
  * author : Aman Karki
- * Date : 13-July-2020
- * Description : Keycloak authentication.
+ * Date : 05-Aug-2020
+ * Description : Authentication middleware. Call sunbird service for authentication.
  */
 
 // dependencies
-const jwtDecode = require('jwt-decode');
-const slackClient = require("../helpers/slack-communications");
-const interceptor = require("./lib/api-interceptor");
-const messageUtil = require("./lib/message-util");
-let responseCode = require("../http-status-codes");
-const shikshalokam = require("../helpers/shikshalokam");
-
-var reqMsg = messageUtil.REQUEST;
-var keyCloakConfig = {
-  authServerUrl : process.env.sunbird_url + process.env.sunbird_keycloak_auth_endpoint,
-  realm : process.env.sunbird_keycloak_realm,
-  clientId : process.env.sunbird_keycloak_client_id,
-  public : process.env.sunbird_keycloak_public
-};
-
-var cacheConfig = {
-  store: process.env.sunbird_cache_store,
-  ttl: process.env.sunbird_cache_ttl
-};
+const sunbirdHelper = require(GENERICS_FILES_PATH + "/services/sunbird");
+const jwt = require('jsonwebtoken');
+const fs = require('fs');
+const accessTokenValidationMode = (process.env.VALIDATE_ACCESS_TOKEN_OFFLINE && process.env.VALIDATE_ACCESS_TOKEN_OFFLINE === "OFF")? "OFF" : "ON";
+const keyCloakPublicKeyPath = (process.env.KEYCLOAK_PUBLIC_KEY_PATH && process.env.KEYCLOAK_PUBLIC_KEY_PATH != "") ? PROJECT_ROOT_DIRECTORY+"/"+process.env.KEYCLOAK_PUBLIC_KEY_PATH+"/" : PROJECT_ROOT_DIRECTORY+"/"+"keycloak-public-keys/" ;
 
 var respUtil = function (resp) {
   return {
@@ -34,25 +20,6 @@ var respUtil = function (resp) {
   };
 };
 
-var tokenAuthenticationFailureMessageToSlack = function (req, token, msg) {
-  let jwtInfomration = jwtDecode(token)
-  jwtInfomration["x-authenticated-user-token"] = token
-  const tokenByPassAllowedLog = { 
-    method: req.method, 
-    url: req.url, 
-    headers: req.headers, 
-    body: req.body,
-    errorMsg: msg, 
-    customFields: 
-    jwtInfomration, 
-    slackErrorName: process.env.SLACK_ERROR_NAME,
-    color: process.env.SLACK_ERROR_MESSAGE_COLOR
-  }
-
-  slackClient.sendMessageToSlack(tokenByPassAllowedLog)
-}
-
-var apiInterceptor = new interceptor(keyCloakConfig, cacheConfig);
 var removedHeaders = [
   "host",
   "origin",
@@ -69,15 +36,7 @@ var removedHeaders = [
   "connection"
 ];
 
-async function getAllRoles(obj) {
-  let roles = await obj.roles;
-  await _.forEach(obj.organisations, async value => {
-    roles = await roles.concat(value.roles);
-  });
-  return roles;
-}
-
-module.exports = async function (req, res, next) {
+module.exports = async function (req, res, next, token = "") {
 
   removedHeaders.forEach(function (e) {
     delete req.headers[e];
@@ -87,86 +46,162 @@ module.exports = async function (req, res, next) {
   if (!req.rspObj) req.rspObj = {};
   var rspObj = req.rspObj;
 
-  if (req.path.includes("slack")) {
-    next();
-    return
-  }
 
   // Allow search endpoints for non-logged in users.
-  if (req.path.includes("bodh/search")) {
+  let guestAccess = false;
+  let guestAccessPaths = [];
+  await Promise.all(guestAccessPaths.map(async function (path) {
+    if (req.path.includes(path)) {
+      guestAccess = true;
+    }
+  }));
+  
+  if(guestAccess==true) {
     next();
-    return
+    return;
   }
 
-  if (req.path.includes("keywords")) {
-    if(req.headers["internal-access-token"] !== process.env.INTERNAL_ACCESS_TOKEN) {
-      rspObj.errCode = reqMsg.TOKEN.MISSING_CODE;
-      rspObj.errMsg = reqMsg.TOKEN.MISSING_MESSAGE;
-      rspObj.responseCode = responseCode.unauthorized;
+  let internalAccessApiPaths = ["/templates/bulkCreate"];
+  let performInternalAccessTokenCheck = false;
+  await Promise.all(internalAccessApiPaths.map(async function (path) {
+    if (req.path.includes(path)) {
+      performInternalAccessTokenCheck = true;
+    }
+  }));
+
+  if (performInternalAccessTokenCheck) {
+    if (req.headers["internal-access-token"] !== process.env.INTERNAL_ACCESS_TOKEN) {
+      rspObj.errCode = CONSTANTS.apiResponses.TOKEN_MISSING_CODE;
+      rspObj.errMsg = CONSTANTS.apiResponses.TOKEN_MISSING_MESSAGE;
+      rspObj.responseCode = HTTP_STATUS_CODE['unauthorized'].status;
       return res.status(HTTP_STATUS_CODE["unauthorized"].status).send(respUtil(rspObj));
-    } else {
-      next();
-      return;
     }
   }
 
+
+  // let tokenOrInternalAccessTokenRequiredPaths = [];
+  // let tokenOrInternalAccessTokenRequired = false;
+  // await Promise.all(tokenOrInternalAccessTokenRequiredPaths.map(async function (path) {
+  //   if (req.path.includes(path)) {
+  //     tokenOrInternalAccessTokenRequired = true;
+  //   }
+  // }));
+
+  // if (tokenOrInternalAccessTokenRequired) {
+  //   if (req.headers["internal-access-token"] == process.env.INTERNAL_ACCESS_TOKEN || token) {
+  //     next();
+  //     return;
+  //   } else {
+  //     rspObj.errCode = CONSTANTS.apiResponses.MISSING_TOKEN_OR_INTERNAL_ACCESS_TOKEN_CODE;
+  //     rspObj.errMsg = CONSTANTS.apiResponses.MISSING_TOKEN_OR_INTERNAL_ACCESS_TOKEN_MESSAGE;
+  //     rspObj.responseCode = HTTP_STATUS_CODE["unauthorized"].status;
+  //     return res.status(HTTP_STATUS_CODE["unauthorized"].status).send(respUtil(rspObj));
+  //   }
+  // }
+
+  // let securedApiPaths = [];
+  // let tokenAndInternalAccessTokenRequired = false;
+  // await Promise.all(securedApiPaths.map(async function (path) {
+  //   if (req.path.includes(path)) {
+  //     tokenAndInternalAccessTokenRequired = true;
+  //   }
+  // }));
+
+  // if (tokenAndInternalAccessTokenRequired) {
+  //   if (req.headers["internal-access-token"] == process.env.INTERNAL_ACCESS_TOKEN && token) {
+  //     next();
+  //     return;
+  //   } else {
+  //     rspObj.errCode = CONSTANTS.apiResponses.MISSING_TOKEN_AND_INTERNAL_ACCESS_TOKEN_CODE;
+  //     rspObj.errMsg = CONSTANTS.apiResponses.MISSING_TOKEN_AND_INTERNAL_ACCESS_TOKEN_MESSAGE;
+  //     rspObj.responseCode = HTTP_STATUS_CODE['unauthorized'].status;
+  //     return res.status(HTTP_STATUS_CODE["unauthorized"].status).send(respUtil(rspObj));
+  //   }
+  // }
+
+
   if (!token) {
-    rspObj.errCode = reqMsg.TOKEN.MISSING_CODE;
-    rspObj.errMsg = reqMsg.TOKEN.MISSING_MESSAGE;
-    rspObj.responseCode = responseCode.unauthorized;
+    rspObj.errCode = CONSTANTS.apiResponses.TOKEN_MISSING_CODE;
+    rspObj.errMsg = CONSTANTS.apiResponses.TOKEN_MISSING_MESSAGE;
+    rspObj.responseCode = HTTP_STATUS_CODE["unauthorized"].status;
     return res.status(HTTP_STATUS_CODE["unauthorized"].status).send(respUtil(rspObj));
   }
 
-  apiInterceptor.validateToken(token, function (err, tokenData) {
+  if (accessTokenValidationMode === "ON") {
 
-    if (err) {
-      rspObj.errCode = reqMsg.TOKEN.INVALID_CODE;
-      rspObj.errMsg = reqMsg.TOKEN.INVALID_MESSAGE;
-      rspObj.responseCode = responseCode.UNAUTHORIZED_ACCESS;
-      
-      tokenAuthenticationFailureMessageToSlack(
-        req,
-        token, "TOKEN VERIFICATION WITH KEYCLOAK FAILED"
-      );
+    let rspObj = {};
+    rspObj.errCode = CONSTANTS.apiResponses.TOKEN_INVALID_CODE;
+    rspObj.errMsg = CONSTANTS.apiResponses.TOKEN_INVALID_MESSAGE;
+    rspObj.responseCode = HTTP_STATUS_CODE["unauthorized"].status;
+
+    var decoded = jwt.decode(token, { complete: true });
+    if(decoded === null || decoded.header === undefined){
       return res.status(HTTP_STATUS_CODE["unauthorized"].status).send(respUtil(rspObj));
-    } else {
-      req.rspObj.userId = tokenData.userId;
-      req.rspObj.userToken = req.headers["x-authenticated-user-token"];
-      delete req.headers["x-authenticated-userid"];
-      delete req.headers["x-authenticated-user-token"];
-      // rspObj.telemetryData.actor = utilsService.getTelemetryActorData(req);
-      req.headers["x-authenticated-userid"] = tokenData.userId;
-      req.rspObj = rspObj;
-      shikshalokam
-        .userInfo(token, tokenData.userId)
-        .then(async userDetails => {
-          if (userDetails.responseCode == "OK") {
-            req.userDetails = userDetails.result.response;
-            req.userDetails.userToken = req.rspObj.userToken
-            req.userDetails.allRoles = await getAllRoles(req.userDetails);
-            next();
-          } else {
-            tokenAuthenticationFailureMessageToSlack(
-              req, 
-              token, 
-              "TOKEN VERIFICATION - FAILED TO GET USER DETAIL FROM Kendra SERVICE"
-            );
+    }
 
-            rspObj.errCode = reqMsg.TOKEN.INVALID_CODE;
-            rspObj.errMsg = reqMsg.TOKEN.INVALID_MESSAGE;
-            rspObj.responseCode = responseCode.UNAUTHORIZED_ACCESS;
+    const kid = decoded.header.kid
+    let cert = "";
+    let path = keyCloakPublicKeyPath + kid + '.pem';
+    
+    if (fs.existsSync(path)) {
+
+      cert = fs.readFileSync(path);
+      jwt.verify(token, cert, { algorithm: 'RS256' }, function (err, decode) {
+  
+        if (err) {
+          return res.status(HTTP_STATUS_CODE["unauthorized"].status).send(respUtil(rspObj));
+        }
+
+        if (decode !== undefined) {
+          const expiry = decode.exp;
+          const now = new Date();
+          if (now.getTime() > expiry * 1000) {
             return res.status(HTTP_STATUS_CODE["unauthorized"].status).send(respUtil(rspObj));
           }
-        })
-        .catch(error => {
-          tokenAuthenticationFailureMessageToSlack(
-            req, 
-            token, 
-            "TOKEN VERIFICATION - ERROR FETCHING USER DETAIL FROM Kendra SERVICE"
-          );
 
-          return res.status(HTTP_STATUS_CODE["unauthorized"].status).send(error);
-        });
+          req.userDetails = {
+            userToken : token,
+            userInformation : {
+              userId : decode.sub.split(":").pop(),
+              userName : decode.preferred_username,
+              email : decode.email,
+              firstName : decode.name
+            }
+          };
+
+          next();
+        
+        } else {
+
+          return res.status(HTTP_STATUS_CODE["unauthorized"].status).send(respUtil(rspObj));
+        }
+
+      });
+    } else {
+      return res.status(HTTP_STATUS_CODE["unauthorized"].status).send(respUtil(rspObj));
     }
-  });
+  }else{
+
+    sunbirdHelper
+      .verifyToken(token)
+      .then(async userDetails => {
+        if (userDetails.result.isValid == true) {
+          req.userDetails = {};
+          req.userDetails = userDetails.result;
+          req.userDetails['userToken'] = token;
+          next();
+        } else {
+          rspObj.errCode = CONSTANTS.apiResponses.TOKEN_INVALID_CODE;
+          rspObj.errMsg = CONSTANTS.apiResponses.TOKEN_INVALID_MESSAGE;
+          rspObj.responseCode = HTTP_STATUS_CODE["unauthorized"].status;
+          return res.status(HTTP_STATUS_CODE["unauthorized"].status).send(respUtil(rspObj));
+        }
+
+      }).catch(error => {
+        return res.status(HTTP_STATUS_CODE["unauthorized"].status).send(error);
+      });
+  }
+
+
+
 };

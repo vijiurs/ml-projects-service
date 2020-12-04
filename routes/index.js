@@ -86,12 +86,8 @@ module.exports = function (app) {
             status: result.status ? result.status : HTTP_STATUS_CODE["ok"].status,
             result: result.data,
             result: result.result,
-            additionalDetails: result.additionalDetails,
-            pagination: result.pagination,
-            totalCount: result.totalCount,
             total: result.total,
-            count: result.count,
-            failed: result.failed
+            count : result.count
           });
         }
 

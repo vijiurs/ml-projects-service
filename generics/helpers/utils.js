@@ -76,9 +76,108 @@ function checkIfStringIsUrl(str) {
   return pattern.test(str);
 }
 
+ /**
+  * Parse a single column.
+  * @function
+  * @name valueParser - Parse value
+  * @param {String} dataToBeParsed - data to be parsed. 
+  * @returns {Object} returns parsed data
+*/
+
+function valueParser(dataToBeParsed) {
+
+  let parsedData = {}
+
+  Object.keys(dataToBeParsed).forEach(eachDataToBeParsed => {
+    parsedData[eachDataToBeParsed] = dataToBeParsed[eachDataToBeParsed].trim()
+  })
+
+  if(parsedData._arrayFields && parsedData._arrayFields.split(",").length > 0) {
+    parsedData._arrayFields.split(",").forEach(arrayTypeField => {
+      if (parsedData[arrayTypeField]) {
+        parsedData[arrayTypeField] = parsedData[arrayTypeField].split(",")
+      }
+    })
+  }
+
+  return parsedData
+}
+
+/**
+     * Convert string to boolean.
+     * @method
+     * @name convertStringToBoolean
+     * @param {String} stringData -String data.         
+     * @returns {Boolean} - Boolean data.  
+   */
+  
+  function convertStringToBoolean(stringData) {
+    let stringToBoolean = (stringData === "TRUE" || stringData === "true");
+    return stringToBoolean;
+  }
+
+    /**
+   * List of boolean data from a given model.
+   * @method
+   * @name getAllBooleanDataFromModels  
+   * @param schema - schema    
+   * @returns {Array} Boolean data.
+   */
+
+  function getAllBooleanDataFromModels(schema) {
+
+    let defaultSchema = Object.keys(schema);
+
+    let booleanValues = [];
+
+    defaultSchema.forEach(singleSchemaKey=>{
+
+      let currentSchema = schema[singleSchemaKey];
+
+      if( 
+        currentSchema.hasOwnProperty('default') && 
+        typeof currentSchema.default === "boolean" 
+      ) {
+        booleanValues.push(singleSchemaKey);
+      }
+    });
+
+    return booleanValues;
+  }
+
+   /**
+    * check whether id is mongodbId or not.
+    * @function
+    * @name isValidMongoId
+    * @param {String} id 
+    * @returns {Boolean} returns whether id is valid mongodb id or not.  
+  */
+
+  function isValidMongoId(id) {
+    return ObjectId.isValid(id) && new ObjectId(id).toString() === id;
+  }
+
+  /**
+  * Get epoch time from current date.
+  * @function
+  * @name epochTime
+  * @returns {Date} returns epoch time.  
+  */
+
+function epochTime() {
+  var currentDate = new Date();
+  currentDate = currentDate.getTime();
+  return currentDate;
+}
+
 module.exports = {
   camelCaseToTitleCase : camelCaseToTitleCase,
   lowerCase : lowerCase,
   checkIfStringIsUrl : checkIfStringIsUrl,
-  hyphenCaseToCamelCase : hyphenCaseToCamelCase
+  hyphenCaseToCamelCase : hyphenCaseToCamelCase,
+  valueParser : valueParser,
+  convertStringToBoolean : convertStringToBoolean,
+  getAllBooleanDataFromModels : getAllBooleanDataFromModels,
+  epochTime : epochTime,
+  isValidMongoId : isValidMongoId
 };

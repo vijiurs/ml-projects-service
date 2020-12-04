@@ -7,13 +7,16 @@
 module.exports = {
     name: "projectTemplates",
     schema: {
-        name : {
+        title : {
             type : String,
-            required : true
+            required : true,
+            text : true
         },
         externalId : {
             type : String,
-            required : true
+            required : true,
+            index: true,
+            unique: true
         },
         categories : {
             type : Array,
@@ -55,7 +58,7 @@ module.exports = {
             type : String,
             default : "SYSTEM"
         },
-        resources : {
+        learningResources : {
             type : Array,
             default : []
         },
@@ -82,6 +85,32 @@ module.exports = {
         metaInformation : {
             type : Object,
             default : {}
+        },
+        parentTemplateId : {
+            type : "ObjectId",
+            index: true
+        },
+        solutionId : "ObjectId",
+        solutionExternalId : String,
+        programId : "ObjectId",
+        programExternalId : String,
+        averageRating : {
+            type : Number,
+            default : 0
+        },
+        noOfRatings : {
+            type : Number,
+            default : 0
+        },
+        ratings : {
+            type : Object,
+            default : {
+                1 : 0,
+                2 : 0,
+                3 : 0,
+                4 : 0,
+                5 : 0
+            }
         }
     }
 };

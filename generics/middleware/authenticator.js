@@ -159,12 +159,15 @@ module.exports = async function (req, res, next, token = "") {
             return res.status(HTTP_STATUS_CODE["unauthorized"].status).send(respUtil(rspObj));
           }
 
-          req.userDetails = {};
-          req.userDetails['userId'] = decode.sub.split(":").pop();
-          req.userDetails['userToken'] = token;
-          req.userDetails['userName'] = decode.preferred_username;
-          req.userDetails['email'] = decode.email;
-          req.userDetails['firstName'] = decode.name;
+          req.userDetails = {
+            userToken : token,
+            userInformation : {
+              userId : decode.sub.split(":").pop(),
+              userName : decode.preferred_username,
+              email : decode.email,
+              firstName : decode.name
+            }
+          };
 
           next();
         

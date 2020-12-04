@@ -37,11 +37,11 @@ module.exports = class UserProjects extends Abstract {
     }
 
     /**
-    * @api {get} /improvement-project/api/v1/userProjects/list 
+    * @api {get} /improvement-project/api/v1/userProjects/list?updateLastDownloadedAt=:updateLastDownloadedAt
     * List of projects.
     * @apiVersion 1.0.0
     * @apiGroup User Projects
-    * @apiSampleRequest /improvement-project/api/v1/userProjects/list
+    * @apiSampleRequest /improvement-project/api/v1/userProjects/list?updateLastDownloadedAt=true
     * @apiParamExample {json} Response:
     * {
     "message": "Project lists fetched successfully",
@@ -137,7 +137,8 @@ module.exports = class UserProjects extends Abstract {
             try {
 
                 let projects = await userProjectsHelper.list(
-                    req.userDetails.userInformation.userId
+                    req.userDetails.userInformation.userId,
+                    req.query.updateLastDownloadedAt ? req.query.updateLastDownloadedAt : false
                 );
 
                 projects.result = projects.data;

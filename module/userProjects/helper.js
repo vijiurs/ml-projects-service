@@ -72,11 +72,12 @@ module.exports = class UserProjectsHelper {
       * List of projects.
       * @method
       * @name list
-      * @param userId - logged in user id.
+      * @param {String} userId - logged in user id.
+      * @param {Boolean} updateLastDownloadedAt - update last downloaded at. 
       * @returns {Object} Projects.
      */
 
-    static list(userId) {
+    static list( userId,updateLastDownloadedAt ) {
         return new Promise(async (resolve, reject) => {
             try {
 
@@ -106,7 +107,11 @@ module.exports = class UserProjectsHelper {
 
                 let projectIds = [];
 
-                let updateLastDownloadedDate = new Date();
+                let updatedDate = "";
+
+                if( updateLastDownloadedAt ) {
+                    updatedDate = new Date();
+                }
 
                 for (let project = 0; project < projects.length; project++) {
                     let projectInformation = await _projectInformation(projects[project]);
@@ -115,17 +120,22 @@ module.exports = class UserProjectsHelper {
                         return resolve(projectInformation);
                     }
 
-                    projectInformation.data.lastDownloadedAt = updateLastDownloadedDate;
+                    if( updatedDate !== "" ) {
+                        projectInformation.data.lastDownloadedAt = updatedDate;
+                    }
+
                     projectIds.push(projectInformation.data._id);
                 }
 
-                await database.models.projects.updateMany({
-                    _id: { $in: projectIds }
-                }, {
-                    $set: {
-                        lastDownloadedAt: updateLastDownloadedDate
-                    }
-                });
+                if( updatedDate !== "" ) {
+                    await database.models.projects.updateMany({
+                        _id: { $in: projectIds }
+                    }, {
+                        $set: {
+                            lastDownloadedAt: updateLastDownloadedDate
+                        }
+                    });
+                }
 
                 return resolve({
                     success: true,
@@ -753,6 +763,10 @@ module.exports = class UserProjectsHelper {
                     }
                 }
 
+              
+                libraryProjects.data.createdFor = userOrganisations.data.createdFor;
+                libraryProjects.data.rootOrganisations = userOrganisations.data.rootOrganisations;
+                
                 libraryProjects.data.userId = libraryProjects.data.updatedBy = libraryProjects.data.createdBy = userId;
                 libraryProjects.data.lastDownloadedAt = new Date();
                 libraryProjects.data.status = CONSTANTS.common.NOT_STARTED_STATUS;
@@ -866,15 +880,15 @@ module.exports = class UserProjectsHelper {
 
                 const userProject = await this.projectDocument({
                     _id : projectId,
-                    userId : userId,
-                    lastDownloadedAt : lastDownloadedAt
+                    userId : userId
                 }, [
                     "_id", 
                     "tasks",
                     "programInformation._id",
                     "solutionInformation._id",
                     "solutionInformation.externalId",
-                    "entityInformation._id"
+                    "entityInformation._id",
+                    "lastDownloadedAt"
                 ]);
 
                 if (!userProject.length > 0) {
@@ -882,6 +896,13 @@ module.exports = class UserProjectsHelper {
                     throw {
                         status : HTTP_STATUS_CODE['bad_request'].status,
                         message: CONSTANTS.apiResponses.USER_PROJECT_NOT_FOUND
+                    };
+                }
+
+                if( userProject[0].lastDownloadedAt.toISOString() !== lastDownloadedAt ) {
+                    throw {
+                        status : HTTP_STATUS_CODE['bad_request'].status,
+                        message: CONSTANTS.apiResponses.USER_ALREADY_SYNC
                     };
                 }
 
@@ -1202,16 +1223,6 @@ module.exports = class UserProjectsHelper {
 
                 let result = {};
 
-                // if (entityId && entityId !== "") {
-                //     let entitiesData = await _entitiesInformation(entityId);
-
-                //     if( !entitiesData.success ) {
-                //         return resolve(entitiesData);
-                //     }
-
-                //     result["entityInformation"] = entitiesData.data[0];
-                // }
-
                 let programAndSolutionData = {
                     entities : entities,
                     type: CONSTANTS.common.IMPROVEMENT_PROJECT,
@@ -1219,38 +1230,6 @@ module.exports = class UserProjectsHelper {
                     isReusable : false,
                     solutionId : solutionId
                 };
-
-                // <- Dirty fix not required currently
-
-                // if( programId == "" && programName == "" ) {
-
-                //     let privatePrograms = 
-                //     await kendraService.userPrivatePrograms(userToken);
-
-                //     if( !privatePrograms.success ) {
-                //         return resolve({
-                //             success : false,
-                //             message : CONSTANTS.apiResponses.SOLUTION_PROGRAMS_NOT_CREATED,
-                //             result : {}
-                //         })
-                //     }
-
-                //     if( privatePrograms.data[0] && privatePrograms.data[0]._id ) {
-                //         programAndSolutionData["programId"] = privatePrograms.data[0]._id;
-                //     } else {
-                //         programAndSolutionData["programName"] = "My Program"
-                //     }
-                // } else {
-
-                //     if( programName !== "" ) {
-
-                //         programAndSolutionData["programName"] = programName;
-                //     } 
-
-                //     if( programId !== "" ) {
-                //         programAndSolutionData["programId"] = programId;
-                //     } 
-                // }
 
 
                 if (programName !== "") {
@@ -1837,8 +1816,6 @@ module.exports = class UserProjectsHelper {
     })
   }
   
-
-
     /**
       * Bulk create user projects By entityId and role.
       * @method

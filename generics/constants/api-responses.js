@@ -95,5 +95,6 @@ module.exports = {
     "FAILED_TO_UPDATE" : "Failed to update the document",
     "UPDATED_DOCUMENT_SUCCESSFULLY" : "Document updated successfully",
     "ENTITY_REQUIRED_FOR_ASSESSMENT_OBSERVATION" : "Entity is required for assessment or observation task",
-    "PROJECT_NOT_CREATED" : "Could not create project"
+    "PROJECT_NOT_CREATED" : "Could not create project",
+    "USER_ALREADY_SYNC" : "User is already synced"
 };

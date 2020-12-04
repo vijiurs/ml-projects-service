@@ -1967,7 +1967,7 @@ function _projectInformation(project) {
         
             }
 
-            project.status = CONSTANTS.common.NOT_STARTED_STATUS;
+            project.status = project.status ? project.status : CONSTANTS.common.NOT_STARTED_STATUS;
 
             if (project.metaInformation) {
                 Object.keys(project.metaInformation).forEach(projectMetaKey => {

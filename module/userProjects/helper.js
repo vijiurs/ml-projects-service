@@ -132,7 +132,7 @@ module.exports = class UserProjectsHelper {
                         _id: { $in: projectIds }
                     }, {
                         $set: {
-                            lastDownloadedAt: updateLastDownloadedDate
+                            lastDownloadedAt: updatedDate
                         }
                     });
                 }

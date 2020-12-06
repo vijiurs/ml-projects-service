@@ -770,6 +770,14 @@ module.exports = class UserProjectsHelper {
                 libraryProjects.data.userId = libraryProjects.data.updatedBy = libraryProjects.data.createdBy = userId;
                 libraryProjects.data.lastDownloadedAt = new Date();
                 libraryProjects.data.status = CONSTANTS.common.NOT_STARTED_STATUS;
+                
+                if( requestedData.startDate ) {
+                    libraryProjects.data.startDate = requestedData.startDate;
+                }
+
+                if( requestedData.endDate ) {
+                    libraryProjects.data.endDate = requestedData.endDate;
+                }
 
                 let projectCreation = await database.models.projects.create(
                     _.omit(libraryProjects.data, ["_id"])
@@ -1967,7 +1975,8 @@ function _projectInformation(project) {
         
             }
 
-            project.status = project.status ? project.status : CONSTANTS.common.NOT_STARTED_STATUS;
+            project.status = 
+            project.status ? project.status : CONSTANTS.common.NOT_STARTED_STATUS;
 
             if (project.metaInformation) {
                 Object.keys(project.metaInformation).forEach(projectMetaKey => {

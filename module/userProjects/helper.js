@@ -1615,6 +1615,7 @@ module.exports = class UserProjectsHelper {
 
                 if( currentTask.submissionDetails && currentTask.submissionDetails._id ) {
                     data["submissionId"] = currentTask.submissionDetails._id;
+                    data["submissionStatus"] = currentTask.submissionDetails.status;
                 }
                 
                 result.push(data);

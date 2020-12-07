@@ -27,8 +27,8 @@ var messageReceived = function (message) {
       let parsedMessage = JSON.parse(message.value);
 
       let submissionDocument = {
-        "status" : parsedMessage.status,
-        "submissionDetails._id" : ObjectId(parsedMessage._id)
+        "submissionDetails._id" : ObjectId(parsedMessage._id),
+        "submissionDetails.status" : parsedMessage.status
       };
       
       if( parsedMessage.submissionDate ) {

@@ -687,7 +687,8 @@ module.exports = class UserProjectsHelper {
                     !Object.keys(libraryProjects.data).length > 0
                 ) {
                     throw {
-                        message: CONSTANTS.apiResponses.PROJECT_TEMPLATE_NOT_FOUND
+                        message : CONSTANTS.apiResponses.PROJECT_TEMPLATE_NOT_FOUND,
+                        status : HTTP_STATUS_CODE['bad_request'].status
                     };
                 }
 
@@ -783,7 +784,7 @@ module.exports = class UserProjectsHelper {
                     _.omit(libraryProjects.data, ["_id"])
                 );
 
-                if (requestedData.rating && requestedData.rating > 0) {
+                if ( requestedData.rating && requestedData.rating > 0 ) {
                     await projectTemplatesHelper.ratings(
                         projectTemplateId,
                         requestedData.rating,
@@ -889,7 +890,7 @@ module.exports = class UserProjectsHelper {
                 const userProject = await this.projectDocument({
                     _id : projectId,
                     userId : userId
-                }, [
+                },[
                     "_id", 
                     "tasks",
                     "programInformation._id",
@@ -1036,17 +1037,20 @@ module.exports = class UserProjectsHelper {
                             }
                         }
 
-                        let removeEntityFromSolutions = 
-                        await assessmentService.removeEntitiesFromSolution(
-                            userToken,
-                            userProject[0].solutionInformation._id,
-                            [userProject[0].entityInformation._id]
-                        );
-
-                        if( !removeEntityFromSolutions.success ) {
-                            throw {
-                                status : HTTP_STATUS_CODE['bad_request'].status,
-                                message : CONSTANTS.apiResponses.ENTITY_NOT_UPDATED
+                        if( userProject[0].entityInformation ) {
+                            
+                            let removeEntityFromSolutions = 
+                            await assessmentService.removeEntitiesFromSolution(
+                                userToken,
+                                userProject[0].solutionInformation._id,
+                                [userProject[0].entityInformation._id]
+                            );
+    
+                            if( !removeEntityFromSolutions.success ) {
+                                throw {
+                                    status : HTTP_STATUS_CODE['bad_request'].status,
+                                    message : CONSTANTS.apiResponses.ENTITY_NOT_UPDATED
+                                }
                             }
                         }
         
@@ -1181,7 +1185,8 @@ module.exports = class UserProjectsHelper {
 
                 if (!projectUpdated._id) {
                     throw {
-                        message: CONSTANTS.apiResponses.USER_PROJECT_NOT_UPDATED
+                        message: CONSTANTS.apiResponses.USER_PROJECT_NOT_UPDATED,
+                        status : HTTP_STATUS_CODE['bad_request'].status
                     }
                 }
 
@@ -1610,6 +1615,7 @@ module.exports = class UserProjectsHelper {
 
                 if( currentTask.submissionDetails && currentTask.submissionDetails._id ) {
                     data["submissionId"] = currentTask.submissionDetails._id;
+                    data["submissionStatus"] = currentTask.submissionDetails.status;
                 }
                 
                 result.push(data);
@@ -1742,56 +1748,6 @@ module.exports = class UserProjectsHelper {
                     currentTask.solutionDetails.programId;
                 }
 
-
-
-                // if( 
-                //     currentTask.solutionDetails.type === CONSTANTS.common.ASSESSMENT 
-                // ) {
-                    
-                //     assignedAssessmentOrObservation = await _assessmentDetails(
-                //         userToken,
-                //         currentTask.solutionDetails,
-                //         assessmentOrObservationData.entityId,
-                //         assessmentOrObservationData.programId,
-                //         {
-                //             "_id" : projectId,
-                //             "taskId" : taskId
-                //         }
-                //     );
-
-                //     if( !assignedAssessmentOrObservation.success ) {
-                //         return resolve(assignedAssessmentOrObservation);
-                //     }
-
-                // } else if( 
-                //     currentTask.solutionDetails.type === CONSTANTS.common.OBSERVATION 
-                // ) {
-                    
-                //     assignedAssessmentOrObservation = await _observationDetails(
-                //         userToken,
-                //         currentTask.solutionDetails,
-                //         assessmentOrObservationData.entityId,
-                //         assessmentOrObservationData.programId,
-                //         {
-                //             "_id" : projectId,
-                //             "taskId" : taskId
-                //         }
-                //     );
-
-                //     if( !assignedAssessmentOrObservation.success ) {
-                //         return resolve(assignedAssessmentOrObservation);
-                //     }
-
-                //     assessmentOrObservationData["observationId"] = 
-                //     ObjectId(observationData.data.observationId);
-
-                //     assessmentOrObservationData["solutionId"] = 
-                //     ObjectId(observationData.data._id);
-                // }
-
-                // assessmentOrObservationData["solutionId"] = 
-                // ObjectId(assignedAssessmentOrObservation.data._id);
-
                 await database.models.projects.findOneAndUpdate({
                     "_id" : projectId,
                     "tasks._id" : taskId
@@ -1893,19 +1849,10 @@ function _projectInformation(project) {
             if( project.entityInformation ) {
                 project.entityId = project.entityInformation._id;
                 project.entityName = project.entityInformation.name;
-                // project.entityType = project.entityInformation.entityType;
-                // project.entityTypeId = project.entityInformation.entityTypeId;
             }
-        
-            // if( project.solutionInformation ) {
-            //     project.solutionId = project.solutionInformation._id;
-            //     project.solutionExternalId = project.solutionInformation.externalId;
-            //     project.solutionName = project.solutionInformation.name;
-            // }
         
             if (project.programInformation ) {
                 project.programId = project.programInformation._id;
-                // project.programExternalId = project.programInformation.externalId;
                 project.programName = project.programInformation.name;
             }
         
@@ -2005,42 +1952,6 @@ function _projectInformation(project) {
             })
         }
     })
-
-    // <- Dirty Fix not required response in this format.
-
-    // project.entityInformation = _.pick(
-    //     project.entityInformation,
-    //     ["externalId", "name", "entityType", "entityTpeId"]
-    // );
-
-    
-
-    // <- Dirty Fix not required response in this format.
-    // project.solutionInformation = _.pick(
-    //     project.solutionInformation,
-    //     ["externalId", "name"]
-    // );
-
-    // project.programInformation = _.pick(
-    //     project.programInformation,
-    //     ["externalId", "name"]
-    // );
-
-    // project.status = CONSTANTS.common.NOT_STARTED_STATUS;
-
-    // if (project.metaInformation) {
-    //     Object.keys(project.metaInformation).forEach(projectMetaKey => {
-    //         project[projectMetaKey] = project.metaInformation[projectMetaKey];
-    //     });
-    // }
-
-    // delete project.metaInformation;
-    // delete project.__v;
-    // delete project.entityInformation;
-    // delete project.solutionInformation;
-    // delete project.programInformation;
-
-    // return project;
 }
 
 /**
@@ -2417,9 +2328,6 @@ function _observationDetails( observationData ) {
 
                 result["solutionId"] = observationData.solutionDetails._id;
                 result["observationId"] = observationCreated.data._id;
-                
-                // result.data["observationId"] = result.data._id;
-                // result.data["_id"] = solutionDetails._id;
             }
 
             return resolve({

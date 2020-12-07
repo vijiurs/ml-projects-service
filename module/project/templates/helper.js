@@ -606,6 +606,13 @@ module.exports = class ProjectTemplatesHelper {
                     }
                 }
 
+                if( solutionData.data[0].type !== CONSTANTS.common.IMPROVEMENT_PROJECT ) {
+                    throw {
+                        message : CONSTANTS.apiResponses.IMPROVEMENT_PROJECT_SOLUTION_NOT_FOUND,
+                        status : HTTP_STATUS_CODE['bad_request'].status
+                    }
+                }
+ 
                 newProjectTemplate.solutionId = solutionData.data[0]._id;
                 newProjectTemplate.solutionExternalId = solutionData.data[0].externalId;
                 newProjectTemplate.programId = solutionData.data[0].programId;
@@ -616,7 +623,7 @@ module.exports = class ProjectTemplatesHelper {
 
                 let updationKeys = Object.keys(updateData);
                 if( updationKeys.length > 0 ) {
-                    updationKeys.forEach(singleKey=>{
+                    updationKeys.forEach(singleKey => {
                         if( newProjectTemplate[singleKey] ) {
                             newProjectTemplate[singleKey] = updateData[singleKey];
                         }
@@ -664,9 +671,12 @@ module.exports = class ProjectTemplatesHelper {
 
             } catch (error) {
                 return resolve({
+                    status : 
+                    error.status ? 
+                    error.status : HTTP_STATUS_CODE['internal_server_error'].status,
                     success: false,
                     message: error.message,
-                    data: false
+                    data: {}
                 });
             }
     })

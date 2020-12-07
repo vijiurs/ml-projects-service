@@ -172,7 +172,7 @@ module.exports = class ProjectTemplates extends Abstract {
         return new Promise(async (resolve, reject) => {
             try {
 
-                const projectTemplates = 
+                let projectTemplates = 
                 await projectTemplatesHelper.importProjectTemplate(
                     req.params._id,
                     req.userDetails.userInformation.userId,
@@ -181,10 +181,9 @@ module.exports = class ProjectTemplates extends Abstract {
                     req.body
                 );
 
-                return resolve({
-                    message: projectTemplates.message,
-                    result: projectTemplates.data
-                });
+                projectTemplates.result = projectTemplates.data;
+
+                return resolve(projectTemplates);
 
             } catch (error) {
                 return reject({

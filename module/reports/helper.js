@@ -104,11 +104,10 @@ module.exports = class ReportsHelper {
 
                     if (getPdf == true) {
 
-                        delete tasksReport['total'];
                         let reportTaskData = {};
                         Object.keys(tasksReport).map(taskData => {
                             reportTaskData[UTILS.camelCaseToTitleCase(taskData)] = tasksReport[taskData];
-                        })
+                        });
 
                         let categoryData = {};
                         Object.keys(categories).map(category => {
@@ -154,7 +153,7 @@ module.exports = class ReportsHelper {
                         })
                     }
                 }
-                projectReport["total"] = projectDetails.length;
+               
 
 
                 await Promise.all(projectDetails.map(async function (project) {
@@ -193,6 +192,9 @@ module.exports = class ReportsHelper {
                             projectReport[CONSTANTS.common.NOT_STARTED_STATUS] = projectReport[CONSTANTS.common.NOT_STARTED_STATUS] + 1;
                         }
                     }
+                    projectReport["total"] = projectReport[CONSTANTS.common.NOT_STARTED_STATUS] + 
+                    projectReport['overdue'] + projectReport[CONSTANTS.common.INPROGRESS_STATUS] +
+                    projectReport[CONSTANTS.common.COMPLETED_STATUS];
 
                     if (project.taskReport) {
                         let keys = Object.keys(project.taskReport);
@@ -213,16 +215,16 @@ module.exports = class ReportsHelper {
                             } else {
                                 tasksReport['overdue'] = 1;
                             }
+                            if(tasksReport[task.status]){
+                                tasksReport[task.status] = tasksReport[task.status] - 1;
+                            }
                         }
                     }));
 
-
                 }));
-
 
                 if (getPdf == true) {
 
-                    delete tasksReport['total'];
                     let reportTaskData = {};
                     Object.keys(tasksReport).map(taskData => {
                         reportTaskData[UTILS.camelCaseToTitleCase(taskData)] = tasksReport[taskData];

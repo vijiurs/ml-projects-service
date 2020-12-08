@@ -4,11 +4,9 @@ global.ObjectID = require('mongodb').ObjectID
 module.exports = {
   async connect() {
 
-
-    let url = process.env.MONGODB_HOST_URL + ":" + process.env.MONGODB_PORT;
-    let databaseName = process.env.MONGODB_DATABASE_NAME;
-
-    const options = { useNewUrlParser: true }
+    const url = process.env.MONGODB_URL + ":" +process.env.MONGODB_PORT;
+    const databaseName = process.env.MONGODB_DATABASE_NAME;
+    const options = {useUnifiedTopology: true, useNewUrlParser: true};
 
     if (!url) {
       throw new Error("No `url` defined in config file!");
@@ -31,9 +29,9 @@ module.exports = {
   },
   async connectToTransferFromDB() {
 
-    const url = process.env.MONGODB_HOST_URL + ":" + process.env.MONGODB_PORT;
-    const databaseName = process.env.TRANSFER_FROM_DB || process.env.MONGODB_DATABASE_NAME
-    const options = {useNewUrlParser: true}
+    const url = process.env.MONGODB_URL + ":" +process.env.MONGODB_PORT;
+    const databaseName = process.env.TRANSFER_FROM_DB || process.env.MONGODB_DATABASE_NAME;
+    const options = {useNewUrlParser: true};
 
     if (!url) {
       throw new Error("No `url` defined in config file!");

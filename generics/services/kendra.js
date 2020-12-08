@@ -25,13 +25,13 @@ const getDownloadableUrl = function (bodyData) {
     
     if ( process.env.CLOUD_STORAGE === "GC" ) {
         fileDownloadUrl = fileDownloadUrl + CONSTANTS.endpoints.DOWNLOADABLE_GCP_URL;
-        bodyData.bucketName = process.env.GCP_BUCKET_NAME;
+        bodyData.bucketName = process.env.BUCKET_NAME;
     } else if (process.env.CLOUD_STORAGE === "AWS" ) {
         fileDownloadUrl = fileDownloadUrl + CONSTANTS.endpoints.DOWNLOADABLE_AWS_URL;
-        bodyData.bucketName = process.env.AWS_BUCKET_NAME;
+        bodyData.bucketName = process.env.BUCKET_NAME;
     } else {
         fileDownloadUrl = fileDownloadUrl + CONSTANTS.endpoints.DOWNLOADABLE_AZURE_URL;
-        bodyData.bucketName = process.env.AZURE_STORAGE_CONTAINER;
+        bodyData.bucketName = process.env.BUCKET_NAME;
     }
 
     return new Promise((resolve, reject) => {
@@ -88,13 +88,13 @@ const upload = function (file,filePath) {
 
     if ( process.env.CLOUD_STORAGE === "GC" ) {
         fileUploadUrl = fileUploadUrl + "api/v1/cloud-services/gcp/uploadFile";
-        bucketName = process.env.GCP_BUCKET_NAME;
+        bucketName = process.env.BUCKET_NAME;
     } else if( process.env.CLOUD_STORAGE === "AWS" ) {
         fileUploadUrl = fileUploadUrl + "api/v1/cloud-services/aws/uploadFile";
-        bucketName = process.env.AWS_BUCKET_NAME;
+        bucketName = process.env.BUCKET_NAME;
     } else {
         fileUploadUrl = fileUploadUrl + "api/v1/cloud-services/azure/uploadFile";
-        bucketName = process.env.AZURE_STORAGE_CONTAINER;
+        bucketName = process.env.BUCKET_NAME;
     }
 
     return new Promise((resolve, reject) => {
@@ -648,13 +648,13 @@ const getPreSignedUrl = function (fileNames) {
             }
             if ( process.env.CLOUD_STORAGE === "GC" ) {
                 filePreSignedUrl = filePreSignedUrl + CONSTANTS.endpoints.PRESIGNED_GCP_URL;
-                bodyData.bucket = process.env.GCP_BUCKET_NAME;
+                bodyData.bucket = process.env.BUCKET_NAME;
             } else if (process.env.CLOUD_STORAGE === "AWS" ) {
                 filePreSignedUrl = filePreSignedUrl + CONSTANTS.endpoints.PRESIGNED_AWS_URL;
-                bodyData.bucket = process.env.AWS_BUCKET_NAME;
+                bodyData.bucket = process.env.BUCKET_NAME;
             } else {
                 filePreSignedUrl = filePreSignedUrl + CONSTANTS.endpoints.PRESIGNED_AZURE_URL;
-                bodyData.bucket = process.env.AZURE_STORAGE_CONTAINER;
+                bodyData.bucket = process.env.BUCKET_NAME;
             }
 
 

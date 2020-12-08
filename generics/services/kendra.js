@@ -698,8 +698,7 @@ const getPreSignedUrl = function (fileNames) {
 
 const getUsersByEntityAndRole = function ( 
    entityId = "",
-   role = "",
-   token = ""
+   role = ""
 ) {
     return new Promise(async (resolve, reject) => {
         try {
@@ -710,8 +709,7 @@ const getUsersByEntityAndRole = function (
                 headers : {
                     "content-type": "application/json",
                     AUTHORIZATION : process.env.AUTHORIZATION,
-                    "internal-access-token": process.env.INTERNAL_ACCESS_TOKEN,
-                    "x-authenticated-user-token" : token
+                    "internal-access-token": process.env.INTERNAL_ACCESS_TOKEN
                 }
             };
 

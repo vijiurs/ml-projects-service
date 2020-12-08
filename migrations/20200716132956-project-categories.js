@@ -60,7 +60,7 @@ module.exports = {
         updatedAt : new Date(),
         updatedBy : "SYSTEM",
         createdBy : "SYSTEM",
-        icon : "educationLeader.png",
+        icon : "el.png",
         isDeleted : false,
         isVisible : true,
         status : "active"

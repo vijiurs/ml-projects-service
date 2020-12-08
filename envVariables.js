@@ -38,10 +38,6 @@ let enviromentVariables = {
     "message" : "Required mongodb port",
     "optional" : false
   },
-  "SHIKSHALOKAM_BASE_HOST" : {
-    "message" : "Required shikshalokam base host",
-    "optional" : false
-  },
   "MONGODB_DATABASE_NAME" : {
     "message" : "Required database",
     "optional" : false

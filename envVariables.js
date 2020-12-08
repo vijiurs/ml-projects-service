@@ -94,7 +94,7 @@ let enviromentVariables = {
     "message" : "Required",
     "optional" : false
   },
-  "GCP_BUCKET_NAME" : {
+  "BUCKET_NAME" : {
     "message" : "Required",
     "optional" : false
   },

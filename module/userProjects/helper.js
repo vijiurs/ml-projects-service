@@ -1788,12 +1788,11 @@ module.exports = class UserProjectsHelper {
       * @method
       * @name bulkCreateByUserRoleAndEntity - Bulk create user projects by entity and role.
       * @param {Object} userProjectData - user project data
-      * @param {String} userId - logged in user id.
       * @param {String} userToken - logged in user token.
       * @returns {Object}  Bulk create user projects.
      */
 
-    static bulkCreateByUserRoleAndEntity(userProjectData, userId, userToken) {
+    static bulkCreateByUserRoleAndEntity(userProjectData, userToken ) {
         return new Promise(async (resolve, reject) => {
             try {
 
@@ -1801,8 +1800,7 @@ module.exports = class UserProjectsHelper {
                 let userAndEntityList = await kendraService.getUsersByEntityAndRole
                 (
                     userProjectData.entityId,
-                    userProjectData.role,
-                    userToken
+                    userProjectData.role
                 )
                 
                 if (!userAndEntityList.success && !userAndEntityList.data) {
@@ -1822,7 +1820,6 @@ module.exports = class UserProjectsHelper {
                 let userProjects = await this.bulkCreate
                 (
                     userProjectBulkCreationData,
-                    userId,
                     userToken
                 )
 

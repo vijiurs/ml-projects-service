@@ -1074,7 +1074,6 @@ module.exports = class UserProjects extends Abstract {
 
                 let projects = await userProjectsHelper.bulkCreateByUserRoleAndEntity(
                     req.body,
-                    req.userDetails.userInformation.userId,
                     req.userDetails.userToken
                 );
 

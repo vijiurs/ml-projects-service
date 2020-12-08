@@ -1635,6 +1635,9 @@ module.exports = class UserProjectsHelper {
             return reject({
                 success : false,
                 message : error.message,
+                status : 
+                error.status ? 
+                error.status : HTTP_STATUS_CODE['internal_server_error'].status,
                 data : []
             });
         }

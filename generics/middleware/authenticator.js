@@ -79,47 +79,6 @@ module.exports = async function (req, res, next, token = "") {
   }
 
 
-  // let tokenOrInternalAccessTokenRequiredPaths = [];
-  // let tokenOrInternalAccessTokenRequired = false;
-  // await Promise.all(tokenOrInternalAccessTokenRequiredPaths.map(async function (path) {
-  //   if (req.path.includes(path)) {
-  //     tokenOrInternalAccessTokenRequired = true;
-  //   }
-  // }));
-
-  // if (tokenOrInternalAccessTokenRequired) {
-  //   if (req.headers["internal-access-token"] == process.env.INTERNAL_ACCESS_TOKEN || token) {
-  //     next();
-  //     return;
-  //   } else {
-  //     rspObj.errCode = CONSTANTS.apiResponses.MISSING_TOKEN_OR_INTERNAL_ACCESS_TOKEN_CODE;
-  //     rspObj.errMsg = CONSTANTS.apiResponses.MISSING_TOKEN_OR_INTERNAL_ACCESS_TOKEN_MESSAGE;
-  //     rspObj.responseCode = HTTP_STATUS_CODE["unauthorized"].status;
-  //     return res.status(HTTP_STATUS_CODE["unauthorized"].status).send(respUtil(rspObj));
-  //   }
-  // }
-
-  // let securedApiPaths = [];
-  // let tokenAndInternalAccessTokenRequired = false;
-  // await Promise.all(securedApiPaths.map(async function (path) {
-  //   if (req.path.includes(path)) {
-  //     tokenAndInternalAccessTokenRequired = true;
-  //   }
-  // }));
-
-  // if (tokenAndInternalAccessTokenRequired) {
-  //   if (req.headers["internal-access-token"] == process.env.INTERNAL_ACCESS_TOKEN && token) {
-  //     next();
-  //     return;
-  //   } else {
-  //     rspObj.errCode = CONSTANTS.apiResponses.MISSING_TOKEN_AND_INTERNAL_ACCESS_TOKEN_CODE;
-  //     rspObj.errMsg = CONSTANTS.apiResponses.MISSING_TOKEN_AND_INTERNAL_ACCESS_TOKEN_MESSAGE;
-  //     rspObj.responseCode = HTTP_STATUS_CODE['unauthorized'].status;
-  //     return res.status(HTTP_STATUS_CODE["unauthorized"].status).send(respUtil(rspObj));
-  //   }
-  // }
-
-
   if (!token) {
     rspObj.errCode = CONSTANTS.apiResponses.TOKEN_MISSING_CODE;
     rspObj.errMsg = CONSTANTS.apiResponses.TOKEN_MISSING_MESSAGE;

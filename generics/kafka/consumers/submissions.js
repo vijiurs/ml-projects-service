@@ -32,7 +32,7 @@ var messageReceived = function (message) {
       };
       
       if( parsedMessage.submissionDate ) {
-        submissionDocument["submissionDate"] = parsedMessage.submissionDate;
+        submissionDocument.submissionDetails["submissionDate"] = parsedMessage.submissionDate;
       }
 
       await userProjectsHelper.updateTask(
@@ -62,14 +62,6 @@ var errorTriggered = function (error) {
   return new Promise(function (resolve, reject) {
 
     try {
-      
-    //     let errorObject = {
-    //     slackErrorName : gen.utils.checkIfEnvDataExistsOrNot("SLACK_ERROR_NAME"),
-    //     color: gen.utils.checkIfEnvDataExistsOrNot("SLACK_ERROR_MESSAGE_COLOR"),
-    //     message: `Kafka server is down on address ${error.address} and on port ${error.port} for notifications`
-    //   }
-
-    //   slackClient.sendMessageToSlack(errorObject)
       return resolve(error);
     } catch (error) {
       return reject(error);

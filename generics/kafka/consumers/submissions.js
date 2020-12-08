@@ -28,12 +28,11 @@ var messageReceived = function (message) {
 
       let submissionDocument = {
         "submissionDetails._id" : ObjectId(parsedMessage._id),
-        "submissionDetails.status" : parsedMessage.status
+        "submissionDetails.status" : parsedMessage.status,
+        "submissionDetails.completedDate" : 
+        parsedMessage.submissionDate ? parsedMessage.submissionDate : ""
       };
-      
-      if( parsedMessage.submissionDate ) {
-        submissionDocument.submissionDetails["submissionDate"] = parsedMessage.submissionDate;
-      }
+
 
       await userProjectsHelper.updateTask(
         parsedMessage.projectId,

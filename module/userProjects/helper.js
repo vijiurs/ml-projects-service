@@ -1617,6 +1617,7 @@ module.exports = class UserProjectsHelper {
                     currentTask.type === CONSTANTS.common.ASSESSMENT || 
                     currentTask.type === CONSTANTS.common.OBSERVATION
                 ) {
+
                     data["submissionDetails"] = 
                     currentTask.submissionDetails ? currentTask.submissionDetails : {}; 
                 }

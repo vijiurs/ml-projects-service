@@ -763,7 +763,7 @@ module.exports = class UserProjectsHelper {
                         programAndSolutionInformation.solutionInformation.entityType
                     ) {
                         throw {
-                            message : CONSTANTS.apiResponses.USER_ORGANISATION_NOT_FOUND,
+                            message : CONSTANTS.apiResponses.ENTITY_TYPE_MIS_MATCHED,
                             status : HTTP_STATUS_CODE['bad_request'].status
                         }
                     }

@@ -760,7 +760,7 @@ module.exports = class UserProjectsHelper {
                     if( 
                         libraryProjects.data["entityInformation"] && 
                         libraryProjects.data["entityInformation"].entityType !== 
-                        programAndSolutionInformation.solutionInformation.entityType
+                        programAndSolutionInformation.data.solutionInformation.entityType
                     ) {
                         throw {
                             message : CONSTANTS.apiResponses.ENTITY_TYPE_MIS_MATCHED,

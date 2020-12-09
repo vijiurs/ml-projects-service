@@ -97,5 +97,10 @@ module.exports = {
     "ENTITY_REQUIRED_FOR_ASSESSMENT_OBSERVATION" : "Entity is required for assessment or observation task",
     "PROJECT_NOT_CREATED" : "Could not create project",
     "USER_ALREADY_SYNC" : "User is already synced",
-    "IMPROVEMENT_PROJECT_SOLUTION_NOT_FOUND" : "Solution should be of type improvement project"
+    "IMPROVEMENT_PROJECT_SOLUTION_NOT_FOUND" : "Solution should be of type improvement project",
+    "SOLUTION_TYPE_MIS_MATCH" : "Not matched solution type",
+    "SOLUTION_SUB_TYPE_MIS_MATCH" : "Not matched solution sub type",
+    "ENTITY_TYPE_NOT_FOUND_IN_TEMPLATE" : "Not found entity type in template",
+    "MIS_MATCHED_PROJECT_AND_TASK_ENTITY_TYPE" : "Project and task entity type mis matched",
+    "ENTITY_TYPE_MIS_MATCHED" : "Entity type does not match template entity type" 
 };

@@ -14,8 +14,7 @@ module.exports = {
             index: true
         },
         description : {
-            type : String,
-            required : true
+            type : String
         },
         createdBy : {
             type : String,

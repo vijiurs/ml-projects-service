@@ -539,6 +539,17 @@ module.exports = class UserProjectsHelper {
                         if( !entityDocument[currentCsvData.entityId] ) {
                             currentCsvData["STATUS"] =
                             CONSTANTS.apiResponses.ENTITIES_NOT_FOUND;
+                            input.push(currentCsvData);
+                            continue;  
+                        }
+
+                        if( 
+                            currentTemplateData.entityType && currentTemplateData.entityType !== "" &&
+                            currentTemplateData.entityType !== entityDocument[currentCsvData.entityId].entityType
+                        ) {
+                            currentCsvData["STATUS"] =
+                            CONSTANTS.apiResponses.ENTITY_TYPE_MIS_MATCHED;
+                            input.push(currentCsvData);
                             continue;  
                         }
 
@@ -744,6 +755,17 @@ module.exports = class UserProjectsHelper {
 
                     if (!programAndSolutionInformation.success) {
                         return resolve(programAndSolutionInformation);
+                    }
+
+                    if( 
+                        libraryProjects.data["entityInformation"] && 
+                        libraryProjects.data["entityInformation"].entityType !== 
+                        programAndSolutionInformation.solutionInformation.entityType
+                    ) {
+                        throw {
+                            message : CONSTANTS.apiResponses.ENTITY_TYPE_MIS_MATCHED,
+                            status : HTTP_STATUS_CODE['bad_request'].status
+                        }
                     }
 
                     libraryProjects.data = _.merge(

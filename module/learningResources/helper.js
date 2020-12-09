@@ -40,22 +40,33 @@ module.exports = class LearningResourcesHelper {
 
                     let resources = {};
                     
-                    if( parsedCsvData[resourceName] !== undefined ) {
+                    if( 
+                        parsedCsvData[resourceName] !== "" && 
+                        parsedCsvData[resourceName] !== undefined 
+                    ) {
                         resources["name"] = parsedCsvData[resourceName];
                         delete parsedCsvData[resourceName];
                     }
     
-                    if( parsedCsvData[resourceLink] !== undefined ) {
+                    if( 
+                        parsedCsvData[resourceLink] !== "" &&
+                        parsedCsvData[resourceLink] !== undefined 
+                    ) {
                         resources["link"] = parsedCsvData[resourceLink];
                         delete parsedCsvData[resourceLink];
                     }
                     
-                    if( parsedCsvData[resourceApp] !== undefined ) {
+                    if( 
+                        parsedCsvData[resourceApp] !== "" && 
+                        parsedCsvData[resourceApp] !== undefined ) {
                         resources["app"] = parsedCsvData[resourceApp];
                         delete parsedCsvData[resourceApp];
                     }
 
-                    if( parsedCsvData[resourceId] !== undefined ) {
+                    if( 
+                        parsedCsvData[resourceId] !== "" && 
+                        parsedCsvData[resourceId] !== undefined 
+                    ) {
                         resources["id"] = parsedCsvData[resourceId];
                         delete parsedCsvData[resourceId];
                     } 

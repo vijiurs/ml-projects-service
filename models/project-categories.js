@@ -13,7 +13,6 @@ module.exports = {
             required : true,
             index: true,
             unique: true
-            
         },
         name : {
             type : String,

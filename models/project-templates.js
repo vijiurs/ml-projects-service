@@ -24,7 +24,7 @@ module.exports = {
         },
         description : {
             type : String,
-            required : true
+            default : ""
         },
         concepts : {
             type : Array,
@@ -67,20 +67,17 @@ module.exports = {
             default : false
         },
         entityType : {
-            type : String,
-            required : true
+            type : String
         },
         entityTypeId : {
-            type : "ObjectId",
-            required : true
+            type : "ObjectId"
         },
         taskSequence : {
             type : Array,
             default : []
         },
         taskCreationForm : {    
-            type : String,
-            required : true
+            type : String
         },
         metaInformation : {
             type : Object,

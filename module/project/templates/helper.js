@@ -108,7 +108,9 @@ module.exports = class ProjectTemplatesHelper {
                         parsedData.recommendedFor
                     );
 
-                    entityTypes.push(parsedData.entityType);
+                    if( parsedData.entityType ) {
+                        entityTypes.push(parsedData.entityType);
+                    }
 
                 });
 
@@ -253,16 +255,10 @@ module.exports = class ProjectTemplatesHelper {
 
                 parsedData.recommendedFor = recommendedFor;
 
-                let entityType = "";
-                let entityTypeId = "";
-
-                if( parsedData.entityType ) {
-                    entityType = csvInformation.entityTypes[parsedData.entityType].name;
-                    entityTypeId = csvInformation.entityTypes[parsedData.entityType]._id;
+                if( parsedData.entityType && parsedData.entityType !== "" ) {
+                    parsedData.entityType = csvInformation.entityTypes[parsedData.entityType].name;
+                    parsedData.entityTypeId = csvInformation.entityTypes[parsedData.entityType]._id;
                 }
-
-                parsedData.entityType = entityType;
-                parsedData.entityTypeId = entityTypeId;
 
                 let learningResources = 
                 await learningResourcesHelper.extractLearningResourcesFromCsv(parsedData);
@@ -274,11 +270,17 @@ module.exports = class ProjectTemplatesHelper {
                     schemas["project-templates"].schema
                 );
 
-                Object.keys(parsedData).forEach(eachParsedData=>{
-                    if( !templatesDataModel.includes(eachParsedData) ) {
-                        parsedData.metaInformation[eachParsedData] = 
-                        parsedData[eachParsedData];
-                        delete parsedData[eachParsedData];
+                Object.keys(parsedData).forEach( eachParsedData => {
+                    if( 
+                        !templatesDataModel.includes(eachParsedData)
+                    ) {
+
+                        if( !eachParsedData.startsWith("learningResources") ) {
+                            parsedData.metaInformation[eachParsedData] = 
+                            parsedData[eachParsedData];
+                            delete parsedData[eachParsedData];
+                        }
+
                     } else {
                         if( booleanData.includes(eachParsedData) ) {
                             parsedData[eachParsedData] = 
@@ -612,6 +614,17 @@ module.exports = class ProjectTemplatesHelper {
                         status : HTTP_STATUS_CODE['bad_request'].status
                     }
                 }
+
+                if( 
+                    projectTemplateData[0].entityType &&  
+                    projectTemplateData[0].entityType !== "" &&
+                    projectTemplateData[0].entityType !== solutionData.data[0].entityType
+                ) {
+                    throw {
+                        message : CONSTANTS.apiResponses.ENTITY_TYPE_MIS_MATCHED,
+                        status : HTTP_STATUS_CODE['bad_request'].status
+                    }
+                }
  
                 newProjectTemplate.solutionId = solutionData.data[0]._id;
                 newProjectTemplate.solutionExternalId = solutionData.data[0].externalId;
@@ -635,6 +648,8 @@ module.exports = class ProjectTemplatesHelper {
                 if(projectTemplateData[0].tasks){
                     tasksIds = projectTemplateData[0].tasks;
                 }
+
+                newProjectTemplate.isReusable = false;
 
                 let duplicateTemplateDocument = 
                 await database.models.projectTemplates.create(

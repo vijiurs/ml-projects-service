@@ -82,10 +82,10 @@ module.exports = class ProjectTemplateTasksHelper {
 
                 let taskIds = [];
                 let solutionIds = [];
-                let observationIds = [];
                 let systemId = false;
+                let solutionExists = false;
 
-                csvData.forEach(data=>{
+                csvData.forEach(data => {
                     
                     let parsedData = UTILS.valueParser(data);
 
@@ -97,11 +97,8 @@ module.exports = class ProjectTemplateTasksHelper {
                     }
 
                     if ( parsedData.solutionId && parsedData.solutionId !== "" ) {
+                        solutionExists = true;
                         solutionIds.push(parsedData.solutionId);
-                    }
-
-                    if ( parsedData.observationId && parsedData.observationId !== "" ) {
-                        observationIds.push(parsedData.observationId);
                     }
 
                 });
@@ -138,22 +135,23 @@ module.exports = class ProjectTemplateTasksHelper {
                     }
                 }
 
-                let templateId = "";
-
                 let projectTemplate = 
                 await projectTemplatesHelper.templateDocument({
                     _id : projectTemplateId
-                },["_id"]);
+                },["_id","entityType"]);
 
-                if( !projectTemplateId.length > 0 ) {
+                if( !projectTemplate.length > 0 ) {
                     throw {
                         message : CONSTANTS.apiResponses.PROJECT_TEMPLATE_NOT_FOUND,
                         status : HTTP_STATUS_CODE['bad_request'].status
                     }
                 }
 
-                if ( projectTemplate.length > 0 ) {
-                    templateId = projectTemplate[0]._id;
+                if( solutionExists && !projectTemplate[0].entityType ) {
+                    throw {
+                        message : CONSTANTS.apiResponses.ENTITY_TYPE_NOT_FOUND_IN_TEMPLATE,
+                        status : HTTP_STATUS_CODE['bad_request'].status
+                    }
                 }
 
                 let solutionData = {};
@@ -187,13 +185,14 @@ module.exports = class ProjectTemplateTasksHelper {
                     success : true,
                     data : {
                         tasks : tasks,
-                        templateId : templateId,
+                        template : projectTemplate[0],
                         solutionData : solutionData
                     }
                 });
 
            } catch (error) {
-               return reject({
+               return resolve({
+                   message : error.message,
                    success : false,
                    status : error.status ? error.status : HTTP_STATUS_CODE['internal_server_error'].status
                });
@@ -214,7 +213,7 @@ module.exports = class ProjectTemplateTasksHelper {
     
     static createOrUpdateTask( 
         data,
-        templateId,
+        template,
         solutionData,
         update = false
     ) {
@@ -223,8 +222,15 @@ module.exports = class ProjectTemplateTasksHelper {
 
                 let parsedData = UTILS.valueParser(data);
 
-                let allValues = {};
-                allValues.type = parsedData.type.toLowerCase(); 
+                let allValues = {
+                    type : parsedData.type
+                };
+
+                let solutionTypes = [
+                    CONSTANTS.common.ASSESSMENT,
+                    CONSTANTS.common.OBSERVATION,
+                    CONSTANTS.common.IMPROVEMENT_PROJECT
+                ]
 
                 if ( allValues.type === CONSTANTS.common.CONTENT ) {
 
@@ -233,24 +239,7 @@ module.exports = class ProjectTemplateTasksHelper {
                     
                     allValues.learningResources = learningResources.data;
 
-                } else if ( allValues.type === CONSTANTS.common.IMPROVEMENT_PROJECT ) {   
-                    parsedData.improvementProjectDetails = {};
-
-                    if ( 
-                        parsedData.improvementProjectId && 
-                        parsedData.improvementProjectId !== "" 
-                    ) {
-                        allValues.improvementProjectDetails.improvementProjectId = 
-                        parsedData.improvementProjectId;
-
-                    } else {
-                        parsedData.STATUS = 
-                        CONSTANTS.apiResponses.REQUIRED_IMPROVEMENT_PROJECT_ID;
-                    }
-                } else if ( 
-                    allValues.type === CONSTANTS.common.ASSESSMENT || 
-                    allValues.type === CONSTANTS.common.OBSERVATION
-                ) { 
+                } else if ( solutionTypes.includes(allValues.type) ) { 
 
                     allValues.solutionDetails = {};
 
@@ -275,11 +264,36 @@ module.exports = class ProjectTemplateTasksHelper {
                             CONSTANTS.apiResponses.SOLUTION_NOT_FOUND;
                         } else {
 
-                            allValues.solutionDetails = 
-                            _.pick(
-                                solutionData[parsedData.solutionId],
-                                ["_id","isReusable","externalId","name","programId","type","subType"]
-                            )
+                            if( 
+                                solutionData[parsedData.solutionId].type !== 
+                                allValues.solutionDetails.type 
+                            ) {
+                                
+                                parsedData.STATUS = 
+                                CONSTANTS.apiResponses.SOLUTION_TYPE_MIS_MATCH;
+                            }
+
+                            if( 
+                                solutionData[parsedData.solutionId].subType !== 
+                                allValues.solutionDetails.subType
+                            ) {
+                                parsedData.STATUS = 
+                                CONSTANTS.apiResponses.SOLUTION_SUB_TYPE_MIS_MATCH;
+                            }
+
+                            if( 
+                                template.entityType !== solutionData[parsedData.solutionId].entityType 
+                            ) {
+                                parsedData.STATUS = 
+                                CONSTANTS.apiResponses.MIS_MATCHED_PROJECT_AND_TASK_ENTITY_TYPE;
+                            } else {
+                                allValues.solutionDetails = 
+                                _.pick(
+                                    solutionData[parsedData.solutionId],
+                                    ["_id","isReusable","externalId","name","programId","type","subType"]
+                                );
+                            }
+
                         }
 
                     } else {
@@ -289,14 +303,14 @@ module.exports = class ProjectTemplateTasksHelper {
 
                 }
 
-                allValues.projectTemplateId = templateId;
+                allValues.projectTemplateId = template._id;
 
                 let templateTaskSchema = schemas["project-template-tasks"].schema;
 
                 let templateTasksData = Object.keys(templateTaskSchema);
                 let booleanData = UTILS.getAllBooleanDataFromModels(templateTaskSchema);
 
-                Object.keys(parsedData).forEach(eachParsedData=>{
+                Object.keys(parsedData).forEach( eachParsedData => {
                     if( 
                         templateTasksData.includes(eachParsedData) && 
                         !allValues[eachParsedData] 
@@ -388,7 +402,7 @@ module.exports = class ProjectTemplateTasksHelper {
 
                         await projectTemplatesHelper.updateProjectTemplateDocument
                         (
-                            { _id : templateId },
+                            { _id : template._id },
                             { $addToSet : { tasks : ObjectId(taskData._id) } }
                         )
                     }
@@ -461,7 +475,7 @@ module.exports = class ProjectTemplateTasksHelper {
                             let createdTask = 
                             await this.createOrUpdateTask(
                                 currentData,
-                                csvData.data.templateId,
+                                csvData.data.template,
                                 csvData.data.solutionData
                             );
 
@@ -484,7 +498,7 @@ module.exports = class ProjectTemplateTasksHelper {
                             
                             let createdTask = await this.createOrUpdateTask(
                                 currentData,
-                                csvData.data.templateId,
+                                csvData.data.template,
                                 csvData.data.solutionData,
                                 csvData.data.observationData
                             );
@@ -574,7 +588,7 @@ module.exports = class ProjectTemplateTasksHelper {
                     let createdTask = 
                     await this.createOrUpdateTask(
                         _.omit(currentData,["STATUS"]),
-                        csvData.data.templateId,
+                        csvData.data.template,
                         csvData.data.solutionData,
                         true  
                     );

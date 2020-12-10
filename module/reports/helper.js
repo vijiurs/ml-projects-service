@@ -329,10 +329,10 @@ module.exports = class ReportsHelper {
                     pageSize,
                     pageNo,
                     searchQuery,
-                    ["programInformation.name", "userId"]
+                    ["programInformation.name","programInformation._id", "userId"]
                 );
 
-                if (projectDocuments.data && projectDocuments.data.count == 0) {
+                if (projectDocuments.data && projectDocuments.data.count && projectDocuments.data.count == 0) {
                     return resolve({
                         message: CONSTANTS.apiResponses.PROGRAMS_NOT_FOUND,
                         data: []
@@ -340,7 +340,6 @@ module.exports = class ReportsHelper {
                 }
 
                 let programs = [];
-
                 let projectDetails = projectDocuments.data.data;
                 for (let index = 0; index < projectDetails.length; index++) {
                     programs.push({
@@ -354,7 +353,7 @@ module.exports = class ReportsHelper {
                     message: CONSTANTS.apiResponses.PROGRAMS_FOUND,
                     data: {
                         data: programs,
-                        count: projectDocuments.result.count
+                        count: projectDocuments.data.count
                     }
                 });
 

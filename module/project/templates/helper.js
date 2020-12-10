@@ -98,15 +98,18 @@ module.exports = class ProjectTemplatesHelper {
                         parsedData.tasks
                     );
 
-                    parsedData.recommendedFor = 
-                    parsedData.recommendedFor.map(role=>{
-                        return role.toUpperCase()
-                    });
-
-                    roleIds = _.concat(
-                        roleIds,
-                        parsedData.recommendedFor
-                    );
+                    if( parsedData.recommendedFor ) {
+                        
+                        parsedData.recommendedFor = 
+                        parsedData.recommendedFor.map(role=>{
+                            return role.toUpperCase()
+                        });
+    
+                        roleIds = _.concat(
+                            roleIds,
+                            parsedData.recommendedFor
+                        );
+                    }
 
                     if( parsedData.entityType ) {
                         entityTypes.push(parsedData.entityType);

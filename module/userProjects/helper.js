@@ -421,6 +421,8 @@ module.exports = class UserProjectsHelper {
 
                     let currentTemplateData = templateData[currentCsvData.templateId];
 
+                    currentTemplateData.projectTemplateId = currentTemplateData._id;
+                    currentTemplateData.projectTemplateExternalId = currentTemplateData.externalId;
                     currentTemplateData.userId = currentCsvData["keycloak-userId"];
 
                     currentTemplateData.createdBy = currentTemplateData.userId;
@@ -506,9 +508,6 @@ module.exports = class UserProjectsHelper {
                             solutionInformation,
                             ["entities", "programId", "programExternalId"]
                         );
-
-                        delete currentTemplateData.solutionId;
-                        delete currentTemplateData.solutionExternalId;
                     }
 
                     if (currentTemplateData.programExternalId) {
@@ -522,9 +521,6 @@ module.exports = class UserProjectsHelper {
 
                         currentTemplateData.programInformation =
                         programs[currentTemplateData.programExternalId];
-
-                        delete currentTemplateData.programId;
-                        delete currentTemplateData.programExternalId;
                     }
 
                     if( assesmentOrObservationTask && !currentCsvData.entityId ) {
@@ -590,6 +586,8 @@ module.exports = class UserProjectsHelper {
                                 }
                             }
                         }
+
+                        currentTemplateData.entityId = ObjectId(currentCsvData.entityId);
 
                         currentTemplateData.entityInformation =
                         entityDocument[currentCsvData.entityId];
@@ -689,9 +687,9 @@ module.exports = class UserProjectsHelper {
             try {
 
                 let libraryProjects =
-                    await libraryCategoriesHelper.projectDetails(
-                        projectTemplateId
-                    );
+                await libraryCategoriesHelper.projectDetails(
+                    projectTemplateId
+                );
 
                 if (
                     libraryProjects.data &&
@@ -738,6 +736,7 @@ module.exports = class UserProjectsHelper {
                     }
     
                     libraryProjects.data["entityInformation"] = entityInformation.data[0];
+                    libraryProjects.data.entityId = entityInformation.data[0]._id;
                 }
 
                 if( 
@@ -785,7 +784,6 @@ module.exports = class UserProjectsHelper {
                         status : HTTP_STATUS_CODE['bad_request'].status
                     }
                 }
-
               
                 libraryProjects.data.createdFor = userOrganisations.data.createdFor;
                 libraryProjects.data.rootOrganisations = userOrganisations.data.rootOrganisations;
@@ -801,6 +799,9 @@ module.exports = class UserProjectsHelper {
                 if( requestedData.endDate ) {
                     libraryProjects.data.endDate = requestedData.endDate;
                 }
+
+                libraryProjects.data.projectTemplateId = libraryProjects.data._id;
+                libraryProjects.data.projectTemplateExternalId = libraryProjects.data.externalId;
 
                 let projectCreation = await database.models.projects.create(
                     _.omit(libraryProjects.data, ["_id"])
@@ -1016,6 +1017,7 @@ module.exports = class UserProjectsHelper {
                     }
 
                     updateProject["entityInformation"] = entityInformation.data[0];
+                    updateProject.entityId = entityInformation.data[0]._id;
 
                     if( userProject[0].solutionInformation ) {
 
@@ -1296,10 +1298,16 @@ module.exports = class UserProjectsHelper {
                 result.solutionInformation._id =
                 ObjectId(result.solutionInformation._id);
 
+                result["solutionId"] = ObjectId(result.solutionInformation._id);
+                result["solutionExternalId"] = result.solutionInformation.externalId;
+
                 result.programInformation = _.omit(
                     solutionAndProgramCreation.data.program,
                     ["__v", "components"]
                 );
+
+                result["programId"] = ObjectId(result.programInformation._id);
+                result["programExternalId"] = result.programInformation.externalId;
 
                 result.programInformation._id =
                 ObjectId(result.programInformation._id);

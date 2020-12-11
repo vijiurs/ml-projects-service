@@ -66,7 +66,7 @@ module.exports = class ReportsHelper {
 
                 const projectDetails = await userProjectsHelper.projectDocument(
                     query,
-                    ["programInformation.name", "entityInformation.metaInformation", "taskReport", "status", "tasks", "categories"],
+                    ["programInformation.name", "entityInformation.name", "taskReport", "status", "tasks", "categories"],
                     []
                 );
 
@@ -137,6 +137,12 @@ module.exports = class ReportsHelper {
                                     }
                                 }
                             });
+                        } else {
+                            return resolve({
+                                message: CONSTANTS.apiResponses.REPORTS_DATA_NOT_FOUND,
+                                data: [],
+                                success:false
+                            })
                         }
 
                     } else {
@@ -254,7 +260,7 @@ module.exports = class ReportsHelper {
                         pdfRequest['programName'] = projectDetails[0].programInformation.name;
                     }
                     if (entityId != "") {
-                        pdfRequest['entityName'] = projectDetails[0].entityInformation.metaInformation.name;
+                        pdfRequest['entityName'] = projectDetails[0].entityInformation.name;
                     }
 
                     let response = await dhitiService.entityReport(userToken, pdfRequest);
@@ -329,10 +335,10 @@ module.exports = class ReportsHelper {
                     pageSize,
                     pageNo,
                     searchQuery,
-                    ["programInformation.name", "userId"]
+                    ["programInformation.name","programInformation._id", "userId"]
                 );
 
-                if (projectDocuments.data && projectDocuments.data.count == 0) {
+                if (projectDocuments.data && projectDocuments.data.count && projectDocuments.data.count == 0) {
                     return resolve({
                         message: CONSTANTS.apiResponses.PROGRAMS_NOT_FOUND,
                         data: []
@@ -340,7 +346,6 @@ module.exports = class ReportsHelper {
                 }
 
                 let programs = [];
-
                 let projectDetails = projectDocuments.data.data;
                 for (let index = 0; index < projectDetails.length; index++) {
                     programs.push({
@@ -354,7 +359,7 @@ module.exports = class ReportsHelper {
                     message: CONSTANTS.apiResponses.PROGRAMS_FOUND,
                     data: {
                         data: programs,
-                        count: projectDocuments.result.count
+                        count: projectDocuments.data.count
                     }
                 });
 

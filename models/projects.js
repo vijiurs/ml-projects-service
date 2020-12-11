@@ -29,7 +29,8 @@ module.exports = {
         },
         status : {
             type : String,
-            default : "notStarted"
+            default : "notStarted",
+            index: true
         },
         lastDownloadedAt : Date,
         syncedAt : Date,
@@ -65,8 +66,14 @@ module.exports = {
             type : String,
             default : "SYSTEM"
         },
-        projectTemplateId : "ObjectId",
-        projectTemplateExternalId : String,
+        projectTemplateId : {
+            type : "ObjectId",
+            index: true
+        },
+        projectTemplateExternalId : {
+            type : String,
+            index: true
+        },
         startDate: Date,
         endDate: Date,
         rootOrganisations : {
@@ -77,6 +84,26 @@ module.exports = {
             type : Array,
             default : []
         },
-        lastSync : Date
+        lastSync : Date,
+        entityId : {
+            type : "ObjectId",
+            index : true
+        },
+        programId : {
+            type : "ObjectId",
+            index : true
+        },
+        programExternalId : {
+            type : String,
+            index : true
+        },
+        solutionId : {
+            type : "ObjectId",
+            index : true
+        },
+        solutionExternalId : {
+            type : String,
+            index : true
+        }
     }
 };

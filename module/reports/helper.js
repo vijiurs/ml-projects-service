@@ -37,9 +37,9 @@ module.exports = class ReportsHelper {
         return new Promise(async (resolve, reject) => {
             try {
 
-                let query = { isDeleted: { $ne: true } };
+                let query = { };
                 if (entityId) {
-                    query["entityInformation._id"] = ObjectId(entityId);
+                    query["entityId"] = ObjectId(entityId);
                 } else {
                     query["userId"] = userId
                 }
@@ -54,18 +54,19 @@ module.exports = class ReportsHelper {
                     pdfReportString = pdfReportString + " - " + moment(endOf).format('MMM YY');
                 }
 
+                if (programId) {
+                    query['programId'] = ObjectId(programId);
+                }
+                query['isDeleted'] = { $ne: true };
+
                 query['$or'] = [
                     { "syncedAt": { $gte: new Date(startFrom), $lte: new Date(endOf) } },
                     { "tasks": { $elemMatch: { isDeleted: { $ne: true },syncedAt: { $gte: new Date(startFrom), $lte: new Date(endOf) } } } },
                 ]
 
-                if (programId) {
-                    query['programInformation._id'] = ObjectId(programId);
-                }
-
                 const projectDetails = await userProjectsHelper.projectDocument(
                     query,
-                    ["programInformation.name", "entityInformation.name", "taskReport", "status", "tasks", "categories"],
+                    ["programId","programInformation.name", "entityInformation.name", "taskReport", "status", "tasks", "categories"],
                     []
                 );
 
@@ -321,7 +322,7 @@ module.exports = class ReportsHelper {
             try {
 
                 let query = {
-                    "entityInformation._id": ObjectId(entityId),
+                    "entityId": ObjectId(entityId),
                 }
 
                 let searchQuery = [];
@@ -334,7 +335,7 @@ module.exports = class ReportsHelper {
                     pageSize,
                     pageNo,
                     searchQuery,
-                    ["programInformation.name","programInformation._id", "userId"]
+                    ["programInformation.name","programId", "userId"]
                 );
 
                 if (projectDocuments.data && projectDocuments.data.count && projectDocuments.data.count == 0) {
@@ -349,7 +350,7 @@ module.exports = class ReportsHelper {
                 for (let index = 0; index < projectDetails.length; index++) {
                     programs.push({
                         name: projectDetails[index].programInformation.name,
-                        _id: projectDetails[index].programInformation._id
+                        _id: projectDetails[index].programId
                     });
                 }
 
@@ -435,7 +436,7 @@ module.exports = class ReportsHelper {
                 };
 
                 if (entityId) {
-                    query["entityInformation._id"] = ObjectId(entityId);
+                    query["entityId"] = ObjectId(entityId);
                 } else {
                     query["userId"] = userId
                 }
@@ -451,7 +452,7 @@ module.exports = class ReportsHelper {
                 ]
 
                 if (programId) {
-                    query['programInformation._id'] = ObjectId(programId);
+                    query['programId'] = ObjectId(programId);
                 }
 
                 const projectDetails = await userProjectsHelper.projectDocument(
@@ -506,7 +507,6 @@ module.exports = class ReportsHelper {
                         })
                         projectData.push(projectInfo);
                     }));
-
                     let data = {
                         "reportType": returnTypeInfo[0].label,
                         "projectDetails": projectData

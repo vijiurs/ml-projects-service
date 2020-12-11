@@ -37,9 +37,9 @@ module.exports = class ReportsHelper {
         return new Promise(async (resolve, reject) => {
             try {
 
-                let query = {};
+                let query = { };
                 if (entityId) {
-                    query["entityInformation._id"] = ObjectId(entityId);
+                    query["entityId"] = ObjectId(entityId);
                 } else {
                     query["userId"] = userId
                 }
@@ -54,19 +54,19 @@ module.exports = class ReportsHelper {
                     pdfReportString = pdfReportString + " - " + moment(endOf).format('MMM YY');
                 }
 
-                query['$or'] = [
-                    { "isDeleted": false },
-                    { "lastSync": { $gte: new Date(startFrom), $lte: new Date(endOf) } },
-                    { "tasks": { $elemMatch: { lastSync: { $gte: new Date(startFrom), $lte: new Date(endOf) } } } },
-                ]
-
                 if (programId) {
-                    query['programInformation._id'] = ObjectId(programId);
+                    query['programId'] = ObjectId(programId);
                 }
+                query['isDeleted'] = { $ne: true };
+
+                query['$or'] = [
+                    { "syncedAt": { $gte: new Date(startFrom), $lte: new Date(endOf) } },
+                    { "tasks": { $elemMatch: { isDeleted: { $ne: true },syncedAt: { $gte: new Date(startFrom), $lte: new Date(endOf) } } } },
+                ]
 
                 const projectDetails = await userProjectsHelper.projectDocument(
                     query,
-                    ["programInformation.name", "entityInformation.metaInformation", "taskReport", "status", "tasks", "categories"],
+                    ["programId","programInformation.name", "entityInformation.name", "taskReport", "status", "tasks", "categories"],
                     []
                 );
 
@@ -137,6 +137,12 @@ module.exports = class ReportsHelper {
                                     }
                                 }
                             });
+                        } else {
+                            return resolve({
+                                message: CONSTANTS.apiResponses.REPORTS_DATA_NOT_FOUND,
+                                data: [],
+                                success:false
+                            })
                         }
 
                     } else {
@@ -254,7 +260,7 @@ module.exports = class ReportsHelper {
                         pdfRequest['programName'] = projectDetails[0].programInformation.name;
                     }
                     if (entityId != "") {
-                        pdfRequest['entityName'] = projectDetails[0].entityInformation.metaInformation.name;
+                        pdfRequest['entityName'] = projectDetails[0].entityInformation.name;
                     }
 
                     let response = await dhitiService.entityReport(userToken, pdfRequest);
@@ -316,7 +322,7 @@ module.exports = class ReportsHelper {
             try {
 
                 let query = {
-                    "entityInformation._id": ObjectId(entityId),
+                    "entityId": ObjectId(entityId),
                 }
 
                 let searchQuery = [];
@@ -329,7 +335,7 @@ module.exports = class ReportsHelper {
                     pageSize,
                     pageNo,
                     searchQuery,
-                    ["programInformation.name","programInformation._id", "userId"]
+                    ["programInformation.name","programId", "userId"]
                 );
 
                 if (projectDocuments.data && projectDocuments.data.count && projectDocuments.data.count == 0) {
@@ -344,7 +350,7 @@ module.exports = class ReportsHelper {
                 for (let index = 0; index < projectDetails.length; index++) {
                     programs.push({
                         name: projectDetails[index].programInformation.name,
-                        _id: projectDetails[index].programInformation._id
+                        _id: projectDetails[index].programId
                     });
                 }
 
@@ -430,7 +436,7 @@ module.exports = class ReportsHelper {
                 };
 
                 if (entityId) {
-                    query["entityInformation._id"] = ObjectId(entityId);
+                    query["entityId"] = ObjectId(entityId);
                 } else {
                     query["userId"] = userId
                 }
@@ -441,13 +447,12 @@ module.exports = class ReportsHelper {
                 let startFrom = dateRange.startFrom;
 
                 query['$or'] = [
-                    { "isDeleted": false },
-                    { "lastSync": { $gte: new Date(startFrom), $lte: new Date(endOf) } },
-                    { "tasks": { $elemMatch: { lastSync: { $gte: new Date(startFrom), $lte: new Date(endOf) } } } },
+                    { "syncedAt": { $gte: new Date(startFrom), $lte: new Date(endOf) } },
+                    { "tasks": { $elemMatch: { isDeleted: { $ne: true } ,syncedAt: { $gte: new Date(startFrom), $lte: new Date(endOf) } } } },
                 ]
 
                 if (programId) {
-                    query['programInformation._id'] = ObjectId(programId);
+                    query['programId'] = ObjectId(programId);
                 }
 
                 const projectDetails = await userProjectsHelper.projectDocument(
@@ -502,7 +507,6 @@ module.exports = class ReportsHelper {
                         })
                         projectData.push(projectInfo);
                     }));
-
                     let data = {
                         "reportType": returnTypeInfo[0].label,
                         "projectDetails": projectData

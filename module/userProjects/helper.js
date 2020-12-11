@@ -323,6 +323,7 @@ module.exports = class UserProjectsHelper {
 
                     const projectTemplates =
                     await projectTemplatesHelper.templateDocument({
+                        status : CONSTANTS.common.PUBLISHED,
                         externalId: {
                             $in: templateIds
                         },
@@ -1195,6 +1196,8 @@ module.exports = class UserProjectsHelper {
                     updateProject.learningResources = data.learningResources;
                 }
 
+                updateProject.syncedAt = new Date();
+
                 let projectUpdated =
                 await database.models.projects.findOneAndUpdate(
                     {
@@ -1419,7 +1422,6 @@ module.exports = class UserProjectsHelper {
                 fieldsArray.forEach(field => {
                     projection[field] = 1;
                 });
-
 
                 let aggregateData = [];
                 aggregateData.push(matchQuery);
@@ -2010,7 +2012,7 @@ function _projectTask(tasks, isImportedFromLibrary = false) {
         singleTask.updatedAt = new Date();
         singleTask._id = UTILS.isValidMongoId(singleTask._id.toString()) ? uuidv4() : singleTask._id;
         singleTask.isImportedFromLibrary = isImportedFromLibrary;
-        singleTask.lastSync = new Date();
+        singleTask.syncedAt = new Date();
 
         if (singleTask.startDate) {
             singleTask.startDate = singleTask.startDate;

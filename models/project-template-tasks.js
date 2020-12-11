@@ -10,8 +10,7 @@ module.exports = {
     schema: {
         name : {
             type : String,
-            required : true,
-            index: true
+            required : true
         },
         description : {
             type : String
@@ -45,7 +44,13 @@ module.exports = {
         parentId : "ObjectId",
         projectTemplateId : {
             type : "ObjectId",
-            required : true
+            required : true,
+            index: true
+        },
+        projectTemplateExternalId : {
+            type : String,
+            required : true,
+            index: true
         },
         isDeleteable : {
             type : Boolean,

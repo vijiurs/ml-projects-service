@@ -1196,6 +1196,8 @@ module.exports = class UserProjectsHelper {
                     updateProject.learningResources = data.learningResources;
                 }
 
+                updateProject.syncedAt = new Date();
+
                 let projectUpdated =
                 await database.models.projects.findOneAndUpdate(
                     {

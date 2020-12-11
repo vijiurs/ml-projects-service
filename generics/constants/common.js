@@ -7,7 +7,7 @@
 
 module.exports = {
     "ACTIVE_STATUS" : "active",
-    "DRAFT_STATUS" : "draft",
+    "PUBLISHED" : "published",
     "SUCCESS" : "Success",
     "ASSESSMENT" : "assessment",
     "CONTENT" : "content",

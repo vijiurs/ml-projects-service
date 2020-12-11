@@ -37,7 +37,7 @@ module.exports = class ReportsHelper {
         return new Promise(async (resolve, reject) => {
             try {
 
-                let query = {};
+                let query = { isDeleted: { $ne: true } };
                 if (entityId) {
                     query["entityInformation._id"] = ObjectId(entityId);
                 } else {
@@ -55,9 +55,8 @@ module.exports = class ReportsHelper {
                 }
 
                 query['$or'] = [
-                    { "isDeleted": false },
-                    { "lastSync": { $gte: new Date(startFrom), $lte: new Date(endOf) } },
-                    { "tasks": { $elemMatch: { lastSync: { $gte: new Date(startFrom), $lte: new Date(endOf) } } } },
+                    { "syncedAt": { $gte: new Date(startFrom), $lte: new Date(endOf) } },
+                    { "tasks": { $elemMatch: { isDeleted: { $ne: true },syncedAt: { $gte: new Date(startFrom), $lte: new Date(endOf) } } } },
                 ]
 
                 if (programId) {
@@ -447,9 +446,8 @@ module.exports = class ReportsHelper {
                 let startFrom = dateRange.startFrom;
 
                 query['$or'] = [
-                    { "isDeleted": false },
-                    { "lastSync": { $gte: new Date(startFrom), $lte: new Date(endOf) } },
-                    { "tasks": { $elemMatch: { lastSync: { $gte: new Date(startFrom), $lte: new Date(endOf) } } } },
+                    { "syncedAt": { $gte: new Date(startFrom), $lte: new Date(endOf) } },
+                    { "tasks": { $elemMatch: { isDeleted: { $ne: true } ,syncedAt: { $gte: new Date(startFrom), $lte: new Date(endOf) } } } },
                 ]
 
                 if (programId) {

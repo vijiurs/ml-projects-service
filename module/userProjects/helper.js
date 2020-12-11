@@ -323,6 +323,7 @@ module.exports = class UserProjectsHelper {
 
                     const projectTemplates =
                     await projectTemplatesHelper.templateDocument({
+                        status : CONSTANTS.common.PUBLISHED,
                         externalId: {
                             $in: templateIds
                         },
@@ -1419,7 +1420,6 @@ module.exports = class UserProjectsHelper {
                 fieldsArray.forEach(field => {
                     projection[field] = 1;
                 });
-
 
                 let aggregateData = [];
                 aggregateData.push(matchQuery);

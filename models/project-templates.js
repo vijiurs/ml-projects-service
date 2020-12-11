@@ -36,7 +36,8 @@ module.exports = {
         },
         status : {
             type : String,
-            required : true
+            required : true,
+            index : true
         },
         isDeleted : {
             type : Boolean,
@@ -64,7 +65,8 @@ module.exports = {
         },
         isReusable : {
             type : Boolean,
-            default : false
+            default : false,
+            index : true
         },
         entityType : {
             type : String

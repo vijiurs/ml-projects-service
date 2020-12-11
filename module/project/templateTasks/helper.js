@@ -137,8 +137,9 @@ module.exports = class ProjectTemplateTasksHelper {
 
                 let projectTemplate = 
                 await projectTemplatesHelper.templateDocument({
+                    status : CONSTANTS.common.PUBLISHED,
                     _id : projectTemplateId
-                },["_id","entityType"]);
+                },["_id","entityType","externalId"]);
 
                 if( !projectTemplate.length > 0 ) {
                     throw {
@@ -304,6 +305,7 @@ module.exports = class ProjectTemplateTasksHelper {
                 }
 
                 allValues.projectTemplateId = template._id;
+                allValues.projectTemplateExternalId = template.externalId;
 
                 let templateTaskSchema = schemas["project-template-tasks"].schema;
 
@@ -634,6 +636,7 @@ module.exports = class ProjectTemplateTasksHelper {
 
                 const templateDocument = 
                 await projectTemplatesHelper.templateDocument({
+                    status : CONSTANTS.common.PUBLISHED,
                     _id : templateId
                 },["tasks"]);
 

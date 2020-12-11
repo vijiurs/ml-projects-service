@@ -2012,7 +2012,7 @@ function _projectTask(tasks, isImportedFromLibrary = false) {
         singleTask.updatedAt = new Date();
         singleTask._id = UTILS.isValidMongoId(singleTask._id.toString()) ? uuidv4() : singleTask._id;
         singleTask.isImportedFromLibrary = isImportedFromLibrary;
-        singleTask.lastSync = new Date();
+        singleTask.syncedAt = new Date();
 
         if (singleTask.startDate) {
             singleTask.startDate = singleTask.startDate;

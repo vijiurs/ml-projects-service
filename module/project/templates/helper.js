@@ -341,6 +341,7 @@ module.exports = class ProjectTemplatesHelper {
                     
                     let templateData = 
                     await this.templateDocument({
+                        status : CONSTANTS.common.PUBLISHED,
                         externalId : currentData.externalId,
                         isReusable : true
                     },["_id"]);
@@ -356,7 +357,7 @@ module.exports = class ProjectTemplatesHelper {
                             userId
                         );
 
-                        templateData.status = CONSTANTS.common.DRAFT_STATUS;
+                        templateData.status = CONSTANTS.common.PUBLISHED_STATUS;
                         templateData.createdBy = templateData.updatedBy = templateData.userId = userId;
                         templateData.isReusable = true;
     
@@ -477,7 +478,9 @@ module.exports = class ProjectTemplatesHelper {
 
                         const template = 
                         await this.templateDocument({
-                            _id : currentData._SYSTEM_ID
+                            status : CONSTANTS.common.PUBLISHED,
+                            _id : currentData._SYSTEM_ID,
+                            status : CONSTANTS.common.PUBLISHED
                         },["_id","categories"]);
 
                         if ( !(template.length > 0 && template[0]._id) ) {
@@ -588,6 +591,7 @@ module.exports = class ProjectTemplatesHelper {
 
                 let projectTemplateData = 
                 await this.templateDocument({
+                    status : CONSTANTS.common.PUBLISHED,
                     externalId : templateId,
                     isReusable : true
                 });
@@ -724,6 +728,7 @@ module.exports = class ProjectTemplatesHelper {
 
                 let templateData = 
                 await this.templateDocument({
+                    status : CONSTANTS.common.PUBLISHED,
                     _id : templateId,
                     isReusable : true
                 },[

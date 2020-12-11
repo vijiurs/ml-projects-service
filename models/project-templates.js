@@ -18,10 +18,14 @@ module.exports = {
             index: true,
             unique: true
         },
-        categories : {
-            type : Array,
-            default : []
-        },
+        categories : [{
+            _id : "ObjectId",
+            externalId : {
+                type : String,
+                index : true
+            },
+            name : String
+        }],
         description : {
             type : String,
             default : ""
@@ -36,7 +40,8 @@ module.exports = {
         },
         status : {
             type : String,
-            required : true
+            required : true,
+            index : true
         },
         isDeleted : {
             type : Boolean,
@@ -64,7 +69,8 @@ module.exports = {
         },
         isReusable : {
             type : Boolean,
-            default : false
+            default : false,
+            index : true
         },
         entityType : {
             type : String

@@ -190,6 +190,7 @@ module.exports = class LibraryCategoriesHelper {
 
                 let matchQuery = {
                     $match : {
+                        status : CONSTANTS.common.PUBLISHED,
                         "isReusable" : true
                     }
                 };
@@ -302,6 +303,7 @@ module.exports = class LibraryCategoriesHelper {
                 let projectsData = 
                 await database.models.projectTemplates.find(
                     {
+                        status : CONSTANTS.common.PUBLISHED,
                         "_id" : projectId,
                         "isDeleted" : false
                     },{

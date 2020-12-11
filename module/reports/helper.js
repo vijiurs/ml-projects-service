@@ -66,7 +66,7 @@ module.exports = class ReportsHelper {
 
                 const projectDetails = await userProjectsHelper.projectDocument(
                     query,
-                    ["programInformation.name", "entityInformation.metaInformation", "taskReport", "status", "tasks", "categories"],
+                    ["programInformation.name", "entityInformation.name", "taskReport", "status", "tasks", "categories"],
                     []
                 );
 
@@ -137,6 +137,12 @@ module.exports = class ReportsHelper {
                                     }
                                 }
                             });
+                        } else {
+                            return resolve({
+                                message: CONSTANTS.apiResponses.REPORTS_DATA_NOT_FOUND,
+                                data: [],
+                                success:false
+                            })
                         }
 
                     } else {
@@ -254,7 +260,7 @@ module.exports = class ReportsHelper {
                         pdfRequest['programName'] = projectDetails[0].programInformation.name;
                     }
                     if (entityId != "") {
-                        pdfRequest['entityName'] = projectDetails[0].entityInformation.metaInformation.name;
+                        pdfRequest['entityName'] = projectDetails[0].entityInformation.name;
                     }
 
                     let response = await dhitiService.entityReport(userToken, pdfRequest);

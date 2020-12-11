@@ -553,7 +553,7 @@ module.exports = class ProjectTemplateTasksHelper {
                     return resolve(csvData);
                 }
 
-                let tasksData =  Object.values(csvData.tasks);
+                let tasksData =  Object.values(csvData.data.tasks);
 
                 if ( csvData.data.tasks && tasksData.length > 0 ) {
 
@@ -669,5 +669,4 @@ module.exports = class ProjectTemplateTasksHelper {
            }
        });
     }
-
 };

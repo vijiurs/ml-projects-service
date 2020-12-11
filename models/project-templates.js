@@ -18,10 +18,14 @@ module.exports = {
             index: true,
             unique: true
         },
-        categories : {
-            type : Array,
-            default : []
-        },
+        categories : [{
+            _id : "ObjectId",
+            externalId : {
+                type : String,
+                index : true
+            },
+            name : String
+        }],
         description : {
             type : String,
             default : ""

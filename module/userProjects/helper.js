@@ -2051,7 +2051,7 @@ function _projectCategories(categories) {
                 if (category.value && category.value !== "") {
                     categoryIds.push(category.value);
                 }
-            });categoryIds
+            });
 
             let categoryData = [];
 

@@ -2045,21 +2045,28 @@ function _projectCategories(categories) {
     return new Promise(async (resolve, reject) => {
         try {
 
-            const categoryIds = categories.map(category => {
+            let categoryIds = [];
+            
+            categories.forEach(category => {
                 if (category.value && category.value !== "") {
-                    return category.value;
+                    categoryIds.push(category.value);
                 }
             });
 
-            const categoryData =
-            await libraryCategoriesHelper.categoryDocuments({
-                _id: { $in: categoryIds }
-            }, ["name", "externalId"]);
+            let categoryData = [];
 
-            if( !categoryData.length > 0 ) {
-                throw {
-                    status : HTTP_STATUS_CODE['bad_request'].status,
-                    message: CONSTANTS.apiResponses.CATEGORY_NOT_FOUND
+            if( categoryIds.length > 0 ) {
+                
+                categoryData =
+                await libraryCategoriesHelper.categoryDocuments({
+                    _id: { $in: categoryIds }
+                }, ["name", "externalId"]);
+
+                 if( !categoryData.length > 0 ) {
+                    throw {
+                        status : HTTP_STATUS_CODE['bad_request'].status,
+                        message: CONSTANTS.apiResponses.CATEGORY_NOT_FOUND
+                    }
                 }
             }
 

@@ -54,7 +54,7 @@ module.exports = {
         },
         isDeleteable : {
             type : Boolean,
-            default : false
+            default : true
         },
         taskSequence : {
             type : Array,

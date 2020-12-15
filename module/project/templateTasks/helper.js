@@ -318,8 +318,10 @@ module.exports = class ProjectTemplateTasksHelper {
                         !allValues[eachParsedData] 
                     ) {
                         if( booleanData.includes(eachParsedData) ) {
-                            allValues[eachParsedData] = 
-                            UTILS.convertStringToBoolean(parsedData[eachParsedData]);
+                            if( parsedData[eachParsedData] !== "" ) {
+                                allValues[eachParsedData] = 
+                                UTILS.convertStringToBoolean(parsedData[eachParsedData]);
+                            }
                         } else {
                             allValues[eachParsedData] = parsedData[eachParsedData]; 
                         }

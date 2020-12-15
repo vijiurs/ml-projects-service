@@ -82,8 +82,7 @@ module.exports = class ReportsHelper {
                 let categories = {
                     "total": 0
                 };
-
-                let categoriesArray = [];
+                
                 let projectReport = {
                     "total": 0,
                     "overdue": 0,
@@ -160,17 +159,24 @@ module.exports = class ReportsHelper {
                     }
                 }
                
-
-
                 await Promise.all(projectDetails.map(async function (project) {
 
                     if (project.categories) {
                         project.categories.map(category => {
-                            if (categoriesArray.includes(category.externalId)) {
+
+                            if( 
+                                category.externalId !== "" && categories[category.externalId] 
+                            ) {
                                 categories[category.externalId] = categories[category.externalId] + 1;
+                            } else if ( categories[category.name] ) {
+                                categories[category.name] = categories[category.name] + 1;
                             } else {
-                                categoriesArray.push(category.externalId);
-                                categories[category.externalId] = 1;
+                                if( category.externalId !== "" ) {
+                                    categories[category.externalId] = 1;
+                                } else {
+                                    categories[category.name] = 1;
+                                }
+                                
                             }
                         });
                         categories['total'] = categories['total'] + project.categories.length;

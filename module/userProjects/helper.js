@@ -2007,7 +2007,11 @@ function _projectTask(tasks, isImportedFromLibrary = false) {
         singleTask.type = singleTask.type ? singleTask.type : CONSTANTS.common.SIMPLE_TASK_TYPE;
         singleTask.status = singleTask.status ? singleTask.status : CONSTANTS.common.NOT_STARTED_STATUS;
         singleTask.isDeleted = singleTask.isDeleted ? singleTask.isDeleted : false;
-        singleTask.isDeleteable = singleTask.isDeleteable ? singleTask.isDeleteable : true;
+
+        if( !singleTask.hasOwnProperty("isDeleteable") ) {
+            singleTask.isDeleteable = true;
+        }
+        
         singleTask.createdAt = singleTask.createdAt ? singleTask.createdAt : new Date();
         singleTask.updatedAt = new Date();
         singleTask._id = UTILS.isValidMongoId(singleTask._id.toString()) ? uuidv4() : singleTask._id;

@@ -1999,7 +1999,7 @@ function _projectInformation(project) {
   * @returns {Object} Project task.
 */
 
-function _projectTask(tasks, isImportedFromLibrary = false) {
+function _projectTask(tasks, isImportedFromLibrary = false,parentTaskId = "") {
 
     tasks.forEach(singleTask => {
 
@@ -2026,8 +2026,21 @@ function _projectTask(tasks, isImportedFromLibrary = false) {
             singleTask.endDate = singleTask.endDate;
         }
 
+        if( singleTask.visibleIf && singleTask.visibleIf.length > 0 ) {
+
+            if( parentTaskId !== "" ) {
+                singleTask.visibleIf.forEach(task => {
+                    task._id = parentTaskId;
+                });
+            }
+        }
+
         if (singleTask.children) {
-            _projectTask(singleTask.children);
+            _projectTask(
+                singleTask.children,
+                isImportedFromLibrary,
+                singleTask._id
+            );
         } else {
             singleTask.children = [];
         }

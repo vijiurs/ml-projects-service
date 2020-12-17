@@ -23,6 +23,8 @@ var cloudStorage = require('../helpers/cloud-storage');
 var impTemplatesModel = require('../models/impTemplates');
 
 var ObjectId = require('mongoose').Types.ObjectId;
+var projectTempModel = require('../models/projectsTemp');
+
 
 
 
@@ -794,6 +796,21 @@ async function syncProject(req) {
                         // }
 
                         console.log("No nned to  Updated the project isEdited :false", projectDocument._id);
+
+                    } else if (projectDocument.isEdited == true && !projectDocument._id) {
+                        // store object to temp collection
+
+                        let tempProject = new projectTempModel({
+                            "userId": req.body.userId,
+                            "requestBody": req.body,
+                            "headers":req.headers,
+                            "createdAt": moment().format(),
+                            "projectDetails": projectDocument
+
+                        });
+                         tempProject.save(tempProject,function (err, data) {
+
+                        });
 
                     } else {
 

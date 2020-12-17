@@ -91,6 +91,24 @@ if(config.app_base_path){
     app_base_path = config.app_base_path;
 }
 
+app.all("*", (req, res, next) => {
+
+      console.log("-------Request log starts here------------------");
+      console.log(
+        "%s %s on %s from ",
+        req.method,
+        req.url,
+        new Date(),
+        req.headers["user-agent"]
+      );
+      console.log("Request Headers: ", req.headers);
+      console.log("Request Body: ", req.body);
+      console.log("Request Files: ", req.files);
+      console.log("-------Request log ends here------------------");
+    
+    next();
+  });
+
 app.use('/'+app_base_path+'/api/v1/',authenticate,projectV1);
 app.use('/'+app_base_path+'/api/external/',authenticate,external);
 app.use('/'+app_base_path+'/api/v1/reports/',authenticate,reports);

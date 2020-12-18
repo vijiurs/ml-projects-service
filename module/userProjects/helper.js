@@ -1839,8 +1839,11 @@ module.exports = class UserProjectsHelper {
                     userProjectData.role
                 )
                 
-                if (!userAndEntityList.success && !userAndEntityList.data) {
-                    throw new Error(CONSTANTS.apiResponses.USERS_AND_ENTITIES_NOT_FOUND);
+                if (!userAndEntityList.success || !userAndEntityList.data) {
+                    throw {
+                        message : CONSTANTS.apiResponses.USERS_AND_ENTITIES_NOT_FOUND,
+                        status : HTTP_STATUS_CODE['bad_request'].status
+                    }
                 }
 
                 let userProjectBulkCreationData = [];

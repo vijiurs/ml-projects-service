@@ -102,5 +102,6 @@ module.exports = {
     "SOLUTION_SUB_TYPE_MIS_MATCH" : "Not matched solution sub type",
     "ENTITY_TYPE_NOT_FOUND_IN_TEMPLATE" : "Not found entity type in template",
     "MIS_MATCHED_PROJECT_AND_TASK_ENTITY_TYPE" : "Project and task entity type mis matched",
-    "ENTITY_TYPE_MIS_MATCHED" : "Entity type does not match template entity type" 
+    "ENTITY_TYPE_MIS_MATCHED" : "Entity type does not match template entity type",
+    "TARGETED_PROJECT_FETCHED" : " Targeted projects fetched successfully" 
 };

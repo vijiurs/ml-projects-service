@@ -638,7 +638,6 @@ module.exports = class ProjectTemplatesHelper {
                 newProjectTemplate.programId = solutionData.data[0].programId;
                 newProjectTemplate.programExternalId = solutionData.data[0].programExternalId;
 
-
                 newProjectTemplate.parentTemplateId = projectTemplateData[0]._id;
 
                 let updationKeys = Object.keys(updateData);
@@ -667,8 +666,16 @@ module.exports = class ProjectTemplatesHelper {
                     throw new Error(CONSTANTS.apiResponses.PROJECT_TEMPLATES_NOT_CREATED)
                 }
 
+                await assessmentService.updateSolution(
+                    userToken,
+                    {
+                        projectTemplateId : duplicateTemplateDocument._id
+                    },
+                    newProjectTemplate.solutionExternalId
+                )
+
                  //duplicate task
-                if(Array.isArray(tasksIds) && tasksIds.length > 0 ){
+                if(Array.isArray(tasksIds) && tasksIds.length > 0 ) {
 
                     await this.duplicateTemplateTasks(
                         tasksIds,
@@ -968,7 +975,7 @@ module.exports = class ProjectTemplatesHelper {
             });
         }
     });
-}
+  } 
 
 };
 

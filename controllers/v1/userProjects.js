@@ -1089,4 +1089,58 @@ module.exports = class UserProjects extends Abstract {
         })
     }
 
+      /**
+    * @api {post} /improvement-project/api/v1/userProjects/getProject?page=:page&limit=:limit&search=:search
+    * List of User projects and targetted ones.
+    * @apiVersion 1.0.0
+    * @apiGroup User Projects
+    * @apiSampleRequest /improvement-project/api/v1/userProjects/getProject
+    * @apiParamExample {json} Request:
+    * {
+    *   "role" : "HM",
+   		"state" : "5c0bbab881bdbe330655da7f",
+   		"block" : "5c0bbab881bdbe330655da7f",
+   		"cluster" : "5c0bbab881bdbe330655da7f",
+   		"school" : "5c0bbab881bdbe330655da7f"
+    }
+    * @apiParamExample {json} Response:
+    * @apiUse successBody
+    * @apiUse errorBody
+    */
+
+    /**
+      * List of user projects and targetted ones.
+      * @method
+      * @name getProject
+      * @param {Object} req - request data.
+      * @returns {JSON} List of user project with targetted ones.
+     */
+    
+    async getProject(req) {
+        return new Promise(async (resolve, reject) => {
+            try {
+
+                let projects = await userProjectsHelper.getProject(
+                    req.body,
+                    req.userDetails.userInformation.userId,
+                    req.userDetails.userToken,
+                    req.pageSize,
+                    req.pageNo,
+                    req.searchText
+                );
+
+                projects.result = projects.data;
+                
+                return resolve(projects);
+
+            } catch (error) {
+                return reject({
+                    status: error.status || HTTP_STATUS_CODE.internal_server_error.status,
+                    message: error.message || HTTP_STATUS_CODE.internal_server_error.message,
+                    errorObject: error
+                });
+            }
+        })
+    }
+
 };

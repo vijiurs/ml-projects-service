@@ -563,9 +563,9 @@ const listProgramsBasedOnIds = function ( programIds ) {
                 }
             };
 
-            request.post(url,options,kendraCallback);
+            request.post(url,options,assessmentCallback);
 
-            function kendraCallback(err, data) {
+            function assessmentCallback(err, data) {
 
                 let result = {
                     success : true
@@ -621,9 +621,9 @@ const removeSolutionsFromProgram = function ( token,programId,solutionIds ) {
                 }
             };
 
-            request.post(url,options,kendraCallback);
+            request.post(url,options,assessmentCallback);
 
-            function kendraCallback(err, data) {
+            function assessmentCallback(err, data) {
 
                 let result = {
                     success : true
@@ -672,9 +672,9 @@ const removeEntitiesFromSolution = function ( token,solutionId,entities ) {
                 }
             };
 
-            request.post(url,options,kendraCallback);
+            request.post(url,options,assessmentCallback);
 
-            function kendraCallback(err, data) {
+            function assessmentCallback(err, data) {
 
                 let result = {
                     success : true
@@ -684,6 +684,125 @@ const removeEntitiesFromSolution = function ( token,solutionId,entities ) {
                     result.success = false;
                 } else {
                     result["data"] = data.body.result;
+                }
+
+                return resolve(result);
+            }
+
+        } catch (error) {
+            return reject(error);
+        }
+    })
+}
+
+/**
+  * User targetted solutions.
+  * @function
+  * @name getUserTargetedSolutions
+  * @param {String} token - User token.
+  * @param {Object} bodyData - Requested body data.
+  * @param {String} searchText - Text to search.
+  * @returns {JSON} - List of user targetted solutions.
+*/
+
+const getUserTargetedSolutions = function ( token,bodyData,typeAndSubType,searchText = "" ) {
+    return new Promise(async (resolve, reject) => {
+        try {
+            
+            const url = 
+            ASSESSMENT_URL + process.env.URL_PREFIX + CONSTANTS.endpoints.USER_TARGETED_SOLUTIONS+ "?type=" + typeAndSubType + "&subType=" + typeAndSubType;
+
+            if( searchText !== "" ) {
+                url = url + "&search=" + searchText;
+            }
+
+            const options = {
+                headers : {
+                    "content-type": "application/json",
+                    AUTHORIZATION : process.env.AUTHORIZATION,
+                    "internal-access-token": process.env.INTERNAL_ACCESS_TOKEN,
+                    "x-authenticated-user-token" : token
+                },
+                json : bodyData
+            };
+
+            request.post(url,options,assessmentCallback);
+
+            function assessmentCallback(err, data) {
+
+                let result = {
+                    success : true
+                };
+
+                if (err) {
+                    result.success = false;
+                } else {
+                    
+                    let response = data.body;
+                    
+                    if( response.status === HTTP_STATUS_CODE['ok'].status ) {
+                        result["data"] = response.result;
+                    } else {
+                        result.success = false;
+                    }
+                }
+
+                return resolve(result);
+            }
+
+        } catch (error) {
+            return reject(error);
+        }
+    })
+}
+
+/**
+  * Targeted Programs and solutions.
+  * @function
+  * @name targetedProgramsSolutions
+  * @param {String} programId - Program id.
+  * @param {String} solutionId - Solution id.
+  * @param {String} token - User token.
+  * @param {Object} bodyData - Requested body data.
+  * @returns {JSON} - List of user targetted solutions.
+*/
+
+const targetedProgramsSolutions = function ( programId,solutionId,token,bodyData ) {
+    return new Promise(async (resolve, reject) => {
+        try {
+            
+            const url = 
+            ASSESSMENT_URL + process.env.URL_PREFIX + CONSTANTS.endpoints.TARGETTED_PROGRAM_SOLUTION_DETAILS + "/" + programId + "?solutionId=" + solutionId ;
+
+            const options = {
+                headers : {
+                    "content-type": "application/json",
+                    AUTHORIZATION : process.env.AUTHORIZATION,
+                    "internal-access-token": process.env.INTERNAL_ACCESS_TOKEN,
+                    "x-authenticated-user-token" : token
+                },
+                json : bodyData
+            };
+
+            request.post(url,options,assessmentCallback);
+
+            function assessmentCallback(err, data) {
+
+                let result = {
+                    success : true
+                };
+
+                if (err) {
+                    result.success = false;
+                } else {
+                    
+                    let response = data.body;
+                    
+                    if( response.status === HTTP_STATUS_CODE['ok'].status ) {
+                        result["data"] = response.result;
+                    } else {
+                        result.success = false;
+                    }
                 }
 
                 return resolve(result);
@@ -707,5 +826,7 @@ module.exports = {
     createObservation : createObservation,
     listProgramsBasedOnIds : listProgramsBasedOnIds,
     removeSolutionsFromProgram : removeSolutionsFromProgram,
-    removeEntitiesFromSolution : removeEntitiesFromSolution
+    removeEntitiesFromSolution : removeEntitiesFromSolution,
+    getUserTargetedSolutions : getUserTargetedSolutions,
+    targetedProgramsSolutions : targetedProgramsSolutions
 }

@@ -669,13 +669,19 @@ module.exports = class ProjectTemplatesHelper {
 
                  //duplicate task
                 if(Array.isArray(tasksIds) && tasksIds.length > 0 ){
-
                     await this.duplicateTemplateTasks(
                         tasksIds,
                         duplicateTemplateDocument._id
                     );
-
                 }
+
+                await assessmentService.updateSolution(
+                    userToken,
+                    {
+                        projectTemplateId : duplicateTemplateDocument._id
+                    },
+                    newProjectTemplate.solutionExternalId
+                );  
                 
                 await this.ratings(
                     projectTemplateData[0]._id,

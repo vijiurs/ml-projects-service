@@ -328,16 +328,11 @@ module.exports = class UserProjectsHelper {
                             $in: templateIds
                         },
                         isReusable: false
-                    }, "all",
-                    [
-                        "ratings",
-                        "noOfRatings",
-                        "averageRating"
-                    ]);
+                    },["_id","solutionExternalId","programExternalId","externalId","programId"]);
 
                     if( !projectTemplates.length > 0 ) {
                         throw {
-                            message : CONSTANTS.apiResponses.SOLUTION_NOT_FOUND,
+                            message : CONSTANTS.apiResponses.PROJECT_TEMPLATE_NOT_FOUND,
                             status : HTTP_STATUS_CODE['bad_request'].status
                         }
                     }
@@ -346,7 +341,7 @@ module.exports = class UserProjectsHelper {
 
                         templateData[template.externalId] = template;
 
-                        if (template.solutionId) {
+                        if (template.solutionExternalId) {
                             solutionIds.push(template.solutionExternalId);
                         }
 
@@ -375,7 +370,6 @@ module.exports = class UserProjectsHelper {
                     if (
                         solutionData.data && solutionData.data.length > 0
                     ) {
-
                         solutionData.data.forEach(solution => {
                             solutions[solution.externalId] = solution;
                         })
@@ -422,73 +416,15 @@ module.exports = class UserProjectsHelper {
 
                     let currentTemplateData = templateData[currentCsvData.templateId];
 
-                    currentTemplateData.projectTemplateId = currentTemplateData._id;
-                    currentTemplateData.projectTemplateExternalId = currentTemplateData.externalId;
-                    currentTemplateData.userId = currentCsvData["keycloak-userId"];
-
-                    currentTemplateData.createdBy = currentTemplateData.userId;
-                    currentTemplateData.updatedBy = currentTemplateData.userId;
-
-                    let userOrganisations = 
-                    await kendraService.getUserOrganisationsAndRootOrganisations(
-                        userToken,
-                        currentTemplateData.userId
+                    let projectCreation = 
+                    await this.userAssignedProjectCreation(
+                        currentTemplateData._id,
+                        currentCsvData["keycloak-userId"],
+                        userToken
                     );
 
-                    if( !userOrganisations.success ) {
-                        throw {
-                            message : CONSTANTS.apiResponses.USER_ORGANISATION_NOT_FOUND,
-                            status : HTTP_STATUS_CODE['bad_request'].status
-                        }
-                    }
-
-                    currentTemplateData.createdFor = 
-                    userOrganisations.data.createdFor;
-                    
-                    currentTemplateData.rootOrganisations = 
-                    userOrganisations.data.rootOrganisations;
-
-                    let assesmentOrObservationTask = false;
-
-                    if (
-                        currentTemplateData &&
-                        currentTemplateData.tasks &&
-                        currentTemplateData.tasks.length > 0
-                    ) {
-
-                        const tasksAndSubTasks =
-                        await projectTemplateTasksHelper.tasksAndSubTasks(
-                            currentTemplateData._id
-                        );
-
-                        if( tasksAndSubTasks.length > 0 ) {
-                            currentTemplateData.tasks = _projectTask(tasksAndSubTasks);
-
-                            currentTemplateData.tasks.forEach( task => {
-                                if( 
-                                    task.type === CONSTANTS.common.ASSESSMENT || 
-                                    task.type === CONSTANTS.common.OBSERVATION
-                                ) {
-                                    assesmentOrObservationTask = true;
-                                }
-                            })
-
-
-                            let taskReport = {
-                                total : currentTemplateData.tasks.length
-                            };
-
-                            currentTemplateData.tasks.forEach(task => {
-                                if (!taskReport[task.status]) {
-                                    taskReport[task.status] = 1;
-                                } else {
-                                    taskReport[task.status] += 1;
-                                }
-                            });
-
-                            currentTemplateData["taskReport"] = taskReport;
-
-                        }
+                    if( !projectCreation.success ) {
+                        return resolve(projectCreation);
                     }
 
                     let solutionInformation = {};
@@ -504,7 +440,7 @@ module.exports = class UserProjectsHelper {
                         }
 
                         solutionInformation = solutions[currentTemplateData.solutionExternalId];
-                        currentTemplateData.solutionInformation =
+                        projectCreation.data.solutionInformation =
                         _.omit(
                             solutionInformation,
                             ["entities", "programId", "programExternalId"]
@@ -520,11 +456,14 @@ module.exports = class UserProjectsHelper {
                             continue;
                         }
 
-                        currentTemplateData.programInformation =
+                        projectCreation.data.programInformation =
                         programs[currentTemplateData.programExternalId];
                     }
 
-                    if( assesmentOrObservationTask && !currentCsvData.entityId ) {
+                    if( 
+                        projectCreation.data.assesmentOrObservationTask && 
+                        !currentCsvData.entityId 
+                    ) {
                         currentCsvData["STATUS"] =
                         CONSTANTS.apiResponses.ENTITY_REQUIRED_FOR_ASSESSMENT_OBSERVATION;
                         input.push(currentCsvData);
@@ -578,7 +517,7 @@ module.exports = class UserProjectsHelper {
                                     entities: entities
                                 },
                                 solutionInformation.externalId
-                            )
+                            );
 
                             if( !solutionUpdated.success ) {
                                 throw {
@@ -588,21 +527,18 @@ module.exports = class UserProjectsHelper {
                             }
                         }
 
-                        currentTemplateData.entityId = ObjectId(currentCsvData.entityId);
+                        projectCreation.data.entityId = ObjectId(currentCsvData.entityId);
 
-                        currentTemplateData.entityInformation =
+                        projectCreation.data.entityInformation =
                         entityDocument[currentCsvData.entityId];
-
-                        delete currentTemplateData.entityType;
-                        delete currentTemplateData.entityTypeId;
                     }
 
-                    currentTemplateData.status = CONSTANTS.common.NOT_STARTED_STATUS;
-                    const projectCreation =
-                    await database.models.projects.create(currentTemplateData);
+                    projectCreation.data.status = CONSTANTS.common.NOT_STARTED_STATUS;
+                    const project =
+                    await database.models.projects.create(projectCreation.data);
 
-                    if( projectCreation._id ) {
-                        currentCsvData["STATUS"] = projectCreation._id;
+                    if( project._id ) {
+                        currentCsvData["STATUS"] = project._id;
                     } else {
                         currentCsvData["STATUS"] = CONSTANTS.apiResponses.PROJECT_NOT_CREATED;
                     }
@@ -1866,6 +1802,127 @@ module.exports = class UserProjectsHelper {
             }
         })
     }
+
+       /**
+    * User assigned project creation data.
+    * @method
+    * @name userAssignedProjectCreation
+    * @param {String} templateId - Project template id.
+    * @param {String} userId - Logged in user id.
+    * @param {String} userToken - Logged in user token.
+    * @returns {String} - message.
+    */
+
+   static userAssignedProjectCreation(templateId,userId,userToken) {
+    return new Promise(async (resolve, reject) => {
+        try {
+
+            const projectTemplateData =
+            await projectTemplatesHelper.templateDocument({
+                status : CONSTANTS.common.PUBLISHED,
+                _id : templateId,
+                isReusable: false
+            }, "all",
+            [
+                "ratings",
+                "noOfRatings",
+                "averageRating"
+            ]);
+
+            if( !projectTemplateData.length > 0 ) {
+                throw {
+                    message : CONSTANTS.apiResponses.SOLUTION_NOT_FOUND,
+                    status : HTTP_STATUS_CODE['bad_request'].status
+                }
+            }
+
+            let result = {...projectTemplateData[0]};
+
+            result.projectTemplateId = result._id;
+            result.projectTemplateExternalId = result.externalId;
+            result.userId = userId;
+            result.createdBy = userId;
+            result.updatedBy = userId;
+
+            let userOrganisations = 
+            await kendraService.getUserOrganisationsAndRootOrganisations(
+                userToken,
+                userId
+            );
+
+            if( !userOrganisations.success ) {
+                throw {
+                    message : CONSTANTS.apiResponses.USER_ORGANISATION_NOT_FOUND,
+                    status : HTTP_STATUS_CODE['bad_request'].status
+                }
+            }
+
+            result.createdFor = 
+            userOrganisations.data.createdFor;
+            
+            result.rootOrganisations = 
+            userOrganisations.data.rootOrganisations;
+
+            result.assesmentOrObservationTask = false;
+
+            if ( projectTemplateData[0].tasks && projectTemplateData[0].tasks.length > 0 ) {
+
+                const tasksAndSubTasks =
+                await projectTemplateTasksHelper.tasksAndSubTasks(
+                    projectTemplateData[0]._id
+                );
+
+                if( tasksAndSubTasks.length > 0 ) {
+                    
+                    result.tasks = _projectTask(tasksAndSubTasks);
+
+                    result.tasks.forEach( task => {
+                        if( 
+                            task.type === CONSTANTS.common.ASSESSMENT || 
+                            task.type === CONSTANTS.common.OBSERVATION
+                        ) {
+                            result.assesmentOrObservationTask = true;
+                        }
+                    });
+
+
+                    let taskReport = {
+                        total : result.tasks.length
+                    };
+
+                    result.tasks.forEach(task => {
+                        if (!taskReport[task.status]) {
+                            taskReport[task.status] = 1;
+                        } else {
+                            taskReport[task.status] += 1;
+                        }
+                    });
+
+                    result["taskReport"] = taskReport;
+
+                }
+            }
+
+            delete result._id;
+
+            return resolve({
+                success : true,
+                message : CONSTANTS.apiResponses.UPDATED_DOCUMENT_SUCCESSFULLY,
+                data : result
+            });
+
+        } catch (error) {
+            return resolve({
+                status : 
+                error.status ? 
+                error.status : HTTP_STATUS_CODE['internal_server_error'].status,
+                success: false,
+                message: error.message,
+                data: {}
+            });
+        }
+    });
+   }
 
 };
 

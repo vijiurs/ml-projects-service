@@ -1793,7 +1793,7 @@ module.exports = class UserProjectsHelper {
                 (
                     userProjectBulkCreationData,
                     userToken
-                )
+                )   
 
                 return resolve(userProjects);
 
@@ -1980,6 +1980,22 @@ module.exports = class UserProjectsHelper {
     
                     if( !entityInformation.success ) {
                         return resolve(entityInformation);
+                    }
+
+                    let solutionUpdated = 
+                    await assessmentService.updateSolution(
+                        userToken,
+                        {
+                            entities: [ObjectId(entityInformation.data[0]._id)]
+                        },
+                        projectCreation.data.solutionInformation.externalId
+                    );
+
+                    if( !solutionUpdated.success ) {
+                        throw {
+                            status : HTTP_STATUS_CODE['bad_request'].status,
+                            message : CONSTANTS.apiResponses.SOLUTION_NOT_UPDATED
+                        }
                     }
 
                     projectCreation.data["entityInformation"] = entityInformation.data[0];

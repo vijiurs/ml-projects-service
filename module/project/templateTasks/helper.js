@@ -649,7 +649,8 @@ module.exports = class ProjectTemplateTasksHelper {
                     tasks = await this.taskDocuments({
                         _id : {
                             $in : templateDocument[0].tasks
-                        }
+                        },
+                        parentId : { $exists : false }
                     },"all",["projectTemplateId","__v"]);
 
                     for( let task = 0 ; task < tasks.length ; task ++ ) {

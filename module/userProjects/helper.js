@@ -1947,6 +1947,7 @@ function _projectInformation(project) {
             if (project.programInformation ) {
                 project.programId = project.programInformation._id;
                 project.programName = project.programInformation.name;
+                project.isAPrivateProgram = project.programInformation.isAPrivateProgram;
             }
         
             if( project.tasks && project.tasks.length > 0 ) {

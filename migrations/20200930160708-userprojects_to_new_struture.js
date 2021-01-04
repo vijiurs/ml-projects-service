@@ -153,7 +153,7 @@ module.exports = {
           var taskData = {
             "_id": id,
             "isDeleted": task.isDeleted ? task.isDeleted : false,
-            "isDelteable": task.isDeleted ? task.isDeleted :false,
+            "isDeletable": task.isDeleted ? task.isDeleted :false,
             "taskSequence": [],
             "visibleIf": [],
             "deleted": false,

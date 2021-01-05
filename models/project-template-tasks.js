@@ -52,7 +52,7 @@ module.exports = {
             required : true,
             index: true
         },
-        isDeleteable : {
+        isDeletable : {
             type : Boolean,
             default : true
         },

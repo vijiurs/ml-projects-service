@@ -208,7 +208,7 @@ module.exports = class LibraryCategories extends Abstract {
                 {
                     "_id": "5f24404784504944928b10bc",
                     "isDeleted": false,
-                    "isDeleteable": false,
+                    "isDeletable": false,
                     "taskSequence": [],
                     "children": [
                         {
@@ -216,7 +216,7 @@ module.exports = class LibraryCategories extends Abstract {
                             "createdBy": "e97b5582-471c-4649-8401-3cc4249359bb",
                             "updatedBy": "e97b5582-471c-4649-8401-3cc4249359bb",
                             "isDeleted": false,
-                            "isDeleteable": false,
+                            "isDeletable": false,
                             "taskSequence": [],
                             "children": [],
                             "deleted": false,

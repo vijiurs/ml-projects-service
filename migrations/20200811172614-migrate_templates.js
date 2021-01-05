@@ -217,7 +217,7 @@ async function taskSchema(task, children) {
     "createdBy": "SYSTEM",
     "updatedBy": "SYSTEM", // new field
     "isDeleted": task.isDeleted ? task.isDeleted : false,
-    "isDeleteable": task.isDeleted ? task.isDeleted : false,
+    "isDeletable": task.isDeleted ? task.isDeleted : false,
     "children": [],
     "visibleIf": [],
     "taskSequence": [],

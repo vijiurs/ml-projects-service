@@ -153,7 +153,7 @@ module.exports = {
           var taskData = {
             "_id": id,
             "isDeleted": task.isDeleted ? task.isDeleted : false,
-            "isDeleteable": task.isDeleted ? task.isDeleted :false,
+            "isDeletable": task.isDeleted ? task.isDeleted :false,
             "taskSequence": [],
             "visibleIf": [],
             "deleted": false,
@@ -189,7 +189,7 @@ module.exports = {
                 "startDate": subTask.startDate,
                 "endDate": subTask.endDate,
                 "isDeleted": subTask.isDeleted ? subTask.isDeleted :false,
-                "isDeleteable": subTask.isDeleted ? subTask.isDeleted :false,
+                "isDeletable": subTask.isDeleted ? subTask.isDeleted :false,
                 "taskSequence": [],
                 "children": [],
                 "visibleIf": [],

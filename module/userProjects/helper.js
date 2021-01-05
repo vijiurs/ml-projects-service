@@ -1950,6 +1950,7 @@ function _projectInformation(project) {
             if (project.programInformation ) {
                 project.programId = project.programInformation._id;
                 project.programName = project.programInformation.name;
+                project.isAPrivateProgram = project.programInformation.isAPrivateProgram;
             }
         
             if( project.tasks && project.tasks.length > 0 ) {
@@ -2068,8 +2069,8 @@ function _projectTask(tasks, isImportedFromLibrary = false,parentTaskId = "") {
         singleTask.status = singleTask.status ? singleTask.status : CONSTANTS.common.NOT_STARTED_STATUS;
         singleTask.isDeleted = singleTask.isDeleted ? singleTask.isDeleted : false;
 
-        if( !singleTask.hasOwnProperty("isDeleteable") ) {
-            singleTask.isDeleteable = true;
+        if( !singleTask.hasOwnProperty("isDeletable") ) {
+            singleTask.isDeletable = true;
         }
         
         singleTask.createdAt = singleTask.createdAt ? singleTask.createdAt : new Date();

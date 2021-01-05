@@ -65,7 +65,7 @@ module.exports = class UserProjects extends Abstract {
                 {
                     "_id": "5f24404784504944928b10bc",
                     "isDeleted": false,
-                    "isDeleteable": false,
+                    "isDeletable": false,
                     "taskSequence": [],
                     "children": [
                         {
@@ -73,7 +73,7 @@ module.exports = class UserProjects extends Abstract {
                             "createdBy": "e97b5582-471c-4649-8401-3cc4249359bb",
                             "updatedBy": "e97b5582-471c-4649-8401-3cc4249359bb",
                             "isDeleted": false,
-                            "isDeleteable": false,
+                            "isDeletable": false,
                             "taskSequence": [],
                             "children": [],
                             "deleted": false,
@@ -414,13 +414,13 @@ module.exports = class UserProjects extends Abstract {
             {
                 "_id": "61d6690d-82cb-4db2-8191-8dd945c5e742",
                 "isDeleted": false,
-                "isDeleteable": false,
+                "isDeletable": false,
                 "taskSequence": [],
                 "children": [
                     {
                         "_id": "b5068cef-eefc-4f43-8a29-ab9c2268f451",
                         "isDeleted": false,
-                        "isDeleteable": false,
+                        "isDeletable": false,
                         "taskSequence": [],
                         "children": [],
                         "visibleIf": [
@@ -444,7 +444,7 @@ module.exports = class UserProjects extends Abstract {
                     {
                         "_id": "988ef20f-267f-4bed-9a38-9d7dc6a320e9",
                         "isDeleted": false,
-                        "isDeleteable": false,
+                        "isDeletable": false,
                         "taskSequence": [],
                         "children": [],
                         "visibleIf": [
@@ -481,7 +481,7 @@ module.exports = class UserProjects extends Abstract {
             {
                 "_id": "289d9558-b98f-41cf-81d3-92486f114a49",
                 "isDeleted": false,
-                "isDeleteable": false,
+                "isDeletable": false,
                 "taskSequence": [],
                 "children": [],
                 "visibleIf": [],
@@ -785,14 +785,14 @@ module.exports = class UserProjects extends Abstract {
                         "type": "single",
                         "isDeleted": false,
                         "externalId": "task 2",
-                        "isDeleteable": false,
+                        "isDeletable": false,
                         "createdAt": "2020-10-28T05:58:24.907Z",
                         "updatedAt": "2020-10-28T05:58:24.907Z",
                         "isImportedFromLibrary": false
                     }
                 ],
                 "externalId": "task 1",
-                "isDeleteable": false,
+                "isDeletable": false,
                 "createdAt": "2020-10-28T05:58:24.907Z",
                 "updatedAt": "2020-10-28T05:58:24.907Z",
                 "isImportedFromLibrary": false

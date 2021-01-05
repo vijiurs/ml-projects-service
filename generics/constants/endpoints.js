@@ -41,6 +41,6 @@ module.exports = {
     LIST_PROGRAMS_BY_IDS : "/programs/listByIds",
     REMOVE_SOLUTIONS_FROM_PROGRAM : "/programs/removeSolutions",
     REMOVE_ENTITY_FROM_SOLUTION : "/solutions/removeEntities",
-    USER_TARGETED_SOLUTIONS : "/programsSolutionsMap/targetedSolutions",
+    USER_TARGETED_SOLUTIONS : "/solutions/autoTargeted",
     TARGETTED_PROGRAM_SOLUTION_DETAILS : "/programsSolutionsMap/programSolutionDetails"
 };

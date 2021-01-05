@@ -534,6 +534,7 @@ module.exports = class UserProjectsHelper {
                     }
 
                     projectCreation.data.status = CONSTANTS.common.NOT_STARTED_STATUS;
+                    projectCreation.data.lastDownloadedAt = new Date();
                     const project =
                     await database.models.projects.create(projectCreation.data);
 

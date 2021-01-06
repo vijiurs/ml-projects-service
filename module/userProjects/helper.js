@@ -1862,13 +1862,13 @@ module.exports = class UserProjectsHelper {
             }
 
             if( solutionIds.length > 0 ) {
-                bodyData["filteredData"] = {};
-                bodyData["filteredData"]["_id"] = {
+                bodyData["filter"] = {};
+                bodyData["filter"]["_id"] = {
                     $nin : solutionIds
                 }; 
             }
 
-            bodyData.filteredData["projectTemplateId"] = {
+            bodyData.filter["projectTemplateId"] = {
                 $exists : true
             };
 
@@ -1941,22 +1941,51 @@ module.exports = class UserProjectsHelper {
         try {
 
             if( projectId === "" ) {
-               
-               let programSolutionDetails = 
-               await assessmentService.targetedProgramsSolutions(
-                   programId,
-                   solutionId,
-                   userToken,
-                   bodyData
+
+                bodyData["filter"] = {
+                    _id : solutionId,
+                    programId : programId
+                };
+
+                let targetedSolutions = 
+                await assessmentService.getUserTargetedSolutions(
+                    userToken,
+                    bodyData,
+                    CONSTANTS.common.IMPROVEMENT_PROJECT
                 );
 
-                if( !programSolutionDetails.success ) {
-                    return resolve(programSolutionDetails);
+                if( !targetedSolutions.success || (targetedSolutions.data.data && !targetedSolutions.data.data.length > 0) ) {
+                    throw {
+                        status : HTTP_STATUS_CODE["bad_request"].status,
+                        message : CONSTANTS.apiResponses.SOLUTION_DOES_NOT_EXISTS_IN_SCOPE
+                    }
+                }
+
+                let solutionData = targetedSolutions.data.data[0];
+
+                let programData =
+                await assessmentService.listProgramsBasedOnIds([solutionData.programId]);
+
+                if( !programData.success ) {
+                    throw {
+                        message : CONSTANTS.apiResponses.PROGRAM_NOT_FOUND,
+                        status : HTTP_STATUS_CODE['bad_request'].status
+                    }
+                }
+
+                let solutionDetails = 
+                await assessmentService.listSolutions([solutionData.externalId]);
+                
+                if( !solutionDetails.success ) {
+                    throw {
+                        message : CONSTANTS.apiResponses.SOLUTION_NOT_FOUND,
+                        status : HTTP_STATUS_CODE['bad_request'].status
+                    }
                 }
 
                 let projectCreation = 
                 await this.userAssignedProjectCreation(
-                    programSolutionDetails.data.solution.projectTemplateId,
+                    solutionDetails.data[0].projectTemplateId,
                     userId,
                     userToken
                 );
@@ -1966,46 +1995,58 @@ module.exports = class UserProjectsHelper {
                 }
 
                 projectCreation.data.programInformation = 
-                programSolutionDetails.data.program;
+                _.omit( programData.data[0],["__v","components"]);
+
+                projectCreation.data.programInformation._id = 
+                ObjectId(projectCreation.data.programInformation._id);
                 
                 projectCreation.data.solutionInformation = 
-                programSolutionDetails.data.solution;
+                _.omit( solutionDetails.data[0],["__v"]);
 
-                if( bodyData[programSolutionDetails.data.solution.entityType] ) {
-                    
-                    let entityInformation = 
-                    await _entitiesInformation(
-                        [bodyData[programSolutionDetails.data.solution.entityType]]
-                    );
-    
-                    if( !entityInformation.success ) {
-                        return resolve(entityInformation);
+                projectCreation.data.solutionInformation._id = 
+                ObjectId(projectCreation.data.solutionInformation._id);
+
+                if( 
+                    !solutionDetails.data[0].entityType ||
+                    !bodyData[solutionDetails.data[0].entityType] 
+                ) {
+                    throw {
+                        message : CONSTANTS.apiResponses.ENTITY_TYPE_MIS_MATCHED
                     }
-
-                    let solutionUpdated = 
-                    await assessmentService.updateSolution(
-                        userToken,
-                        {
-                            entities: [ObjectId(entityInformation.data[0]._id)]
-                        },
-                        projectCreation.data.solutionInformation.externalId
-                    );
-
-                    if( !solutionUpdated.success ) {
-                        throw {
-                            status : HTTP_STATUS_CODE['bad_request'].status,
-                            message : CONSTANTS.apiResponses.SOLUTION_NOT_UPDATED
-                        }
-                    }
-
-                    projectCreation.data["entityInformation"] = entityInformation.data[0];
-                    projectCreation.data.entityId = entityInformation.data[0]._id;
                 }
+
+                let entityInformation = 
+                await _entitiesInformation(
+                    [bodyData[solutionDetails.data[0].entityType]] 
+                );
+
+                if( !entityInformation.success ) {
+                    return resolve(entityInformation);
+                }
+
+                let solutionUpdated = 
+                await assessmentService.updateSolution(
+                    userToken,
+                    {
+                        entities: [ObjectId(entityInformation.data[0]._id)]
+                    },
+                    solutionDetails.data[0].externalId
+                );
+
+                if( !solutionUpdated.success ) {
+                    throw {
+                        status : HTTP_STATUS_CODE['bad_request'].status,
+                        message : CONSTANTS.apiResponses.SOLUTION_NOT_UPDATED
+                    }
+                }
+
+                projectCreation.data["entityInformation"] = entityInformation.data[0];
+                projectCreation.data.entityId = entityInformation.data[0]._id;
 
                 projectCreation.data.status = CONSTANTS.common.NOT_STARTED_STATUS;
                 projectCreation.data.lastDownloadedAt = new Date();
 
-                let project = await database.models.projects.create(projectCreation);
+                let project = await database.models.projects.create(projectCreation.data);
                 projectId = project._id;
 
             }
@@ -2015,7 +2056,7 @@ module.exports = class UserProjectsHelper {
             return resolve({
                 success : true,
                 message : CONSTANTS.apiResponses.PROJECT_DETAILS_FETCHED,
-                data : projectDetails
+                data : projectDetails.data
             });
 
         } catch (error) {

@@ -1986,8 +1986,8 @@ module.exports = class UserProjectsHelper {
                 }
             }
 
+            bodyData["filter"] = {};
             if( solutionIds.length > 0 ) {
-                bodyData["filter"] = {};
                 bodyData["filter"]["_id"] = {
                     $nin : solutionIds
                 }; 
@@ -2030,19 +2030,24 @@ module.exports = class UserProjectsHelper {
                 success : true,
                 message : CONSTANTS.apiResponses.TARGETED_PROJECT_FETCHED,
                 data : {
+                    description : CONSTANTS.common.PROJECT_DESCRIPTION,
                     data : mergedData,
                     count : totalCount
                 }
             });
 
         } catch (error) {
-            return reject({
+            return resolve({
                 success : false,
                 message : error.message,
                 status : 
                 error.status ? 
                 error.status : HTTP_STATUS_CODE['internal_server_error'].status,
-                data : []
+                data : {
+                    description : CONSTANTS.common.PROJECT_DESCRIPTION,
+                    data : [],
+                    count : 0
+                }
             });
         }
     })

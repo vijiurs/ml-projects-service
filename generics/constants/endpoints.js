@@ -40,5 +40,6 @@ module.exports = {
     GET_USERS_BY_ENTITY_AND_ROLE : "/entities/getUsersByEntityAndRole", //Kendra service
     LIST_PROGRAMS_BY_IDS : "/programs/listByIds",
     REMOVE_SOLUTIONS_FROM_PROGRAM : "/programs/removeSolutions",
-    REMOVE_ENTITY_FROM_SOLUTION : "/solutions/removeEntities"
+    REMOVE_ENTITY_FROM_SOLUTION : "/solutions/removeEntities",
+    USER_TARGETED_SOLUTIONS : "/solutions/autoTargeted"
 };

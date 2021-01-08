@@ -23,5 +23,6 @@ module.exports = {
     "NOT_STARTED_STATUS" : "notStarted",
     "OBSERVATION" : "observation",
     "PUBLISHED_STATUS" : "published",
-    "LEAD_ASSESSOR" : "LEAD_ASSESSOR"
+    "LEAD_ASSESSOR" : "LEAD_ASSESSOR",
+    "PROJECT_DESCRIPTION" : "Manage and track your school Improvement easily by creating tasks and planning timelines."
 };

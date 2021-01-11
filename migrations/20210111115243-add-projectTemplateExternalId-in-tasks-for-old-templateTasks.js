@@ -1,4 +1,3 @@
-console.log("here")
 module.exports = {
 
   async up(db) {

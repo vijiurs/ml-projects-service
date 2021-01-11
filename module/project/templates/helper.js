@@ -671,7 +671,8 @@ module.exports = class ProjectTemplatesHelper {
                 if(Array.isArray(tasksIds) && tasksIds.length > 0 ){
                     await this.duplicateTemplateTasks(
                         tasksIds,
-                        duplicateTemplateDocument._id
+                        duplicateTemplateDocument._id,
+                        duplicateTemplateDocument.externalId
                     );
                 }
 
@@ -837,7 +838,7 @@ module.exports = class ProjectTemplatesHelper {
       * @returns {Object} Duplicated tasks.
      */
 
-    static duplicateTemplateTasks( taskIds=[], duplicateTemplateId ) {
+    static duplicateTemplateTasks( taskIds=[], duplicateTemplateId, duplicateTemplateExternalId ) {
         return new Promise(async (resolve, reject) => {
             try {
 
@@ -855,6 +856,7 @@ module.exports = class ProjectTemplatesHelper {
                             //duplicate task
                             newProjectTemplateTask = {...taskData};
                             newProjectTemplateTask.projectTemplateId = duplicateTemplateId;
+                            newProjectTemplateTask.projectTemplateExternalId = duplicateTemplateExternalId;
                             newProjectTemplateTask.externalId = taskData.externalId +"-"+ UTILS.epochTime();
                             duplicateTemplateTask = 
                                 await database.models.projectTemplateTasks.create(
@@ -876,6 +878,7 @@ module.exports = class ProjectTemplatesHelper {
                                         if(childTaskData){
                                             newProjectTemplateChildTask = {...childTaskData};
                                             newProjectTemplateChildTask.projectTemplateId = duplicateTemplateId;
+                                            newProjectTemplateChildTask.projectTemplateExternalId = duplicateTemplateExternalId;
                                             newProjectTemplateChildTask.parentId = duplicateTemplateTask._id;
                                             newProjectTemplateChildTask.externalId = childTaskData.externalId +"-"+ UTILS.epochTime();
                                             duplicateChildTemplateTask = 

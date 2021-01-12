@@ -371,7 +371,12 @@ module.exports = class UserProjectsHelper {
                         solutionData.data && solutionData.data.length > 0
                     ) {
                         solutionData.data.forEach(solution => {
-                            solutions[solution.externalId] = solution;
+                            solutions[solution.externalId] = {
+                                "name" : solution.name,
+                                "externalId" : solution.externalId,
+                                "description" : solution.description,
+                                "_id" : solution._id
+                            };
                         })
                     }
 
@@ -394,7 +399,12 @@ module.exports = class UserProjectsHelper {
                     if (programData.data && programData.data.length > 0) {
 
                         programData.data.forEach(program => {
-                            programs[program.externalId] = program;
+                            programs[program.externalId] = {
+                                _id : program._id,
+                                name : program.name,
+                                description : program.description ? program.description : "",
+                                externalId : program.externalId
+                            };
                         })
                     }
                 }
@@ -440,11 +450,7 @@ module.exports = class UserProjectsHelper {
                         }
 
                         solutionInformation = solutions[currentTemplateData.solutionExternalId];
-                        projectCreation.data.solutionInformation =
-                        _.omit(
-                            solutionInformation,
-                            ["entities", "programId", "programExternalId"]
-                        );
+                        projectCreation.data.solutionInformation = solutionInformation;
                     }
 
                     if (currentTemplateData.programExternalId) {
@@ -458,6 +464,9 @@ module.exports = class UserProjectsHelper {
 
                         projectCreation.data.programInformation =
                         programs[currentTemplateData.programExternalId];
+
+                        projectCreation.data.isAPrivateProgram = 
+                        programs[currentTemplateData.programExternalId].isAPrivateProgram;
                     }
 
                     if( 
@@ -1230,9 +1239,9 @@ module.exports = class UserProjectsHelper {
                     };
                 }
 
-                result.solutionInformation = _.omit(
+                result.solutionInformation = _.pick(
                     solutionAndProgramCreation.data.solution,
-                    ["__v"]
+                    ["name","externalId","description","_id"]
                 );
 
                 result.solutionInformation._id =
@@ -1241,13 +1250,14 @@ module.exports = class UserProjectsHelper {
                 result["solutionId"] = ObjectId(result.solutionInformation._id);
                 result["solutionExternalId"] = result.solutionInformation.externalId;
 
-                result.programInformation = _.omit(
+                result.programInformation = _.pick(
                     solutionAndProgramCreation.data.program,
-                    ["__v", "components"]
+                    ["_id", "name","externalId","description","isAPrivateProgram"]
                 );
 
                 result["programId"] = ObjectId(result.programInformation._id);
                 result["programExternalId"] = result.programInformation.externalId;
+                result["isAPrivateProgram"] = result.programInformation.isAPrivateProgram;
 
                 result.programInformation._id =
                 ObjectId(result.programInformation._id);
@@ -2125,16 +2135,40 @@ module.exports = class UserProjectsHelper {
                 }
 
                 projectCreation.data.programInformation = 
-                _.omit( programData.data[0],["__v","components"]);
+                _.pick( 
+                    programData.data[0],
+                    [
+                        "_id", 
+                        "name",
+                        "externalId",
+                        "description",
+                        "isAPrivateProgram"
+                    ]
+                );
 
                 projectCreation.data.programInformation._id = 
                 ObjectId(projectCreation.data.programInformation._id);
                 
                 projectCreation.data.solutionInformation = 
-                _.omit( solutionDetails.data[0],["__v"]);
+                _.pick( solutionDetails.data[0],["name","externalId","description","_id"]);
 
                 projectCreation.data.solutionInformation._id = 
                 ObjectId(projectCreation.data.solutionInformation._id);
+
+                projectCreation.data["programId"] = 
+                projectCreation.data.programInformation._id;
+
+                projectCreation.data["programExternalId"] = 
+                projectCreation.data.programInformation.externalId;
+
+                projectCreation.data["isAPrivateProgram"] = 
+                projectCreation.data.programInformation.isAPrivateProgram;
+
+                projectCreation.data["solutionId"] = 
+                projectCreation.data.solutionInformation._id;
+
+                projectCreation.data["solutionExternalId"] = 
+                projectCreation.data.solutionInformation.externalId;
 
                 if( 
                     !solutionDetails.data[0].entityType ||

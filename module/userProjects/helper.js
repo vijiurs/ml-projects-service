@@ -2640,7 +2640,7 @@ function _entitiesInformation(entityIds) {
             let entityData =
             await kendraService.entityDocuments(
                 entityIds,
-                ["metaInformation", "entityType", "entityTypeId"]
+                ["metaInformation", "entityType", "entityTypeId","registryDetails"]
             );
 
             if( !entityData.success ) {
@@ -2658,6 +2658,7 @@ function _entitiesInformation(entityIds) {
                     entity.metaInformation._id = ObjectId(entity._id);
                     entity.metaInformation.entityType = entity.entityType;
                     entity.metaInformation.entityTypeId = ObjectId(entity.entityTypeId);
+                    entity.metaInformation.registryDetails = entity.registryDetails;
                     return entity.metaInformation;
                 });
             }

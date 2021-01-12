@@ -104,6 +104,7 @@ module.exports = {
         solutionExternalId : {
             type : String,
             index : true
-        }
+        },
+        isAPrivateProgram : Boolean
     }
 };

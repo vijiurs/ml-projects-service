@@ -136,7 +136,6 @@ module.exports = class UserProjects extends v1UserProjects {
                 let projectDetails = 
                 await userProjectsHelper.detailsV2(
                     req.params._id ? req.params._id : "",
-                    req.query.programId,
                     req.query.solutionId,
                     req.userDetails.userInformation.userId,
                     req.userDetails.userToken,

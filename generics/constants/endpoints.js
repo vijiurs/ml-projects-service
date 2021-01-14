@@ -41,5 +41,7 @@ module.exports = {
     LIST_PROGRAMS_BY_IDS : "/programs/listByIds",
     REMOVE_SOLUTIONS_FROM_PROGRAM : "/programs/removeSolutions",
     REMOVE_ENTITY_FROM_SOLUTION : "/solutions/removeEntities",
-    USER_TARGETED_SOLUTIONS : "/solutions/autoTargeted"
+    AUTO_TARGETED_SOLUTIONS : "/solutions/autoTargeted",
+    AUTO_TARGETED_SOLUTION_DETAILS : "/solutions/targetedSolutionDetails",
+    LIST_ENTITIES_BY_LOCATION_IDS : "/entities/listByLocationIds"
 };

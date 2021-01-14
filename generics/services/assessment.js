@@ -710,7 +710,7 @@ const getUserTargetedSolutions = function ( token,bodyData,typeAndSubType,search
         try {
             
             const url = 
-            ASSESSMENT_URL + process.env.URL_PREFIX + CONSTANTS.endpoints.USER_TARGETED_SOLUTIONS+ "?type=" + typeAndSubType + "&subType=" + typeAndSubType;
+            ASSESSMENT_URL + process.env.URL_PREFIX + CONSTANTS.endpoints.AUTO_TARGETED_SOLUTIONS+ "?type=" + typeAndSubType + "&subType=" + typeAndSubType;
 
             if( searchText !== "" ) {
                 url = url + "&search=" + searchText;
@@ -756,6 +756,121 @@ const getUserTargetedSolutions = function ( token,bodyData,typeAndSubType,search
     })
 }
 
+/**
+  * User targetted solutions.
+  * @function
+  * @name targetedSolutionDetails
+  * @param {String} token - User token.
+  * @param {Object} bodyData - Requested body data.
+  * @param {String} solutionId - Targeted solution id.
+  * @returns {JSON} - List of user targetted solutions.
+*/
+
+const targetedSolutionDetails = function ( token,bodyData,solutionId ) {
+    return new Promise(async (resolve, reject) => {
+        try {
+            
+            const url = 
+            ASSESSMENT_URL + process.env.URL_PREFIX + CONSTANTS.endpoints.AUTO_TARGETED_SOLUTION_DETAILS + "/" + solutionId;
+
+            const options = {
+                headers : {
+                    "content-type": "application/json",
+                    AUTHORIZATION : process.env.AUTHORIZATION,
+                    "internal-access-token": process.env.INTERNAL_ACCESS_TOKEN,
+                    "x-authenticated-user-token" : token
+                },
+                json : bodyData
+            };
+
+            request.post(url,options,assessmentCallback);
+
+            function assessmentCallback(err, data) {
+
+                let result = {
+                    success : true
+                };
+
+                if (err) {
+                    result.success = false;
+                } else {
+                    
+                    let response = data.body;
+                    
+                    if( response.status === HTTP_STATUS_CODE['ok'].status ) {
+                        result["data"] = response.result;
+                    } else {
+                        result.success = false;
+                    }
+                }
+
+                return resolve(result);
+            }
+
+        } catch (error) {
+            return reject(error);
+        }
+    })
+}
+
+/**
+  * User targetted solutions.
+  * @function
+  * @name listEntitiesByLocationIds
+  * @param {String} token - User token.
+  * @param {Object} locationIds - Requested body data.
+  * @returns {JSON} - List of entities by location ids.
+*/
+
+const listEntitiesByLocationIds = function ( token,locationIds ) {
+    return new Promise(async (resolve, reject) => {
+        try {
+            
+            const url = 
+            ASSESSMENT_URL + process.env.URL_PREFIX + CONSTANTS.endpoints.LIST_ENTITIES_BY_LOCATION_IDS;
+
+            const options = {
+                headers : {
+                    "content-type": "application/json",
+                    AUTHORIZATION : process.env.AUTHORIZATION,
+                    "internal-access-token": process.env.INTERNAL_ACCESS_TOKEN,
+                    "x-authenticated-user-token" : token
+                },
+                json : {
+                    locationIds : locationIds
+                }
+            };
+
+            request.post(url,options,assessmentCallback);
+
+            function assessmentCallback(err, data) {
+
+                let result = {
+                    success : true
+                };
+
+                if (err) {
+                    result.success = false;
+                } else {
+                    
+                    let response = data.body;
+                    
+                    if( response.status === HTTP_STATUS_CODE['ok'].status ) {
+                        result["data"] = response.result;
+                    } else {
+                        result.success = false;
+                    }
+                }
+
+                return resolve(result);
+            }
+
+        } catch (error) {
+            return reject(error);
+        }
+    })
+}
+
 module.exports = {
     createAssessmentSolutionFromTemplate : createAssessmentSolutionFromTemplate,
     createObservationFromSolutionTemplate : createObservationFromSolutionTemplate,
@@ -769,5 +884,7 @@ module.exports = {
     listProgramsBasedOnIds : listProgramsBasedOnIds,
     removeSolutionsFromProgram : removeSolutionsFromProgram,
     removeEntitiesFromSolution : removeEntitiesFromSolution,
-    getUserTargetedSolutions : getUserTargetedSolutions
+    getUserTargetedSolutions : getUserTargetedSolutions,
+    targetedSolutionDetails : targetedSolutionDetails,
+    listEntitiesByLocationIds : listEntitiesByLocationIds
 }

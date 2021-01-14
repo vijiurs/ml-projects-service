@@ -1998,9 +1998,7 @@ module.exports = class UserProjectsHelper {
 
             bodyData["filter"] = {};
             if( solutionIds.length > 0 ) {
-                bodyData["filter"]["_id"] = {
-                    $nin : solutionIds
-                }; 
+                bodyData["filter"]["skipSolutions"] = solutionIds;
             }
 
             bodyData.filter["projectTemplateId"] = {
@@ -2068,7 +2066,6 @@ module.exports = class UserProjectsHelper {
      * @method
      * @name detailsV2 
      * @param {String} projectId - project id.
-     * @param {String} programId - program id.
      * @param {String} solutionId - solution id.
      * @param {String} userId - logged in user id.
      * @param {String} userToken - logged in user token.
@@ -2076,22 +2073,17 @@ module.exports = class UserProjectsHelper {
      * @returns {Object} Project details.
     */
 
-   static detailsV2( projectId,programId,solutionId,userId,userToken,bodyData ) {
+   static detailsV2( projectId,solutionId,userId,userToken,bodyData ) {
     return new Promise(async (resolve, reject) => {
         try {
 
             if( projectId === "" ) {
 
-                bodyData["filter"] = {
-                    _id : solutionId,
-                    programId : programId
-                };
-
                 let targetedSolutions = 
-                await assessmentService.getUserTargetedSolutions(
+                await assessmentService.targetedSolutionDetails(
                     userToken,
                     bodyData,
-                    CONSTANTS.common.IMPROVEMENT_PROJECT
+                    solutionId
                 );
 
                 if( !targetedSolutions.success || (targetedSolutions.data.data && !targetedSolutions.data.data.length > 0) ) {
@@ -2101,31 +2093,9 @@ module.exports = class UserProjectsHelper {
                     }
                 }
 
-                let solutionData = targetedSolutions.data.data[0];
-
-                let programData =
-                await assessmentService.listProgramsBasedOnIds([solutionData.programId]);
-
-                if( !programData.success ) {
-                    throw {
-                        message : CONSTANTS.apiResponses.PROGRAM_NOT_FOUND,
-                        status : HTTP_STATUS_CODE['bad_request'].status
-                    }
-                }
-
-                let solutionDetails = 
-                await assessmentService.listSolutions([solutionData.externalId]);
-                
-                if( !solutionDetails.success ) {
-                    throw {
-                        message : CONSTANTS.apiResponses.SOLUTION_NOT_FOUND,
-                        status : HTTP_STATUS_CODE['bad_request'].status
-                    }
-                }
-
                 let projectCreation = 
                 await this.userAssignedProjectCreation(
-                    solutionDetails.data[0].projectTemplateId,
+                    targetedSolutions.data.projectTemplateId,
                     userId,
                     userToken
                 );
@@ -2134,35 +2104,31 @@ module.exports = class UserProjectsHelper {
                     return resolve(projectCreation);
                 }
 
-                projectCreation.data.programInformation = 
-                _.pick( 
-                    programData.data[0],
-                    [
-                        "_id", 
-                        "name",
-                        "externalId",
-                        "description",
-                        "isAPrivateProgram"
-                    ]
-                );
+                projectCreation.data["isAPrivateProgram"] = 
+                targetedSolutions.data.isAPrivateProgram;
 
-                projectCreation.data.programInformation._id = 
-                ObjectId(projectCreation.data.programInformation._id);
-                
-                projectCreation.data.solutionInformation = 
-                _.pick( solutionDetails.data[0],["name","externalId","description","_id"]);
+                projectCreation.data.programInformation = {
+                    _id : ObjectId(targetedSolutions.data.programId),
+                    externalId : targetedSolutions.data.programExternalId,
+                    description : 
+                    targetedSolutions.data.programDescription ? targetedSolutions.data.programDescription : "",
+                    name : targetedSolutions.data.programName
+                }
 
-                projectCreation.data.solutionInformation._id = 
-                ObjectId(projectCreation.data.solutionInformation._id);
+                projectCreation.data.solutionInformation = {
+                    _id : ObjectId(targetedSolutions.data._id),
+                    externalId : targetedSolutions.data.externalId,
+                    description : 
+                    targetedSolutions.data.description ? 
+                    targetedSolutions.data.description : "",
+                    name : targetedSolutions.data.name
+                };
 
                 projectCreation.data["programId"] = 
                 projectCreation.data.programInformation._id;
 
                 projectCreation.data["programExternalId"] = 
                 projectCreation.data.programInformation.externalId;
-
-                projectCreation.data["isAPrivateProgram"] = 
-                projectCreation.data.programInformation.isAPrivateProgram;
 
                 projectCreation.data["solutionId"] = 
                 projectCreation.data.solutionInformation._id;
@@ -2171,8 +2137,8 @@ module.exports = class UserProjectsHelper {
                 projectCreation.data.solutionInformation.externalId;
 
                 if( 
-                    !solutionDetails.data[0].entityType ||
-                    !bodyData[solutionDetails.data[0].entityType] 
+                    !targetedSolutions.data.entityType ||
+                    !bodyData[targetedSolutions.data.entityType] 
                 ) {
                     throw {
                         message : CONSTANTS.apiResponses.ENTITY_TYPE_MIS_MATCHED
@@ -2180,8 +2146,9 @@ module.exports = class UserProjectsHelper {
                 }
 
                 let entityInformation = 
-                await _entitiesInformation(
-                    [bodyData[solutionDetails.data[0].entityType]] 
+                await assessmentService.listEntitiesByLocationIds(
+                    userToken,
+                    [bodyData[targetedSolutions.data.entityType]] 
                 );
 
                 if( !entityInformation.success ) {
@@ -2194,7 +2161,7 @@ module.exports = class UserProjectsHelper {
                     {
                         entities: [ObjectId(entityInformation.data[0]._id)]
                     },
-                    solutionDetails.data[0].externalId
+                    targetedSolutions.data.externalId
                 );
 
                 if( !solutionUpdated.success ) {
@@ -2204,7 +2171,10 @@ module.exports = class UserProjectsHelper {
                     }
                 }
 
-                projectCreation.data["entityInformation"] = entityInformation.data[0];
+                projectCreation.data["entityInformation"] = _entitiesMetaInformation(
+                    entityInformation.data
+                )[0];
+
                 projectCreation.data.entityId = entityInformation.data[0]._id;
 
                 projectCreation.data.status = CONSTANTS.common.NOT_STARTED_STATUS;
@@ -2654,13 +2624,15 @@ function _entitiesInformation(entityIds) {
 
             if (entityData.success && entityData.data.length > 0) {
 
-                entitiesData = entityData.data.map(entity => {
-                    entity.metaInformation._id = ObjectId(entity._id);
-                    entity.metaInformation.entityType = entity.entityType;
-                    entity.metaInformation.entityTypeId = ObjectId(entity.entityTypeId);
-                    entity.metaInformation.registryDetails = entity.registryDetails;
-                    return entity.metaInformation;
-                });
+                entitiesData = _entitiesMetaInformation( entityData.data);
+
+                    // entitiesData = entityData.data.map(entity => {
+                    //     entity.metaInformation._id = ObjectId(entity._id);
+                    //     entity.metaInformation.entityType = entity.entityType;
+                    //     entity.metaInformation.entityTypeId = ObjectId(entity.entityTypeId);
+                    //     entity.metaInformation.registryDetails = entity.registryDetails;
+                    //     return entity.metaInformation;
+                    // });
             }
 
             return resolve({
@@ -2896,6 +2868,27 @@ function _observationDetails( observationData ) {
             });
         }
     })
+}
+
+ /**
+    * Observation details
+    * @method
+    * @name _entitiesMetaInformation 
+    * @param {Object} entitiesData - entities data.
+    * @returns {Object} - entities metadata.
+*/
+
+function _entitiesMetaInformation( entitiesData ) {
+
+    entitiesData = entitiesData.map(entity => {
+        entity.metaInformation._id = ObjectId(entity._id);
+        entity.metaInformation.entityType = entity.entityType;
+        entity.metaInformation.entityTypeId = ObjectId(entity.entityTypeId);
+        entity.metaInformation.registryDetails = entity.registryDetails;
+        return entity.metaInformation;
+    });
+
+    return entitiesData;
 }
 
 

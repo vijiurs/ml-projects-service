@@ -2079,109 +2079,119 @@ module.exports = class UserProjectsHelper {
 
             if( projectId === "" ) {
 
-                let targetedSolutions = 
-                await assessmentService.targetedSolutionDetails(
-                    userToken,
-                    bodyData,
-                    solutionId
-                );
+                const projectDetails = await this.projectDocument({
+                    solutionId : solutionId,
+                    userId : userId
+                }, ["_id"]);
 
-                if( !targetedSolutions.success || (targetedSolutions.data.data && !targetedSolutions.data.data.length > 0) ) {
-                    throw {
-                        status : HTTP_STATUS_CODE["bad_request"].status,
-                        message : CONSTANTS.apiResponses.SOLUTION_DOES_NOT_EXISTS_IN_SCOPE
+                if( projectDetails.length > 0 ) {
+                    projectId = projectDetails[0]._id;
+                } else {
+                    
+                    let targetedSolutions = 
+                    await assessmentService.targetedSolutionDetails(
+                        userToken,
+                        bodyData,
+                        solutionId
+                    );
+    
+                    if( !targetedSolutions.success || (targetedSolutions.data.data && !targetedSolutions.data.data.length > 0) ) {
+                        throw {
+                            status : HTTP_STATUS_CODE["bad_request"].status,
+                            message : CONSTANTS.apiResponses.SOLUTION_DOES_NOT_EXISTS_IN_SCOPE
+                        }
                     }
-                }
-
-                let projectCreation = 
-                await this.userAssignedProjectCreation(
-                    targetedSolutions.data.projectTemplateId,
-                    userId,
-                    userToken
-                );
-
-                if( !projectCreation.success ) {
-                    return resolve(projectCreation);
-                }
-
-                projectCreation.data["isAPrivateProgram"] = 
-                targetedSolutions.data.isAPrivateProgram;
-
-                projectCreation.data.programInformation = {
-                    _id : ObjectId(targetedSolutions.data.programId),
-                    externalId : targetedSolutions.data.programExternalId,
-                    description : 
-                    targetedSolutions.data.programDescription ? targetedSolutions.data.programDescription : "",
-                    name : targetedSolutions.data.programName
-                }
-
-                projectCreation.data.solutionInformation = {
-                    _id : ObjectId(targetedSolutions.data._id),
-                    externalId : targetedSolutions.data.externalId,
-                    description : 
-                    targetedSolutions.data.description ? 
-                    targetedSolutions.data.description : "",
-                    name : targetedSolutions.data.name
-                };
-
-                projectCreation.data["programId"] = 
-                projectCreation.data.programInformation._id;
-
-                projectCreation.data["programExternalId"] = 
-                projectCreation.data.programInformation.externalId;
-
-                projectCreation.data["solutionId"] = 
-                projectCreation.data.solutionInformation._id;
-
-                projectCreation.data["solutionExternalId"] = 
-                projectCreation.data.solutionInformation.externalId;
-
-                if( 
-                    !targetedSolutions.data.entityType ||
-                    !bodyData[targetedSolutions.data.entityType] 
-                ) {
-                    throw {
-                        message : CONSTANTS.apiResponses.ENTITY_TYPE_MIS_MATCHED
+    
+                    let projectCreation = 
+                    await this.userAssignedProjectCreation(
+                        targetedSolutions.data.projectTemplateId,
+                        userId,
+                        userToken
+                    );
+    
+                    if( !projectCreation.success ) {
+                        return resolve(projectCreation);
                     }
-                }
-
-                let entityInformation = 
-                await assessmentService.listEntitiesByLocationIds(
-                    userToken,
-                    [bodyData[targetedSolutions.data.entityType]] 
-                );
-
-                if( !entityInformation.success ) {
-                    return resolve(entityInformation);
-                }
-
-                let solutionUpdated = 
-                await assessmentService.updateSolution(
-                    userToken,
-                    {
-                        entities: [ObjectId(entityInformation.data[0]._id)]
-                    },
-                    targetedSolutions.data.externalId
-                );
-
-                if( !solutionUpdated.success ) {
-                    throw {
-                        status : HTTP_STATUS_CODE['bad_request'].status,
-                        message : CONSTANTS.apiResponses.SOLUTION_NOT_UPDATED
+    
+                    projectCreation.data["isAPrivateProgram"] = 
+                    targetedSolutions.data.isAPrivateProgram;
+    
+                    projectCreation.data.programInformation = {
+                        _id : ObjectId(targetedSolutions.data.programId),
+                        externalId : targetedSolutions.data.programExternalId,
+                        description : 
+                        targetedSolutions.data.programDescription ? targetedSolutions.data.programDescription : "",
+                        name : targetedSolutions.data.programName
                     }
+    
+                    projectCreation.data.solutionInformation = {
+                        _id : ObjectId(targetedSolutions.data._id),
+                        externalId : targetedSolutions.data.externalId,
+                        description : 
+                        targetedSolutions.data.description ? 
+                        targetedSolutions.data.description : "",
+                        name : targetedSolutions.data.name
+                    };
+    
+                    projectCreation.data["programId"] = 
+                    projectCreation.data.programInformation._id;
+    
+                    projectCreation.data["programExternalId"] = 
+                    projectCreation.data.programInformation.externalId;
+    
+                    projectCreation.data["solutionId"] = 
+                    projectCreation.data.solutionInformation._id;
+    
+                    projectCreation.data["solutionExternalId"] = 
+                    projectCreation.data.solutionInformation.externalId;
+    
+                    if( 
+                        !targetedSolutions.data.entityType ||
+                        !bodyData[targetedSolutions.data.entityType] 
+                    ) {
+                        throw {
+                            message : CONSTANTS.apiResponses.ENTITY_TYPE_MIS_MATCHED
+                        }
+                    }
+    
+                    let entityInformation = 
+                    await assessmentService.listEntitiesByLocationIds(
+                        userToken,
+                        [bodyData[targetedSolutions.data.entityType]] 
+                    );
+    
+                    if( !entityInformation.success ) {
+                        return resolve(entityInformation);
+                    }
+    
+                    let solutionUpdated = 
+                    await assessmentService.updateSolution(
+                        userToken,
+                        {
+                            entities: [ObjectId(entityInformation.data[0]._id)]
+                        },
+                        targetedSolutions.data.externalId
+                    );
+    
+                    if( !solutionUpdated.success ) {
+                        throw {
+                            status : HTTP_STATUS_CODE['bad_request'].status,
+                            message : CONSTANTS.apiResponses.SOLUTION_NOT_UPDATED
+                        }
+                    }
+    
+                    projectCreation.data["entityInformation"] = _entitiesMetaInformation(
+                        entityInformation.data
+                    )[0];
+    
+                    projectCreation.data.entityId = entityInformation.data[0]._id;
+    
+                    projectCreation.data.status = CONSTANTS.common.NOT_STARTED_STATUS;
+                    projectCreation.data.lastDownloadedAt = new Date();
+    
+                    let project = await database.models.projects.create(projectCreation.data);
+                    projectId = project._id;
                 }
-
-                projectCreation.data["entityInformation"] = _entitiesMetaInformation(
-                    entityInformation.data
-                )[0];
-
-                projectCreation.data.entityId = entityInformation.data[0]._id;
-
-                projectCreation.data.status = CONSTANTS.common.NOT_STARTED_STATUS;
-                projectCreation.data.lastDownloadedAt = new Date();
-
-                let project = await database.models.projects.create(projectCreation.data);
-                projectId = project._id;
 
             }
 

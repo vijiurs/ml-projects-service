@@ -24,5 +24,8 @@ module.exports = {
     "OBSERVATION" : "observation",
     "PUBLISHED_STATUS" : "published",
     "LEAD_ASSESSOR" : "LEAD_ASSESSOR",
-    "PROJECT_DESCRIPTION" : "Manage and track your school Improvement easily by creating tasks and planning timelines."
+    "PROJECT_DESCRIPTION" : "Manage and track your school Improvement easily by creating tasks and planning timelines.",
+    "RESOURCE_TYPE" : "Improvement Project Solution",
+    "ENGLISH_LANGUAGE" : "English",
+    "KEYWORDS" : "Improvement Project"
 };

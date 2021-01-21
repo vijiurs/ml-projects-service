@@ -104,5 +104,7 @@ module.exports = {
     "MIS_MATCHED_PROJECT_AND_TASK_ENTITY_TYPE" : "Project and task entity type mis matched",
     "ENTITY_TYPE_MIS_MATCHED" : "Entity type does not match template entity type",
     "TARGETED_PROJECT_FETCHED" : " Targeted projects fetched successfully",
-    "SOLUTION_DOES_NOT_EXISTS_IN_SCOPE" : "Solution does not exists in scope" 
+    "SOLUTION_DOES_NOT_EXISTS_IN_SCOPE" : "Solution does not exists in scope" ,
+    "IMPROVEMENT_PROJECT_SOLUTION_CREATED" : "Improvement project solution created successfully",
+    "IMPROVEMENT_PROJECT_SOLUTION_NOT_CREATED" : "Improvement project solution could not be created"
 };

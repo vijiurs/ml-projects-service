@@ -2006,7 +2006,7 @@ module.exports = class UserProjectsHelper {
             };
 
             let targetedSolutions = 
-            await assessmentService.getUserTargetedSolutions(
+            await kendraService.solutionBasedOnRoleAndLocation(
                 userToken,
                 bodyData,
                 CONSTANTS.common.IMPROVEMENT_PROJECT,
@@ -2089,7 +2089,7 @@ module.exports = class UserProjectsHelper {
                 } else {
                     
                     let targetedSolutions = 
-                    await assessmentService.targetedSolutionDetails(
+                    await kendraService.solutionDetailsBasedOnRoleAndLocation(
                         userToken,
                         bodyData,
                         solutionId

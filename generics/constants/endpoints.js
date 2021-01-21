@@ -41,7 +41,8 @@ module.exports = {
     LIST_PROGRAMS_BY_IDS : "/programs/listByIds",
     REMOVE_SOLUTIONS_FROM_PROGRAM : "/programs/removeSolutions",
     REMOVE_ENTITY_FROM_SOLUTION : "/solutions/removeEntities",
-    AUTO_TARGETED_SOLUTIONS : "/solutions/autoTargeted",
-    AUTO_TARGETED_SOLUTION_DETAILS : "/solutions/targetedSolutionDetails",
-    LIST_ENTITIES_BY_LOCATION_IDS : "/entities/listByLocationIds"
+    SOLUTION_BASED_ON_ROLE_LOCATION : "/solutions/forUserRoleAndLocation",
+    SOLUTION_DETAILS_BASED_ON_ROLE_LOCATION : "/solutions/detailsBasedOnRoleAndLocation",
+    LIST_ENTITIES_BY_LOCATION_IDS : "/entities/listByLocationIds",
+    CREATE_IMPROVEMENT_PROJECT_SOLUTION : "/solutions/create"
 };

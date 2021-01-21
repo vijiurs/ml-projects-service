@@ -2553,14 +2553,6 @@ function _entitiesInformation(entityIds) {
             if (entityData.success && entityData.data.length > 0) {
 
                 entitiesData = _entitiesMetaInformation( entityData.data);
-
-                    // entitiesData = entityData.data.map(entity => {
-                    //     entity.metaInformation._id = ObjectId(entity._id);
-                    //     entity.metaInformation.entityType = entity.entityType;
-                    //     entity.metaInformation.entityTypeId = ObjectId(entity.entityTypeId);
-                    //     entity.metaInformation.registryDetails = entity.registryDetails;
-                    //     return entity.metaInformation;
-                    // });
             }
 
             return resolve({

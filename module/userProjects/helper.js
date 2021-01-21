@@ -693,7 +693,6 @@ module.exports = class UserProjectsHelper {
                     
                     let programAndSolutionInformation =
                     await this.createProgramAndSolution(
-                        requestedData.entityId ? [requestedData.entityId] : [] ,
                         requestedData.programId,
                         requestedData.programName,
                         userToken
@@ -965,74 +964,12 @@ module.exports = class UserProjectsHelper {
 
                     updateProject["entityInformation"] = entityInformation.data[0];
                     updateProject.entityId = entityInformation.data[0]._id;
-
-                    if( userProject[0].solutionInformation ) {
-
-                        // New entities should not be updated if entityType of
-                        // solution is not match with the entity type of entities.
-                        // Update first solution with new entity type.
-
-                        if(
-                            updateProject.entityInformation.entityType !== userProject[0].solutionInformation.entityType 
-                        ) {
-
-                            let updateSolution = 
-                            await assessmentService.updateSolution(
-                                userToken,
-                                {
-                                    entityType : updateProject.entityInformation.entityType,
-                                    entityTypeId : updateProject.entityInformation.entityTypeId
-                                },
-                                userProject[0].solutionInformation.externalId
-                            );
-
-                            if( !updateSolution.success ) {
-                                throw {
-                                    status : HTTP_STATUS_CODE['bad_request'].status,
-                                    message : CONSTANTS.apiResponses.SOLUTION_NOT_UPDATED
-                                }
-                            }
-                        }
-                        
-                        let solutionUpdated = 
-                        await assessmentService.addEntitiesToSolution(
-                            userToken,
-                            userProject[0].solutionInformation._id,
-                            [ObjectId(data.entityId)]
-                        );
-
-                        if( !solutionUpdated.success ) {
-                            throw {
-                                status : HTTP_STATUS_CODE['bad_request'].status,
-                                message : CONSTANTS.apiResponses.SOLUTION_NOT_UPDATED
-                            }
-                        }
-
-                        if( userProject[0].entityInformation ) {
-                            
-                            let removeEntityFromSolutions = 
-                            await assessmentService.removeEntitiesFromSolution(
-                                userToken,
-                                userProject[0].solutionInformation._id,
-                                [userProject[0].entityInformation._id]
-                            );
-    
-                            if( !removeEntityFromSolutions.success ) {
-                                throw {
-                                    status : HTTP_STATUS_CODE['bad_request'].status,
-                                    message : CONSTANTS.apiResponses.ENTITY_NOT_UPDATED
-                                }
-                            }
-                        }
-        
-                    }
                 }
 
                 if( createNewProgramAndSolution || solutionExists ) {
                     
                     let programAndSolutionInformation = 
                     await this.createProgramAndSolution(
-                        data.entityId ? [updateProject.entityInformation._id] : [],
                         data.programId,
                         data.programName,
                         userToken,
@@ -1198,7 +1135,6 @@ module.exports = class UserProjectsHelper {
     */
 
     static createProgramAndSolution(
-        entities = [],
         programId = "",
         programName = "",
         userToken,
@@ -1210,13 +1146,11 @@ module.exports = class UserProjectsHelper {
                 let result = {};
 
                 let programAndSolutionData = {
-                    entities : entities,
                     type: CONSTANTS.common.IMPROVEMENT_PROJECT,
                     subType: CONSTANTS.common.IMPROVEMENT_PROJECT,
                     isReusable : false,
                     solutionId : solutionId
                 };
-
 
                 if (programName !== "") {
                     programAndSolutionData["programName"] = programName;
@@ -2162,22 +2096,6 @@ module.exports = class UserProjectsHelper {
     
                     if( !entityInformation.success ) {
                         return resolve(entityInformation);
-                    }
-    
-                    let solutionUpdated = 
-                    await assessmentService.updateSolution(
-                        userToken,
-                        {
-                            entities: [ObjectId(entityInformation.data[0]._id)]
-                        },
-                        targetedSolutions.data.externalId
-                    );
-    
-                    if( !solutionUpdated.success ) {
-                        throw {
-                            status : HTTP_STATUS_CODE['bad_request'].status,
-                            message : CONSTANTS.apiResponses.SOLUTION_NOT_UPDATED
-                        }
                     }
     
                     projectCreation.data["entityInformation"] = _entitiesMetaInformation(

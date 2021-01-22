@@ -1905,7 +1905,7 @@ module.exports = class UserProjectsHelper {
                 pageSize,
                 pageNo,
                 searchQuery,
-                ["title", "description","solutionId","programId"]
+                ["title", "description","solutionId","programId","programInformation.name","projectTemplateId","solutionExternalId"]
             );
 
             let solutionIds = [];
@@ -1921,6 +1921,12 @@ module.exports = class UserProjectsHelper {
                 if( mergedData.length > 0 ) {
                     mergedData.forEach( projectData => {
                         projectData.name = projectData.title;
+                        projectData.programName = projectData.programInformation.name;
+                        delete programInformation.name;
+                        projectData.externalId = projectData.solutionExternalId;
+                        delete projectData.solutionExternalId;
+                        projectData.type = CONSTANTS.common.IMPROVEMENT_PROJECT;
+                        
                         if( projectData.solutionId ) {
                             solutionIds.push(projectData.solutionId);
                         }

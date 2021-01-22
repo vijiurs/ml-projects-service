@@ -149,7 +149,7 @@ const entityTypesDocuments = function (
     return new Promise(async (resolve, reject) => {
         try {
             
-            const url = KENDRA_URL + process.env.URL_PREFIX + CONSTANTS.endpoints.LIST_ENTITY_TYPES;
+            const url = KENDRA_URL + CONSTANTS.endpoints.LIST_ENTITY_TYPES;
 
             const options = {
                 headers : {
@@ -212,7 +212,7 @@ const rolesDocuments = function (
     return new Promise(async (resolve, reject) => {
         try {
             
-            const url = KENDRA_URL + process.env.URL_PREFIX + CONSTANTS.endpoints.LIST_USER_ROLES;
+            const url = KENDRA_URL + CONSTANTS.endpoints.LIST_USER_ROLES;
 
             const options = {
                 headers : {
@@ -269,7 +269,7 @@ const formDetails = function ( formName ) {
         try {
             
             const url = 
-            KENDRA_URL + process.env.URL_PREFIX + 
+            KENDRA_URL + 
             CONSTANTS.endpoints.DETAILS_FORM + "/" + formName;
 
             const options = {
@@ -324,7 +324,7 @@ const entityDocuments = function (
     return new Promise(async (resolve, reject) => {
         try {
             
-            const url = KENDRA_URL + process.env.URL_PREFIX + CONSTANTS.endpoints.LIST_ENTITIES;
+            const url = KENDRA_URL + CONSTANTS.endpoints.LIST_ENTITIES;
 
             const options = {
                 headers : {
@@ -380,7 +380,7 @@ const createUserProgramAndSolution = function ( data,userToken ) {
     return new Promise(async (resolve, reject) => {
         try {
             
-            const url = KENDRA_URL + process.env.URL_PREFIX + CONSTANTS.endpoints.CREATE_PROGRAM_AND_SOLUTION;
+            const url = KENDRA_URL + CONSTANTS.endpoints.CREATE_PROGRAM_AND_SOLUTION;
 
             const options = {
                 headers : {
@@ -487,7 +487,7 @@ const updateUserProfile = function ( token,updateData ) {
     return new Promise(async (resolve, reject) => {
         try {
             
-            const url = KENDRA_URL + process.env.URL_PREFIX + 
+            const url = KENDRA_URL + 
             CONSTANTS.endpoints.USER_EXTENSION_UPDATE_USER_PROFILE;
 
             const options = {
@@ -535,7 +535,7 @@ const userPrivatePrograms = function ( token ) {
     return new Promise(async (resolve, reject) => {
         try {
             
-            const url = KENDRA_URL + process.env.URL_PREFIX + 
+            const url = KENDRA_URL + 
             CONSTANTS.endpoints.USER_PRIVATE_PROGRAMS;
 
             const options = {
@@ -584,7 +584,7 @@ const getUserOrganisationsAndRootOrganisations = function ( token,userId = "" ) 
         try {
             
             let url = 
-            KENDRA_URL + process.env.URL_PREFIX + 
+            KENDRA_URL + 
             CONSTANTS.endpoints.GET_USER_ORGANISATIONS;
 
             if( userId !== "" ) {
@@ -703,7 +703,7 @@ const getUsersByEntityAndRole = function (
     return new Promise(async (resolve, reject) => {
         try {
             
-            const url = KENDRA_URL + process.env.URL_PREFIX + CONSTANTS.endpoints.GET_USERS_BY_ENTITY_AND_ROLE + "/" + entityId + "?role=" + role;
+            const url = KENDRA_URL + CONSTANTS.endpoints.GET_USERS_BY_ENTITY_AND_ROLE + "/" + entityId + "?role=" + role;
            
             const options = {
                 headers : {
@@ -756,7 +756,7 @@ const createSolution = function ( bodyData,token ) {
      return new Promise(async (resolve, reject) => {
          try {
              
-             const url = KENDRA_URL + process.env.URL_PREFIX + CONSTANTS.endpoints.CREATE_IMPROVEMENT_PROJECT_SOLUTION;
+             const url = KENDRA_URL + CONSTANTS.endpoints.CREATE_IMPROVEMENT_PROJECT_SOLUTION;
             
              const options = {
                  headers : {
@@ -813,7 +813,7 @@ const solutionBasedOnRoleAndLocation = function ( token,bodyData,typeAndSubType,
         try {
             
             const url = 
-            KENDRA_URL + process.env.URL_PREFIX + CONSTANTS.endpoints.SOLUTION_BASED_ON_ROLE_LOCATION+ "?type=" + typeAndSubType + "&subType=" + typeAndSubType;
+            KENDRA_URL + CONSTANTS.endpoints.SOLUTION_BASED_ON_ROLE_LOCATION+ "?type=" + typeAndSubType + "&subType=" + typeAndSubType;
 
             if( searchText !== "" ) {
                 url = url + "&search=" + searchText;
@@ -874,7 +874,7 @@ const solutionDetailsBasedOnRoleAndLocation = function ( token,bodyData,solution
         try {
             
             const url = 
-            KENDRA_URL + process.env.URL_PREFIX + CONSTANTS.endpoints.SOLUTION_DETAILS_BASED_ON_ROLE_LOCATION + "/" + solutionId;
+            KENDRA_URL + CONSTANTS.endpoints.SOLUTION_DETAILS_BASED_ON_ROLE_LOCATION + "/" + solutionId;
 
             const options = {
                 headers : {

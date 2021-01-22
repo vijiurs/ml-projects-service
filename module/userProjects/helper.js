@@ -1922,7 +1922,7 @@ module.exports = class UserProjectsHelper {
                     mergedData.forEach( projectData => {
                         projectData.name = projectData.title;
                         projectData.programName = projectData.programInformation.name;
-                        delete programInformation.name;
+                        delete projectData.programInformation.name;
                         projectData.externalId = projectData.solutionExternalId;
                         delete projectData.solutionExternalId;
                         projectData.type = CONSTANTS.common.IMPROVEMENT_PROJECT;

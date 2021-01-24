@@ -1973,6 +1973,10 @@ module.exports = class UserProjectsHelper {
                 }
 
             }
+
+            if( mergedData.length > 0 ) {
+                
+            }
             
             return resolve({
                 success : true,
@@ -2199,6 +2203,9 @@ module.exports = class UserProjectsHelper {
             
             result.rootOrganisations = 
             userOrganisations.data.rootOrganisations;
+
+            result.createdAt = new Date();
+            result.updatedAt = new Date();
 
             result.assesmentOrObservationTask = false;
 

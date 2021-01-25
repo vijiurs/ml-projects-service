@@ -1965,17 +1965,14 @@ module.exports = class UserProjectsHelper {
                             targetedSolution._id = "";
                             mergedData.push(targetedSolution); 
                         })
-                        
-                       let startIndex = pageSize * (pageNo - 1);
-                       let endIndex = startIndex + pageSize;
-                       mergedData = mergedData.slice(startIndex,endIndex) 
                     }
                 }
-
             }
 
             if( mergedData.length > 0 ) {
-                
+                let startIndex = pageSize * (pageNo - 1);
+                let endIndex = startIndex + pageSize;
+                mergedData = mergedData.slice(startIndex,endIndex); 
             }
             
             return resolve({

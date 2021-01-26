@@ -2084,6 +2084,9 @@ module.exports = class UserProjectsHelper {
     
                     projectCreation.data["solutionExternalId"] = 
                     projectCreation.data.solutionInformation.externalId;
+
+                    projectCreation.data["userRole"] = 
+                    bodyData.role;
     
                     if( 
                         !targetedSolutions.data.entityType ||

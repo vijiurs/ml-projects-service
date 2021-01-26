@@ -23,6 +23,11 @@ module.exports = {
             default : "SYSTEM",
             index: true
         },
+        userRole : {
+            type : String,
+            default : "",
+            index: true
+        },
         createdFor : {
             type : Array,
             default : []

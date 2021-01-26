@@ -1965,13 +1965,14 @@ module.exports = class UserProjectsHelper {
                             targetedSolution._id = "";
                             mergedData.push(targetedSolution); 
                         })
-                        
-                       let startIndex = pageSize * (pageNo - 1);
-                       let endIndex = startIndex + pageSize;
-                       mergedData = mergedData.slice(startIndex,endIndex) 
                     }
                 }
+            }
 
+            if( mergedData.length > 0 ) {
+                let startIndex = pageSize * (pageNo - 1);
+                let endIndex = startIndex + pageSize;
+                mergedData = mergedData.slice(startIndex,endIndex); 
             }
             
             return resolve({
@@ -2202,6 +2203,9 @@ module.exports = class UserProjectsHelper {
             
             result.rootOrganisations = 
             userOrganisations.data.rootOrganisations;
+
+            result.createdAt = new Date();
+            result.updatedAt = new Date();
 
             result.assesmentOrObservationTask = false;
 

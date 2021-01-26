@@ -373,6 +373,10 @@ module.exports = class ReportsHelper {
                     });
                 }
 
+                programs = _.uniqBy(programs, function (program) {
+                    return program.id.toString();
+                });
+
                 return resolve({
                     success: true,
                     message: CONSTANTS.apiResponses.PROGRAMS_FOUND,

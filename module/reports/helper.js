@@ -324,7 +324,7 @@ module.exports = class ReportsHelper {
       * @returns {Object} -  returns programs list
      */
 
-    static getProgramsByEntity(userId, entityId = "", pageSize, pageNo, search, userRole = "") {
+    static getProgramsByEntity(userId = "", entityId = "", pageSize, pageNo, search, userRole = "") {
         return new Promise(async (resolve, reject) => {
             try {
 
@@ -334,7 +334,7 @@ module.exports = class ReportsHelper {
                     query = {
                         "entityId": ObjectId(entityId),
                     }
-                } else if (userRole != "") {
+                } else if (userRole != "" && userId != "") {
                     query = {
                         "userId": userId,
                         "userRole": userRole
@@ -369,12 +369,12 @@ module.exports = class ReportsHelper {
                 for (let index = 0; index < projectDetails.length; index++) {
                     programs.push({
                         name: projectDetails[index].programInformation.name,
-                        _id: projectDetails[index].programId
+                        _id: projectDetails[index].programId.toString()
                     });
                 }
 
                 programs = _.uniqBy(programs, function (program) {
-                    return program.id.toString();
+                    return program.id;
                 });
 
                 return resolve({

@@ -336,7 +336,8 @@ module.exports = class ReportsHelper {
                     }
                 } else if (userRole != "") {
                     query = {
-                        "userRole": userRole,
+                        "userId": userId,
+                        "userRole": userRole
                     }
                 } else {
                     throw new Error("Missing user role or entity id.")

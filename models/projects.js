@@ -110,6 +110,7 @@ module.exports = {
             type : String,
             index : true
         },
-        isAPrivateProgram : Boolean
+        isAPrivateProgram : Boolean,
+        appInformation : Object
     }
 };

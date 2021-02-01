@@ -849,10 +849,12 @@ module.exports = class UserProjectsHelper {
       * @param {Object} data - body data.
       * @param {String} userId - Logged in user id.
       * @param {String} userToken - User token.
+      * @param {String} [appName = ""] - App Name.
+      * @param {String} [appVersion = ""] - App Version.
       * @returns {Object} Project created information.
     */
 
-    static sync(projectId, lastDownloadedAt, data, userId, userToken) {
+    static sync(projectId, lastDownloadedAt, data, userId, userToken,appName = "",appVersion = "") {
         return new Promise(async (resolve, reject) => {
             try {
 
@@ -866,7 +868,8 @@ module.exports = class UserProjectsHelper {
                     "solutionInformation._id",
                     "solutionInformation.externalId",
                     "entityInformation._id",
-                    "lastDownloadedAt"
+                    "lastDownloadedAt",
+                    "appInformation"
                 ]);
 
                 if (!userProject.length > 0) {
@@ -1080,6 +1083,18 @@ module.exports = class UserProjectsHelper {
                 }
 
                 updateProject.syncedAt = new Date();
+
+                if( !userProject[0].appInformation ) {
+                    updateProject["appInformation"] = {};
+                    
+                    if( appName !== "" ) {
+                        updateProject["appInformation"]["appName"] = appName;
+                    }
+
+                    if( appVersion !== "" ) {
+                        updateProject["appInformation"]["appVersion"] = appVersion;
+                    }
+                }
 
                 let projectUpdated =
                 await database.models.projects.findOneAndUpdate(
@@ -2014,7 +2029,7 @@ module.exports = class UserProjectsHelper {
      * @returns {Object} Project details.
     */
 
-   static detailsV2( projectId,solutionId,userId,userToken,bodyData ) {
+   static detailsV2( projectId,solutionId,userId,userToken,bodyData,appName = "",appVersion = "" ) {
     return new Promise(async (resolve, reject) => {
         try {
 
@@ -2088,6 +2103,16 @@ module.exports = class UserProjectsHelper {
 
                     projectCreation.data["userRole"] = 
                     bodyData.role;
+
+                    projectCreation.data["appInformation"] = {};
+
+                    if( appName !== "" ) {
+                        projectCreation.data["appInformation"]["appName"] = appName;
+                    }
+
+                    if( appVersion !== "" ) {
+                        projectCreation.data["appInformation"]["appVersion"] = appVersion;
+                    }
     
                     if( 
                         !targetedSolutions.data.entityType ||

@@ -139,7 +139,13 @@ module.exports = class UserProjects extends v1UserProjects {
                     req.query.solutionId,
                     req.userDetails.userInformation.userId,
                     req.userDetails.userToken,
-                    req.body
+                    req.body,
+                    req.headers["x-app-id"]  ? 
+                    req.headers["x-app-id"]  : 
+                    req.headers.appname ? req.headers.appname : "",
+                    req.headers["x-app-ver"] ? 
+                    req.headers["x-app-ver"] : 
+                    req.headers.appversion ? req.headers.appversion : ""
                 );
 
                 projectDetails.result = projectDetails.data;

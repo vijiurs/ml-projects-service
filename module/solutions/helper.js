@@ -33,6 +33,7 @@ module.exports = class SolutionsHelper {
             requestedData.language = [CONSTANTS.common.ENGLISH_LANGUAGE];
             requestedData.keywords = [CONSTANTS.common.KEYWORDS];
             requestedData.isDeleted = false;
+            requestedData.isReusable = false;
             
             let solutionCreated = 
             await kendraService.createSolution(requestedData,token);

@@ -433,7 +433,7 @@ const getProfile = function ( token ) {
     return new Promise(async (resolve, reject) => {
         try {
             
-            const url = KENDRA_URL + "api/v2" + CONSTANTS.endpoints.USER_EXTENSION_GET_PROFILE;
+            const url = KENDRA_URL + CONSTANTS.endpoints.USER_EXTENSION_GET_PROFILE;
 
             const options = {
                 headers : {

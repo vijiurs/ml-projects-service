@@ -25,7 +25,7 @@ const createAssessmentSolutionFromTemplate = function (token,templateId,bodyData
         try {
 
             let assessmentCreateUrl =  
-            ASSESSMENT_URL + process.env.URL_PREFIX + 
+            ASSESSMENT_URL + 
             CONSTANTS.endpoints.ASSESSMENTS_CREATE + "?solutionId=" + templateId;
 
             const options = {
@@ -146,7 +146,7 @@ const addEntitiesToSolution = function (token,solutionId,bodyData) {
         try {
 
             let assessmentCreateUrl =  
-            ASSESSMENT_URL + process.env.URL_PREFIX + 
+            ASSESSMENT_URL + 
             CONSTANTS.endpoints.ADD_ENTITIES_TO_SOLUTIONS + "/" + solutionId;
 
             const options = {
@@ -205,7 +205,7 @@ const addEntityToObservation = function (token,observationId,bodyData) {
         try {
 
             let addEntityToObservationUrl =  
-            ASSESSMENT_URL + process.env.URL_PREFIX + 
+            ASSESSMENT_URL + 
             CONSTANTS.endpoints.ADD_ENTITY_TO_OBSERVATIONS + "/" + observationId;
 
             const options = {
@@ -265,7 +265,7 @@ const createEntityAssessors = function (token,programId,solutionId,entities) {
         try {
 
             let createdEntityAssessor =  
-            ASSESSMENT_URL + process.env.URL_PREFIX + 
+            ASSESSMENT_URL + 
             CONSTANTS.endpoints.CREATE_ENTITY_ASSESSORS + "/" + programId + "?solutionId=" + solutionId;
 
             const options = {
@@ -323,7 +323,7 @@ const observationDetails = function (token,observationId) {
         try {
 
             let url =  
-            ASSESSMENT_URL + process.env.URL_PREFIX + 
+            ASSESSMENT_URL + 
             CONSTANTS.endpoints.OBSERVATION_DETAILS + "/" + observationId;
 
             const options = {
@@ -376,7 +376,7 @@ const listSolutions = function (solutionIds) {
     return new Promise(async (resolve, reject) => {
         try {
             
-            const url = ASSESSMENT_URL + process.env.URL_PREFIX + CONSTANTS.endpoints.LIST_SOLUTIONS;
+            const url = ASSESSMENT_URL + CONSTANTS.endpoints.LIST_SOLUTIONS;
 
             const options = {
                 headers : {
@@ -433,7 +433,7 @@ const updateSolution = function ( token,updateData,solutionExternalId ) {
         try {
             
             const url = 
-            ASSESSMENT_URL + process.env.URL_PREFIX + 
+            ASSESSMENT_URL + 
             CONSTANTS.endpoints.UPDATE_SOLUTIONS + "?solutionExternalId=" + solutionExternalId;
 
             const options = {
@@ -493,7 +493,7 @@ const createObservation = function (token,solutionId,data) {
         try {
 
             let createdObservationUrl =  
-            ASSESSMENT_URL + process.env.URL_PREFIX + 
+            ASSESSMENT_URL + 
             CONSTANTS.endpoints.CREATE_OBSERVATIONS + "?solutionId=" + solutionId;
 
             const options = {
@@ -550,7 +550,7 @@ const listProgramsBasedOnIds = function ( programIds ) {
         try {
             
             const url = 
-            ASSESSMENT_URL + process.env.URL_PREFIX + CONSTANTS.endpoints.LIST_PROGRAMS_BY_IDS;
+            ASSESSMENT_URL + CONSTANTS.endpoints.LIST_PROGRAMS_BY_IDS;
 
             const options = {
                 headers : {
@@ -607,7 +607,7 @@ const removeSolutionsFromProgram = function ( token,programId,solutionIds ) {
         try {
             
             const url = 
-            ASSESSMENT_URL + process.env.URL_PREFIX + CONSTANTS.endpoints.REMOVE_SOLUTIONS_FROM_PROGRAM + "/" + programId;
+            ASSESSMENT_URL + CONSTANTS.endpoints.REMOVE_SOLUTIONS_FROM_PROGRAM + "/" + programId;
 
             const options = {
                 headers : {
@@ -658,7 +658,7 @@ const removeEntitiesFromSolution = function ( token,solutionId,entities ) {
         try {
             
             const url = 
-            ASSESSMENT_URL + process.env.URL_PREFIX + CONSTANTS.endpoints.REMOVE_ENTITY_FROM_SOLUTION + "/" + solutionId;
+            ASSESSMENT_URL + CONSTANTS.endpoints.REMOVE_ENTITY_FROM_SOLUTION + "/" + solutionId;
 
             const options = {
                 headers : {
@@ -695,6 +695,64 @@ const removeEntitiesFromSolution = function ( token,solutionId,entities ) {
     })
 }
 
+/**
+  * User targetted solutions.
+  * @function
+  * @name listEntitiesByLocationIds
+  * @param {String} token - User token.
+  * @param {Object} locationIds - Requested body data.
+  * @returns {JSON} - List of entities by location ids.
+*/
+
+const listEntitiesByLocationIds = function ( token,locationIds ) {
+    return new Promise(async (resolve, reject) => {
+        try {
+            
+            const url = 
+            ASSESSMENT_URL + CONSTANTS.endpoints.LIST_ENTITIES_BY_LOCATION_IDS;
+
+            const options = {
+                headers : {
+                    "content-type": "application/json",
+                    AUTHORIZATION : process.env.AUTHORIZATION,
+                    "internal-access-token": process.env.INTERNAL_ACCESS_TOKEN,
+                    "x-authenticated-user-token" : token
+                },
+                json : {
+                    locationIds : locationIds
+                }
+            };
+
+            request.post(url,options,assessmentCallback);
+
+            function assessmentCallback(err, data) {
+
+                let result = {
+                    success : true
+                };
+
+                if (err) {
+                    result.success = false;
+                } else {
+                    
+                    let response = data.body;
+                    
+                    if( response.status === HTTP_STATUS_CODE['ok'].status ) {
+                        result["data"] = response.result;
+                    } else {
+                        result.success = false;
+                    }
+                }
+
+                return resolve(result);
+            }
+
+        } catch (error) {
+            return reject(error);
+        }
+    })
+}
+
 module.exports = {
     createAssessmentSolutionFromTemplate : createAssessmentSolutionFromTemplate,
     createObservationFromSolutionTemplate : createObservationFromSolutionTemplate,
@@ -707,5 +765,6 @@ module.exports = {
     createObservation : createObservation,
     listProgramsBasedOnIds : listProgramsBasedOnIds,
     removeSolutionsFromProgram : removeSolutionsFromProgram,
-    removeEntitiesFromSolution : removeEntitiesFromSolution
+    removeEntitiesFromSolution : removeEntitiesFromSolution,
+    listEntitiesByLocationIds : listEntitiesByLocationIds
 }

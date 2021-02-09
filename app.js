@@ -7,6 +7,13 @@
 
 require("dotenv").config();
 
+// express
+const express = require("express");
+const app = express();
+
+// Health check
+require("./healthCheck")(app);
+
 // Setup application config, establish DB connections and set global constants.
 global.config = require("./config/connections");
 require("./config/globals")();
@@ -18,10 +25,6 @@ if (!environmentData.success) {
   LOGGER.error("Server could not start . Not all environment variable is provided");
   process.exit();
 }
-
-// express
-const express = require("express");
-const app = express();
 
 //required modules
 const fileUpload = require("express-fileupload");

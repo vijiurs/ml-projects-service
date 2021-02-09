@@ -679,7 +679,8 @@ module.exports = class ProjectTemplatesHelper {
                 await assessmentService.updateSolution(
                     userToken,
                     {
-                        projectTemplateId : duplicateTemplateDocument._id
+                        projectTemplateId : duplicateTemplateDocument._id,
+                        name : duplicateTemplateDocument.title
                     },
                     newProjectTemplate.solutionExternalId
                 );  

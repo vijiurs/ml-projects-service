@@ -106,5 +106,6 @@ module.exports = {
     "TARGETED_PROJECT_FETCHED" : " Targeted projects fetched successfully",
     "SOLUTION_DOES_NOT_EXISTS_IN_SCOPE" : "Solution does not exists in scope" ,
     "IMPROVEMENT_PROJECT_SOLUTION_CREATED" : "Improvement project solution created successfully",
-    "IMPROVEMENT_PROJECT_SOLUTION_NOT_CREATED" : "Improvement project solution could not be created"
+    "IMPROVEMENT_PROJECT_SOLUTION_NOT_CREATED" : "Improvement project solution could not be created",
+    "PROJECT_TEMPLATES_FETCHED" : "List of project templates fetched successfully"
 };

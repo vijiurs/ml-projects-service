@@ -149,7 +149,7 @@ const entityTypesDocuments = function (
     return new Promise(async (resolve, reject) => {
         try {
             
-            const url = KENDRA_URL + process.env.URL_PREFIX + CONSTANTS.endpoints.LIST_ENTITY_TYPES;
+            const url = KENDRA_URL + CONSTANTS.endpoints.LIST_ENTITY_TYPES;
 
             const options = {
                 headers : {
@@ -212,7 +212,7 @@ const rolesDocuments = function (
     return new Promise(async (resolve, reject) => {
         try {
             
-            const url = KENDRA_URL + process.env.URL_PREFIX + CONSTANTS.endpoints.LIST_USER_ROLES;
+            const url = KENDRA_URL + CONSTANTS.endpoints.LIST_USER_ROLES;
 
             const options = {
                 headers : {
@@ -269,7 +269,7 @@ const formDetails = function ( formName ) {
         try {
             
             const url = 
-            KENDRA_URL + process.env.URL_PREFIX + 
+            KENDRA_URL + 
             CONSTANTS.endpoints.DETAILS_FORM + "/" + formName;
 
             const options = {
@@ -324,7 +324,7 @@ const entityDocuments = function (
     return new Promise(async (resolve, reject) => {
         try {
             
-            const url = KENDRA_URL + process.env.URL_PREFIX + CONSTANTS.endpoints.LIST_ENTITIES;
+            const url = KENDRA_URL + CONSTANTS.endpoints.LIST_ENTITIES;
 
             const options = {
                 headers : {
@@ -380,7 +380,7 @@ const createUserProgramAndSolution = function ( data,userToken ) {
     return new Promise(async (resolve, reject) => {
         try {
             
-            const url = KENDRA_URL + process.env.URL_PREFIX + CONSTANTS.endpoints.CREATE_PROGRAM_AND_SOLUTION;
+            const url = KENDRA_URL + CONSTANTS.endpoints.CREATE_PROGRAM_AND_SOLUTION;
 
             const options = {
                 headers : {
@@ -433,7 +433,7 @@ const getProfile = function ( token ) {
     return new Promise(async (resolve, reject) => {
         try {
             
-            const url = KENDRA_URL + "api/v2" + CONSTANTS.endpoints.USER_EXTENSION_GET_PROFILE;
+            const url = KENDRA_URL + CONSTANTS.endpoints.USER_EXTENSION_GET_PROFILE;
 
             const options = {
                 headers : {
@@ -487,7 +487,7 @@ const updateUserProfile = function ( token,updateData ) {
     return new Promise(async (resolve, reject) => {
         try {
             
-            const url = KENDRA_URL + process.env.URL_PREFIX + 
+            const url = KENDRA_URL + 
             CONSTANTS.endpoints.USER_EXTENSION_UPDATE_USER_PROFILE;
 
             const options = {
@@ -535,7 +535,7 @@ const userPrivatePrograms = function ( token ) {
     return new Promise(async (resolve, reject) => {
         try {
             
-            const url = KENDRA_URL + process.env.URL_PREFIX + 
+            const url = KENDRA_URL + 
             CONSTANTS.endpoints.USER_PRIVATE_PROGRAMS;
 
             const options = {
@@ -584,7 +584,7 @@ const getUserOrganisationsAndRootOrganisations = function ( token,userId = "" ) 
         try {
             
             let url = 
-            KENDRA_URL + process.env.URL_PREFIX + 
+            KENDRA_URL + 
             CONSTANTS.endpoints.GET_USER_ORGANISATIONS;
 
             if( userId !== "" ) {
@@ -703,7 +703,7 @@ const getUsersByEntityAndRole = function (
     return new Promise(async (resolve, reject) => {
         try {
             
-            const url = KENDRA_URL + process.env.URL_PREFIX + CONSTANTS.endpoints.GET_USERS_BY_ENTITY_AND_ROLE + "/" + entityId + "?role=" + role;
+            const url = KENDRA_URL + CONSTANTS.endpoints.GET_USERS_BY_ENTITY_AND_ROLE + "/" + entityId + "?role=" + role;
            
             const options = {
                 headers : {
@@ -743,6 +743,178 @@ const getUsersByEntityAndRole = function (
     })
 }
 
+/**
+  * Create improvement project solution.
+  * @function
+  * @name createSolution
+  * @param {Object} bodyData - requested body data. 
+  * @param {String} token - requested user token. 
+  * @returns {JSON} - Improvement project solution data.
+*/
+
+const createSolution = function ( bodyData,token ) {
+     return new Promise(async (resolve, reject) => {
+         try {
+             
+             const url = KENDRA_URL + CONSTANTS.endpoints.CREATE_IMPROVEMENT_PROJECT_SOLUTION;
+            
+             const options = {
+                 headers : {
+                     "content-type": "application/json",
+                     AUTHORIZATION : process.env.AUTHORIZATION,
+                     "internal-access-token": process.env.INTERNAL_ACCESS_TOKEN,
+                     "x-authenticated-user-token" : token
+                 },
+                 json : bodyData
+             };
+ 
+             request.post(url,options,kendraCallback);
+ 
+             function kendraCallback(err, data) {
+ 
+                 let result = {
+                     success : true
+                 };
+ 
+                 if (err) {
+                     result.success = false;
+                 } else {
+                    
+                     let response = data.body;
+ 
+                     if( response.status === HTTP_STATUS_CODE['ok'].status ) {
+                         result["data"] = response.result;
+                     } else {
+                         result.success = false;
+                     }
+                 }
+ 
+                 return resolve(result);
+             }
+ 
+         } catch (error) {
+             return reject(error);
+         }
+     })
+ }
+
+/**
+  * List of solutions based on role and location.
+  * @function
+  * @name solutionBasedOnRoleAndLocation
+  * @param {String} token - User token.
+  * @param {Object} bodyData - Requested body data.
+  * @param {String} searchText - Text to search.
+  * @returns {JSON} - List of user targetted solutions.
+*/
+
+const solutionBasedOnRoleAndLocation = function ( token,bodyData,typeAndSubType,searchText = "" ) {
+    return new Promise(async (resolve, reject) => {
+        try {
+            
+            const url = 
+            KENDRA_URL + CONSTANTS.endpoints.SOLUTION_BASED_ON_ROLE_LOCATION+ "?type=" + typeAndSubType + "&subType=" + typeAndSubType;
+
+            if( searchText !== "" ) {
+                url = url + "&search=" + searchText;
+            }
+
+            const options = {
+                headers : {
+                    "content-type": "application/json",
+                    AUTHORIZATION : process.env.AUTHORIZATION,
+                    "internal-access-token": process.env.INTERNAL_ACCESS_TOKEN,
+                    "x-authenticated-user-token" : token
+                },
+                json : bodyData
+            };
+
+            request.post(url,options,kendraCallback);
+
+            function kendraCallback(err, data) {
+
+                let result = {
+                    success : true
+                };
+
+                if (err) {
+                    result.success = false;
+                } else {
+                    
+                    let response = data.body;
+                    
+                    if( response.status === HTTP_STATUS_CODE['ok'].status ) {
+                        result["data"] = response.result;
+                    } else {
+                        result.success = false;
+                    }
+                }
+
+                return resolve(result);
+            }
+
+        } catch (error) {
+            return reject(error);
+        }
+    })
+}
+
+/**
+  * Solution details based on role and location.
+  * @function
+  * @name solutionDetailsBasedOnRoleAndLocation
+  * @param {String} token - User token.
+  * @param {Object} bodyData - Requested body data.
+  * @param {String} solutionId - Targeted solution id.
+  * @returns {JSON} - List of user targetted solutions.
+*/
+
+const solutionDetailsBasedOnRoleAndLocation = function ( token,bodyData,solutionId ) {
+    return new Promise(async (resolve, reject) => {
+        try {
+            
+            const url = 
+            KENDRA_URL + CONSTANTS.endpoints.SOLUTION_DETAILS_BASED_ON_ROLE_LOCATION + "/" + solutionId;
+
+            const options = {
+                headers : {
+                    "content-type": "application/json",
+                    AUTHORIZATION : process.env.AUTHORIZATION,
+                    "internal-access-token": process.env.INTERNAL_ACCESS_TOKEN,
+                    "x-authenticated-user-token" : token
+                },
+                json : bodyData
+            };
+
+            request.post(url,options,kendraCallback);
+
+            function kendraCallback(err, data) {
+
+                let result = {
+                    success : true
+                };
+
+                if (err) {
+                    result.success = false;
+                } else {
+                    
+                    let response = data.body;
+                    
+                    if( response.status === HTTP_STATUS_CODE['ok'].status ) {
+                        result["data"] = response.result;
+                    } else {
+                        result.success = false;
+                    }
+                }
+
+                return resolve(result);
+            }
+
+        } catch (error) {
+            return reject(error);
+        }
+    })
+}
 
 module.exports = {
     getDownloadableUrl : getDownloadableUrl,
@@ -757,6 +929,9 @@ module.exports = {
     userPrivatePrograms : userPrivatePrograms,
     getUserOrganisationsAndRootOrganisations : getUserOrganisationsAndRootOrganisations,
     getPreSignedUrl : getPreSignedUrl,
-    getUsersByEntityAndRole : getUsersByEntityAndRole
+    getUsersByEntityAndRole : getUsersByEntityAndRole,
+    createSolution: createSolution,
+    solutionBasedOnRoleAndLocation : solutionBasedOnRoleAndLocation,
+    solutionDetailsBasedOnRoleAndLocation : solutionDetailsBasedOnRoleAndLocation
 };
 

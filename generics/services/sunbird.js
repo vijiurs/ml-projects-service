@@ -22,7 +22,7 @@ const verifyToken = function (token) {
         try {
             const url = 
             process.env.SUNBIRD_SERIVCE_HOST + 
-            process.env.SUNBIRD_SERIVCE_BASE_URL + process.env.URL_PREFIX + 
+            process.env.SUNBIRD_SERIVCE_BASE_URL + 
             CONSTANTS.endpoints.VERIFY_TOKEN;
 
             let options = {

@@ -320,16 +320,29 @@ module.exports = class ReportsHelper {
       * @param {String} pageSize - Size of page.
       * @param {String} pageNo - Recent page no.
       * @param {String} search - search text.
+      * @param {String} userRole - User roles (optional) to be provided if entityId not given.
       * @returns {Object} -  returns programs list
      */
 
-    static getProgramsByEntity(userId, entityId, pageSize, pageNo, search) {
+    static getProgramsByEntity(userId = "", entityId = "", pageSize, pageNo, search, userRole = "") {
         return new Promise(async (resolve, reject) => {
             try {
 
-                let query = {
-                    "entityId": ObjectId(entityId),
+                let query = {};
+
+                if(entityId != "" && UTILS.isValidMongoId(entityId)) {
+                    query = {
+                        "entityId": ObjectId(entityId),
+                    }
+                } else if (userRole != "" && userId != "") {
+                    query = {
+                        "userId": userId,
+                        "userRole": userRole
+                    }
+                } else {
+                    throw new Error("Missing user role or entity id.")
                 }
+
 
                 let searchQuery = [];
                 if (search !== "") {
@@ -356,9 +369,13 @@ module.exports = class ReportsHelper {
                 for (let index = 0; index < projectDetails.length; index++) {
                     programs.push({
                         name: projectDetails[index].programInformation.name,
-                        _id: projectDetails[index].programId
+                        _id: projectDetails[index].programId.toString()
                     });
                 }
+
+                programs = _.uniqBy(programs, function (program) {
+                    return program.id;
+                });
 
                 return resolve({
                     success: true,

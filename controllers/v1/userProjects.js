@@ -707,7 +707,13 @@ module.exports = class UserProjects extends Abstract {
                     req.query.lastDownloadedAt,
                     req.body,
                     req.userDetails.userInformation.userId,
-                    req.userDetails.userToken
+                    req.userDetails.userToken,
+                    req.headers["x-app-id"]  ? 
+                    req.headers["x-app-id"]  : 
+                    req.headers.appname ? req.headers.appname : "",
+                    req.headers["x-app-ver"] ? 
+                    req.headers["x-app-ver"] : 
+                    req.headers.appversion ? req.headers.appversion : ""
                 );
 
                 createdProject.result = createdProject.data;
@@ -1089,4 +1095,82 @@ module.exports = class UserProjects extends Abstract {
         })
     }
 
+      /**
+    * @api {post} /improvement-project/api/v1/userProjects/getProject?page=:page&limit=:limit&search=:search
+    * List of User projects and auto targeted.
+    * @apiVersion 1.0.0
+    * @apiGroup User Projects
+    * @apiSampleRequest /improvement-project/api/v1/userProjects/getProject
+    * @apiParamExample {json} Request:
+    * {
+    *   "role" : "HM",
+   		"state" : "236f5cff-c9af-4366-b0b6-253a1789766a",
+        "district" : "1dcbc362-ec4c-4559-9081-e0c2864c2931",
+        "school" : "c5726207-4f9f-4f45-91f1-3e9e8e84d824"
+    }
+    * @apiParamExample {json} Response:
+    {
+    "message": " Targeted projects fetched successfully",
+    "status": 200,
+    "result": {
+        "description": "Manage and track your school Improvement easily by creating tasks and planning timelines.",
+        "data": [
+            {
+                "_id": "5fd6f3b6062df5269e6532f0",
+                "description": "h bucks ",
+                "programId": "5fd6f3b7ab86c4262564b83f",
+                "solutionId": "5fd6f3b7ab86c4262564b840",
+                "name": "gjk"
+            },
+            {
+                "_id": "",
+                "externalId": "TAMIL-NADU-AUTO-TARGETING-IMPROVEMENT-PROJECT",
+                "programId": "5ffbf8909259097d48017bbf",
+                "programName": "Tamil nadu AUTO TARGETING program",
+                "description": "tamil nadu improvement project testing",
+                "name": "tamil nadu improvement project testing",
+                "solutionId": "5ffbf9629259097d48017bc0"
+            }
+        ],
+        "count": 2
+    }
+    }
+    * @apiUse successBody
+    * @apiUse errorBody
+    */
+
+    /**
+      * List of user projects and targetted ones.
+      * @method
+      * @name getProject
+      * @param {Object} req - request data.
+      * @returns {JSON} List of user project with targetted ones.
+     */
+    
+    async getProject(req) {
+        return new Promise(async (resolve, reject) => {
+            try {
+
+                let projects = await userProjectsHelper.getProject(
+                    req.body,
+                    req.userDetails.userInformation.userId,
+                    req.userDetails.userToken,
+                    req.pageSize,
+                    req.pageNo,
+                    req.searchText
+                );
+
+                projects.result = projects.data;
+                
+                return resolve(projects);
+
+            } catch (error) {
+                return reject({
+                    status: error.status || HTTP_STATUS_CODE.internal_server_error.status,
+                    message: error.message || HTTP_STATUS_CODE.internal_server_error.message,
+                    errorObject: error
+                });
+            }
+        })
+    }
 };

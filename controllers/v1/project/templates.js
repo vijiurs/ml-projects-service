@@ -194,4 +194,59 @@ module.exports = class ProjectTemplates extends Abstract {
         })
     }
 
+     /**
+    * @api {post} /improvement-project/api/v1/project/templates/listByIds
+    * List templates based on ids.
+    * @apiVersion 1.0.0
+    * @apiGroup Project Templates
+    * @apiSampleRequest /improvement-project/api/v1/project/templates/listByIds
+    * @apiParamExample {json} Request: 
+    * {
+    * "externalIds" : ["IDEAIMP 4"]
+    * }
+    * @apiParamExample {json} Response:
+    * {
+    "message": "List of project templates fetched successfully",
+    "status": 200,
+    "result": [
+        {
+            "_id": "5fd0c55d496c5a49b203e047",
+            "title": "Keep Our Schools Alive! (Petition)",
+            "externalId": "IDEAIMP 4",
+            "goal": "Leveraging the huge number of private schools to show the significance of the financial problem by creating a petition and presenting to the authorities."
+        }
+    ]
+    }
+    * @apiUse successBody
+    * @apiUse errorBody
+    */
+
+      /**
+       * List templates based on ids.
+      * @method
+      * @name listByIds
+      * @param {Object} req - request data.
+      * @returns {Array} List of templates.
+     */
+
+    async listByIds(req) {
+        return new Promise(async (resolve, reject) => {
+            try {
+
+                let projectTemplates = 
+                await projectTemplatesHelper.listByIds(req.body.externalIds);
+
+                projectTemplates.result = projectTemplates.data;
+
+                return resolve(projectTemplates);
+
+            } catch (error) {
+                return reject({
+                    status: error.status || HTTP_STATUS_CODE.internal_server_error.status,
+                    message: error.message || HTTP_STATUS_CODE.internal_server_error.message
+                });
+            }
+        })
+    }
+
 };

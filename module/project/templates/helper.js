@@ -679,7 +679,8 @@ module.exports = class ProjectTemplatesHelper {
                 await assessmentService.updateSolution(
                     userToken,
                     {
-                        projectTemplateId : duplicateTemplateDocument._id
+                        projectTemplateId : duplicateTemplateDocument._id,
+                        name : duplicateTemplateDocument.title
                     },
                     newProjectTemplate.solutionExternalId
                 );  
@@ -977,7 +978,51 @@ module.exports = class ProjectTemplatesHelper {
             });
         }
     });
-}
+   }
+
+      /**
+      * Templates list.
+      * @method
+      * @name listByIds
+      * @param {Array} externalIds - External ids
+      * @returns {Array} List of templates data.
+     */
+
+    static listByIds( externalIds ) {
+        return new Promise(async (resolve, reject) => {
+            try {
+
+                let templateData = await this.templateDocument({
+                    externalId : { $in : externalIds }
+                },["title","metaInformation.goal","externalId"]);
+
+                if ( !templateData.length > 0 ) {
+                    throw {
+                        status : HTTP_STATUS_CODE.bad_request.status,
+                        message : CONSTANTS.apiResponses.PROJECT_TEMPLATE_NOT_FOUND
+                    }
+                }
+
+                templateData = templateData.map( template => {
+                    if( template.metaInformation && template.metaInformation.goal ) {
+                        template.goal = template.metaInformation.goal;
+                        delete template.metaInformation;
+                    }
+
+                    return template;
+                }) 
+
+                return resolve({
+                    success : false,
+                    data : templateData,
+                    message : CONSTANTS.apiResponses.PROJECT_TEMPLATES_FETCHED
+                });
+                
+            } catch (error) {
+                return reject(error);
+            }
+        })
+    }
 
 };
 

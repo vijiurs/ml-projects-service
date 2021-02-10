@@ -205,7 +205,8 @@ module.exports = class Reports {
                     req.params._id,
                     req.pageSize,
                     req.pageNo,
-                    req.searchText
+                    req.searchText,
+                    req.body.role
                 );
                 
                 return resolve({

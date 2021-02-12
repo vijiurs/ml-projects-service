@@ -89,7 +89,6 @@ module.exports = {
             type : Array,
             default : []
         },
-        lastSync : Date,
         entityId : {
             type : "ObjectId",
             index : true

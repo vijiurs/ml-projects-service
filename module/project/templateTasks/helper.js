@@ -651,7 +651,7 @@ module.exports = class ProjectTemplateTasksHelper {
                             $in : templateDocument[0].tasks
                         },
                         parentId : { $exists : false }
-                    },"all",["projectTemplateId","__v"]);
+                    },"all",["projectTemplateId","__v","projectTemplateExternalId"]);
 
                     for( let task = 0 ; task < tasks.length ; task ++ ) {
 

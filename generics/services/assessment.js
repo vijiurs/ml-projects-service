@@ -81,8 +81,7 @@ const createObservationFromSolutionTemplate = function (token,templateId,bodyDat
         try {
 
             let observationCreateUrl =  
-            ASSESSMENT_URL + "api/v2" + 
-            CONSTANTS.endpoints.OBSERVATION_CREATE + "?solutionId=" + templateId;
+            ASSESSMENT_URL + "api/v2/observations/create?solutionId=" + templateId;
 
             const options = {
                 headers : {

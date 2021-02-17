@@ -627,6 +627,463 @@ module.exports = class ReportsHelper {
             }
         });
     }
+
+
+    /**
+    * Entity Report.
+    * @method
+    * @name entity 
+    * @param {String} entityId - mapped entity id.
+    * @param {String} userId - Logged in user id.
+    * @param {String} userToken - Logged in user keyclock token.
+    * @param {String} userId - Logged in user name.
+    * @param {String} reportType - report type monthly or quterly.
+    * @param {String} programId - program id
+    * @param {Boolean} getPdf - pdf true or false
+    * @returns {Object} Entity report.
+   */
+  static entityV2(entityId = "", userId, userToken, userName, reportType, programId = "", getPdf) {
+    return new Promise(async (resolve, reject) => {
+        try {
+
+            let query = { };
+            if (entityId) {
+                query["entityId"] = ObjectId(entityId);
+            } else {
+                query["userId"] = userId
+            }
+
+            let dateRange = await _getDateRangeofReport(reportType);
+            let endOf = dateRange.endOf;
+            let startFrom = dateRange.startFrom;
+
+
+            let pdfReportString = moment(startFrom).format('MMM YY');
+            if (reportType == 3) {
+                pdfReportString = pdfReportString + " - " + moment(endOf).format('MMM YY');
+            }
+
+            if (programId) {
+                query['programId'] = ObjectId(programId);
+            }
+            query['isDeleted'] = { $ne: true };
+
+            query['$or'] = [
+                { "syncedAt": { $gte: new Date(startFrom), $lte: new Date(endOf) } },
+                { "tasks": { $elemMatch: { isDeleted: { $ne: true },syncedAt: { $gte: new Date(startFrom), $lte: new Date(endOf) } } } },
+            ]
+
+            const projectDetails = await userProjectsHelper.projectDocument(
+                query,
+                ["programId","programInformation.name", "entityInformation.name", "taskReport", "status", "tasks", "categories"],
+                []
+            );
+
+
+            let tasksReport = {
+                "total": 0,
+                "overdue": 0
+            };
+            tasksReport[CONSTANTS.common.COMPLETED_STATUS] = 0;
+            tasksReport[CONSTANTS.common.INPROGRESS_STATUS] = 0;
+            tasksReport[CONSTANTS.common.NOT_STARTED_STATUS] = 0;
+
+            let categories = {
+                "total": 0
+            };
+            
+            let projectReport = {
+                "total": 0,
+                "overdue": 0,
+            };
+            projectReport[CONSTANTS.common.COMPLETED_STATUS] = 0;
+            projectReport[CONSTANTS.common.INPROGRESS_STATUS] = 0;
+            projectReport[CONSTANTS.common.NOT_STARTED_STATUS] = 0;
+
+
+            let types = await this.types();
+            let returnTypeInfo = types.data.filter(type => {
+                if (type.value == reportType) {
+                    return type.label;
+                }
+            });
+
+            if (!projectDetails.length > 0) {
+
+                if (getPdf == true) {
+
+                    let reportTaskData = {};
+                    Object.keys(tasksReport).map(taskData => {
+                        reportTaskData[UTILS.camelCaseToTitleCase(taskData)] = tasksReport[taskData];
+                    });
+
+                    let categoryData = {};
+                    Object.keys(categories).map(category => {
+                        categoryData[UTILS.camelCaseToTitleCase(category)] = categories[category];
+                    });
+
+                    let pdfRequest = {
+                        "reportType": returnTypeInfo[0].label,
+                        "sharedBy": userName,
+                        "reportTitle": pdfReportString,
+                        categories: categoryData,
+                        tasks: reportTaskData,
+                        projects: projectReport,
+
+                    }
+
+                    let response = await dhitiService.entityReportV2(userToken, pdfRequest);
+
+                    if (response && response.success == true) {
+
+                        return resolve({
+                            success: true,
+                            message: CONSTANTS.apiResponses.REPORT_GENERATED,
+                            data: {
+                                data: {
+                                    downloadUrl: response.data.pdfUrl
+                                }
+                            }
+                        });
+                    } else {
+                        return resolve({
+                            message: CONSTANTS.apiResponses.REPORTS_DATA_NOT_FOUND,
+                            data: [],
+                            success:false
+                        })
+                    }
+
+                } else {
+                    return resolve({
+                        message: CONSTANTS.apiResponses.REPORTS_DATA_NOT_FOUND,
+                        data: {
+                            dataAvailable: false,
+                            data: {
+                                categories: categories,
+                                tasks: tasksReport,
+                                projects: projectReport
+                            }
+                        }
+                    })
+                }
+            }
+           
+            await Promise.all(projectDetails.map(async function (project) {
+
+                if (project.categories) {
+                    project.categories.map(category => {
+
+                        if( 
+                            category.externalId !== "" && categories[category.externalId] 
+                        ) {
+                            categories[category.externalId] = categories[category.externalId] + 1;
+                        } else if ( categories[category.name] ) {
+                            categories[category.name] = categories[category.name] + 1;
+                        } else {
+                            if( category.externalId !== "" ) {
+                                categories[category.externalId] = 1;
+                            } else {
+                                categories[category.name] = 1;
+                            }
+                            
+                        }
+                    });
+                    categories['total'] = categories['total'] + project.categories.length;
+                }
+
+                let todayDate = moment(project.endDate, "DD.MM.YYYY");
+                let endDate = moment().format();
+                if (project.status == CONSTANTS.common.COMPLETED_STATUS) {
+
+                    projectReport[CONSTANTS.common.COMPLETED_STATUS] = projectReport[CONSTANTS.common.COMPLETED_STATUS] + 1;
+
+                } else if (project.status == CONSTANTS.common.INPROGRESS_STATUS) {
+
+                    if (todayDate.diff(endDate, 'days') < 1) {
+                        projectReport['overdue'] = projectReport['overdue'] + 1;
+                    } else {
+                        projectReport[CONSTANTS.common.INPROGRESS_STATUS] = projectReport[CONSTANTS.common.INPROGRESS_STATUS] + 1;
+                    }
+
+                } else if (project.status == CONSTANTS.common.NOT_STARTED_STATUS) {
+
+                    if (todayDate.diff(endDate, 'days') < 1) {
+                        projectReport['overdue'] = projectReport['overdue'] + 1;
+                    } else {
+                        projectReport[CONSTANTS.common.NOT_STARTED_STATUS] = projectReport[CONSTANTS.common.NOT_STARTED_STATUS] + 1;
+                    }
+                }
+                projectReport["total"] = projectReport[CONSTANTS.common.NOT_STARTED_STATUS] + 
+                projectReport['overdue'] + projectReport[CONSTANTS.common.INPROGRESS_STATUS] +
+                projectReport[CONSTANTS.common.COMPLETED_STATUS];
+
+                if (project.taskReport) {
+                    let keys = Object.keys(project.taskReport);
+                    keys.map(key => {
+                        if (tasksReport[key]) {
+                            tasksReport[key] = tasksReport[key] + project.taskReport[key];
+                        } else {
+                            tasksReport[key] = project.taskReport[key];
+                        }
+                    });
+                }
+
+                await Promise.all(project.tasks.map(task => {
+                    let taskCurrentDate = moment(task.endDate, "DD.MM.YYYY");
+                    if (taskCurrentDate.diff(endDate, 'days') < 1) {
+                        if (tasksReport['overdue']) {
+                            tasksReport['overdue'] = tasksReport['overdue'] + 1;
+                        } else {
+                            tasksReport['overdue'] = 1;
+                        }
+                        if(tasksReport[task.status]){
+                            tasksReport[task.status] = tasksReport[task.status] - 1;
+                        }
+                    }
+                }));
+
+            }));
+
+            if (getPdf == true) {
+
+                let reportTaskData = {};
+                Object.keys(tasksReport).map(taskData => {
+                    reportTaskData[UTILS.camelCaseToTitleCase(taskData)] = tasksReport[taskData];
+                })
+
+                let categoryData = {};
+                Object.keys(categories).map(category => {
+                    categoryData[UTILS.camelCaseToTitleCase(category)] = categories[category];
+                })
+
+                let types = await this.types();
+                let returnTypeInfo = types.data.filter(type => {
+                    if (type.value == reportType) {
+                        return type.label;
+                    }
+                });
+
+                let pdfRequest = {
+                    "reportType": returnTypeInfo[0].label,
+                    "sharedBy": userName,
+                    "reportTitle": pdfReportString,
+                    categories: categoryData,
+                    tasks: reportTaskData,
+                    projects: projectReport
+                }
+                if (programId != "") {
+                    pdfRequest['programName'] = projectDetails[0].programInformation.name;
+                }
+                if (entityId != "") {
+                    pdfRequest['entityName'] = projectDetails[0].entityInformation.name;
+                }
+
+                let response = await dhitiService.entityReportV2(userToken, pdfRequest);
+                if (response && response.success == true) {
+                    return resolve({
+                        success: true,
+                        message: CONSTANTS.apiResponses.REPORT_GENERATED,
+                        data: {
+                            data: {
+                                downloadUrl: response.data.pdfUrl
+                            }
+
+                        }
+                    });
+                }
+
+            } else {
+
+                let response = {
+                    categories: categories,
+                    tasks: tasksReport,
+                    projects: projectReport
+                }
+                return resolve({
+                    success: true,
+                    message: CONSTANTS.apiResponses.REPORTS_GENERATED,
+                    data: {
+                        dataAvailable: true,
+                        data: response,
+                    }
+                });
+
+            }
+        } catch (error) {
+            return resolve({
+                success: false,
+                message: error.message,
+                data: false
+            });
+        }
+    })
+}
+
+
+    /**
+       * Detail view Report.
+       * @method
+       * @name detailView 
+       * @param {String} userId - Logged in user id.
+       * @param {String} userToken - Logged in user keyclock token.
+       * @param {String} reportType - report type monthly or quterly.
+       * @param {String} entityId - mapped entity id.
+       * @param {String} programId - program id
+       * @param {Boolean} getPdf - to get pdf 
+       * @returns {Object} - response consist of chart report data
+      */
+
+    static detailViewV2(userId, userToken, reportType, entityId = "", programId, getPdf) {
+        return new Promise(async (resolve, reject) => {
+            try {
+                
+                if (getPdf == true) {
+
+                    let types = await this.types();
+                    let returnTypeInfo = types.data.filter(type => {
+                        if (type.value == reportType) {
+                            return type.label;
+                        }
+                    });
+
+                    let projectData = [];
+                    await Promise.all(projectDetails.map(project => {
+                        let projectInfo = {
+                            startDate: project.startDate,
+                            endDate: project.endDate,
+                            status: project.status,
+                            title: project.title,
+                            tasks: []
+                        }
+
+                        project.tasks.map(task => {
+                            projectInfo.tasks.push({
+                                startDate: task.startDate,
+                                endDate: task.endDate,
+                                status: task.status,
+                                title: task.name
+                            })
+                        })
+                        projectData.push(projectInfo);
+                    }));
+                    let data = {
+                        "reportType": returnTypeInfo[0].label,
+                        "projectDetails": projectData
+                    }
+                    let response = await dhitiService.viewFullReportV2(userToken, data);
+
+                    if (response && response.success == true) {
+
+                        return resolve({
+                            success: true,
+                            message: CONSTANTS.apiResponses.REPORT_GENERATED,
+                            data: {
+                                data: {
+                                    downloadUrl: response.data.pdfUrl
+                                }
+                            }
+                        });
+                    }
+
+                } else {
+                let data = [
+                    { task: 'Task 1', startDate: '2018-04-08 00:00:00.000', endDate: '2018-06-08 00:00:00.000' },
+                    { task: 'Task 2', startDate: '2018-05-08 00:00:00.000', endDate: '2018-07-19 00:00:00.000' },
+                    { task: 'Task 3', startDate: '2018-07-08 00:00:00.000', endDate: '2020-09-08 00:00:00.000' },
+                ];
+
+                let plantingDays = "2018-04-01 00:00:00.000";
+
+                let chartData = [
+                    {
+                        title: 'Improvement project',
+                        labels: ["Task 1", "Task 2", "Task 3"],
+                        taskArr: data,
+                        plantingDays: plantingDays,
+                        datasets: [
+                            {
+                                data: data.map((t) => {
+                                    return dateDiffInDays(new Date(plantingDays), new Date(t.startDate));
+                                }),
+                                datalabels: {
+                                    color: '#025ced',
+                                    formatter: function (value, context) {
+                                        return '';
+                                    },
+                                },
+                                backgroundColor: 'rgba(63,103,126,0)',
+                                hoverBackgroundColor: 'rgba(50,90,100,0)',
+                            },
+                            {
+                                data: data.map((t) => {
+                                    return dateDiffInDays(new Date(t.startDate), new Date(t.endDate));
+                                }),
+                                datalabels: {
+                                    color: '#025ced',
+                                    formatter: function (value, context) {
+                                        return '';
+                                    },
+                                },
+                            },
+                        ],
+                    },
+                    {
+                        title: 'Improvement project',
+                        labels: ["Task 1", "Task 2", "Task 3"],
+                        taskArr: data,
+                        plantingDays: plantingDays,
+                        datasets: [
+                            {
+                                data: data.map((t) => {
+                                    return dateDiffInDays(new Date(plantingDays), new Date(t.startDate));
+                                }),
+                                datalabels: {
+                                    color: '#025ced',
+                                    formatter: function (value, context) {
+                                        return '';
+                                    },
+                                },
+                                backgroundColor: 'rgba(63,103,126,0)',
+                                hoverBackgroundColor: 'rgba(50,90,100,0)',
+                            },
+                            {
+                                data: data.map((t) => {
+                                    return dateDiffInDays(new Date(t.startDate), new Date(t.endDate));
+                                }),
+                                datalabels: {
+                                    color: '#025ced',
+                                    formatter: function (value, context) {
+                                        return '';
+                                    },
+                                },
+                            },
+                        ],
+                    }
+                ]
+                
+                function dateDiffInDays(a, b) {
+                    // Discard the time and time-zone information.
+                    const utc1 = Date.UTC(a.getFullYear(), a.getMonth(), a.getDate());
+                    const utc2 = Date.UTC(b.getFullYear(), b.getMonth(), b.getDate());
+                    return Math.floor((utc2 - utc1) / (1000 * 60 * 60 * 24));
+                }
+
+                resolve({
+                    success: true,
+                    message: CONSTANTS.apiResponses.REPORT_GENERATED,
+                    data: chartData
+                })
+
+            }
+            } catch (error) {
+                return resolve({
+                    success: false,
+                    message: error.message,
+                    data: false
+                });
+            }
+        });
+    }
 }
 
 /**

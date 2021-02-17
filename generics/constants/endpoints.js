@@ -43,5 +43,7 @@ module.exports = {
     SOLUTION_BASED_ON_ROLE_LOCATION : "api/v1/solutions/forUserRoleAndLocation",
     SOLUTION_DETAILS_BASED_ON_ROLE_LOCATION : "api/v1/solutions/detailsBasedOnRoleAndLocation",
     LIST_ENTITIES_BY_LOCATION_IDS : "api/v1/entities/listByLocationIds",
-    CREATE_IMPROVEMENT_PROJECT_SOLUTION : "api/v1/solutions/create"
+    CREATE_IMPROVEMENT_PROJECT_SOLUTION : "api/v1/solutions/create",
+    VIEW_PROJECT_REPORT_V2 : "api/v2/improvement-project/viewProjectReport", // dhiti service
+    ENTITY_REPORT_V2 : "api/v2/improvement-project/entityReport", // dhiti service
 };

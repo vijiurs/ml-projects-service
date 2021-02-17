@@ -29,7 +29,6 @@ module.exports = {
     VIEW_PROJECT_REPORT : "api/v1/improvement-project/viewProjectReport", // dhiti service
     ENTITY_REPORT : "api/v1/improvement-project/entityReport", // dhiti service
     ASSESSMENTS_CREATE : "api/v1/assessments/create", // Should be kendra as api is not build checked for assessment
-    OBSERVATION_CREATE : "api/v1/observations/create",
     ADD_ENTITY_TO_OBSERVATIONS : "api/v1/observations/addEntityToObservation",
     ADD_ENTITIES_TO_SOLUTIONS : "api/v1/solutions/addEntities",
     UPDATE_OBSERVATION : "api/v1/observations/update",

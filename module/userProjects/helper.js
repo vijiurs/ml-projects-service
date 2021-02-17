@@ -1076,7 +1076,7 @@ module.exports = class UserProjectsHelper {
                 });
 
                 updateProject.updatedBy = userId;
-                updateProject.updatedAt = updateProject.lastSync = new Date();
+                updateProject.updatedAt = new Date();
 
                 if (data.learningResources) {
                     updateProject.learningResources = data.learningResources;

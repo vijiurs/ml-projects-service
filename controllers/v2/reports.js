@@ -105,46 +105,52 @@ module.exports = class Reports {
     * @apiSampleRequest /improvement-project/api/v2/reports/detailView/5f731631e8d7cd3b88ac0659?requestPdf=false&programId=5da5a3af6ee4a93ce5a1987a&reportType=1
     * @apiParamExample {json} Response:
     * {
-      message: "Chart report data generated succesfully.",
-      status: 200,
-      result: [
-      {
-        title: "Improvement project 1",
-        plantingDays: "2015-04-01 00:00:00.000",
-​        taskArr: [
-          {
-            task: "Task 1",
-            startDate: "2018-04-02 00:00:00.000",
-            endDate: "2018-06-08 00:00:00.000"
-          },
-          {
-            task: "Task 2",
-            startDate: "2018-07-08 00:00:00.000",
-            endDate: "2021-07-19 00:00:00.000"
-          },
-          {
-            task: "Task 3",
-            startDate: "2018-07-29 00:00:00.000",
-            endDate: "2019-05-08 00:00:00.000"
-          }
-        ],
-        labels: ["Task 1", "Task 2", "Task 3"],
-        datasets: [
-          {
-            data: [1097, 1194, 1215],
-            datalabels: {
-              color: "#025ced"
-            },
-            backgroundColor: "rgba(63,103,126,0)",
-            hoverBackgroundColor: "rgba(50,90,100,0)"
-          },
-          {
-            data: [67, 1107, 283],
-            datalabels: {
-              color: "#025ced"
+    "message": "Chart report data generated succesfully.",
+    "status": 200,
+    "result": [
+        {
+            "title": "Keep Our Schools Alive! (Petition)",
+            "labels": [
+                "TASK – 1- observation",
+                "TASK – 2- assessment"
+            ],
+            "taskArr": [
+                {
+                    "task": "TASK – 1- observation",
+                    "startDate": "2020-02-25 05:19:48.210",
+                    "endDate": "2020-02-29 05:19:48.210"
+                },
+                {
+                    "task": "TASK – 2- assessment",
+                    "startDate": "2020-02-25 05:19:48.210",
+                    "endDate": "2020-02-29 05:19:48.210"
+                }
+            ],
+            "leastStartDate": "2020-02-25 05:19:48.210",
+            "datasets": [
+                {
+                    "data": [
+                        0,
+                        0
+                    ],
+                    "datalabels": {
+                        "color": "#025ced"
+                    },
+                    "backgroundColor": "rgba(63,103,126,0)",
+                    "hoverBackgroundColor": "rgba(50,90,100,0)"
+                },
+                {
+                    "data": [
+                        4,
+                        4
+                    ],
+                    "datalabels": {
+                        "color": "#025ced"
+                    }
+                }
+              ]
             }
-          }
-        ]
+         ] 
       }
     */
 

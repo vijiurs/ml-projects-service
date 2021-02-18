@@ -936,7 +936,54 @@ module.exports = class ReportsHelper {
     static detailViewV2(userId, userToken, reportType, entityId = "", programId, getPdf) {
         return new Promise(async (resolve, reject) => {
             try {
-                
+
+                let query = {
+                    isDeleted: { $ne: true }
+                };
+
+                if (entityId) {
+                    query["entityId"] = ObjectId(entityId);
+                } else {
+                    query["userId"] = userId
+                }
+
+                let chartObject = [];
+                let dateRange = await _getDateRangeofReport(reportType);
+                let endOf = dateRange.endOf;
+                let startFrom = dateRange.startFrom;
+
+                query['$or'] = [
+                    { "syncedAt": { $gte: new Date(startFrom), $lte: new Date(endOf) } },
+                    { "tasks": { $elemMatch: { isDeleted: { $ne: true } ,syncedAt: { $gte: new Date(startFrom), $lte: new Date(endOf) } } } },
+                ]
+
+                if (programId) {
+                    query['programId'] = ObjectId(programId);
+                }
+
+                const projectDetails = await userProjectsHelper.projectDocument(
+                    query,
+                    ["title",
+                        "taskReport",
+                        "status",
+                        "tasks.status",
+                        "tasks.startDate",
+                        "tasks.endDate",
+                        "tasks.name",
+                        "categories",
+                        "startDate",
+                        "endDate"],
+                    []
+                );
+
+                if (!projectDetails.length > 0) {
+
+                    return resolve({
+                        message: CONSTANTS.apiResponses.REPORTS_DATA_NOT_FOUND,
+                        data: []
+                    })
+                }
+
                 if (getPdf == true) {
 
                     let types = await this.types();
@@ -986,95 +1033,70 @@ module.exports = class ReportsHelper {
                     }
 
                 } else {
-                let data = [
-                    { task: 'Task 1', startDate: '2018-04-08 00:00:00.000', endDate: '2018-06-08 00:00:00.000' },
-                    { task: 'Task 2', startDate: '2018-05-08 00:00:00.000', endDate: '2018-07-19 00:00:00.000' },
-                    { task: 'Task 3', startDate: '2018-07-08 00:00:00.000', endDate: '2020-09-08 00:00:00.000' },
-                ];
 
-                let plantingDays = "2018-04-01 00:00:00.000";
+                    await Promise.all(projectDetails.map(async projectList => {
+                        let labels = [];
+                        let data = [];
+                        let leastStartDate = "";
 
-                let chartData = [
-                    {
-                        title: 'Improvement project',
-                        labels: ["Task 1", "Task 2", "Task 3"],
-                        taskArr: data,
-                        plantingDays: plantingDays,
-                        datasets: [
-                            {
-                                data: data.map((t) => {
-                                    return dateDiffInDays(new Date(plantingDays), new Date(t.startDate));
-                                }),
-                                datalabels: {
-                                    color: '#025ced',
-                                    formatter: function (value, context) {
-                                        return '';
+                        if (projectList.tasks && projectList.tasks.length > 0) {
+
+                            leastStartDate = projectList.tasks[0].startDate;
+                            await Promise.all(projectList.tasks.map(async taskList => {
+
+                                leastStartDate = new Date(taskList.startDate) < new Date(leastStartDate) ? taskList.startDate : leastStartDate;
+                                
+                                labels.push(taskList.name);
+                                data.push({
+                                    task: taskList.name,
+                                    startDate: _dateConversionForDetailViewReport(taskList.startDate),
+                                    endDate: _dateConversionForDetailViewReport(taskList.endDate)
+                                })
+                            }))
+
+                            let responseObj = {
+                                title: projectList.title,
+                                labels: labels,
+                                taskArr: data,
+                                leastStartDate: _dateConversionForDetailViewReport(leastStartDate),
+                                datasets: [
+                                    {
+                                        data: data.map((t) => {
+                                            return _dateDiffInDays(new Date(leastStartDate), new Date(t.startDate));
+                                        }),
+                                        datalabels: {
+                                            color: '#025ced',
+                                            formatter: function (value, context) {
+                                                return '';
+                                            },
+                                        },
+                                        backgroundColor: 'rgba(63,103,126,0)',
+                                        hoverBackgroundColor: 'rgba(50,90,100,0)',
                                     },
-                                },
-                                backgroundColor: 'rgba(63,103,126,0)',
-                                hoverBackgroundColor: 'rgba(50,90,100,0)',
-                            },
-                            {
-                                data: data.map((t) => {
-                                    return dateDiffInDays(new Date(t.startDate), new Date(t.endDate));
-                                }),
-                                datalabels: {
-                                    color: '#025ced',
-                                    formatter: function (value, context) {
-                                        return '';
+                                    {
+                                        data: data.map((t) => {
+                                            return _dateDiffInDays(new Date(t.startDate), new Date(t.endDate));
+                                        }),
+                                        datalabels: {
+                                            color: '#025ced',
+                                            formatter: function (value, context) {
+                                                return '';
+                                            },
+                                        },
                                     },
-                                },
-                            },
-                        ],
-                    },
-                    {
-                        title: 'Improvement project',
-                        labels: ["Task 1", "Task 2", "Task 3"],
-                        taskArr: data,
-                        plantingDays: plantingDays,
-                        datasets: [
-                            {
-                                data: data.map((t) => {
-                                    return dateDiffInDays(new Date(plantingDays), new Date(t.startDate));
-                                }),
-                                datalabels: {
-                                    color: '#025ced',
-                                    formatter: function (value, context) {
-                                        return '';
-                                    },
-                                },
-                                backgroundColor: 'rgba(63,103,126,0)',
-                                hoverBackgroundColor: 'rgba(50,90,100,0)',
-                            },
-                            {
-                                data: data.map((t) => {
-                                    return dateDiffInDays(new Date(t.startDate), new Date(t.endDate));
-                                }),
-                                datalabels: {
-                                    color: '#025ced',
-                                    formatter: function (value, context) {
-                                        return '';
-                                    },
-                                },
-                            },
-                        ],
-                    }
-                ]
-                
-                function dateDiffInDays(a, b) {
-                    // Discard the time and time-zone information.
-                    const utc1 = Date.UTC(a.getFullYear(), a.getMonth(), a.getDate());
-                    const utc2 = Date.UTC(b.getFullYear(), b.getMonth(), b.getDate());
-                    return Math.floor((utc2 - utc1) / (1000 * 60 * 60 * 24));
+                                ],
+                            }
+
+                            chartObject.push(responseObj);
+                        }
+                    })
+                    )
+                    resolve({
+                        success: true,
+                        message: CONSTANTS.apiResponses.REPORT_GENERATED,
+                        data: chartObject
+                    })
                 }
-
-                resolve({
-                    success: true,
-                    message: CONSTANTS.apiResponses.REPORT_GENERATED,
-                    data: chartData
-                })
-
-            }
             } catch (error) {
                 return resolve({
                     success: false,
@@ -1111,4 +1133,31 @@ function _getDateRangeofReport(reportType) {
     }
     return { startFrom: startFrom, endOf: endOf };
 
+}
+
+/**
+  * Get date difference for report
+  * @method
+  * @name _dateDiffInDays 
+  * @param {String} date1 - date
+  * @param {String} date2 - date 
+  * @returns {Object} - returns date difference in days  
+ */
+function _dateDiffInDays(date1, date2) {
+    const utc1 = Date.UTC(date1.getFullYear(), date1.getMonth(), date1.getDate());
+    const utc2 = Date.UTC(date2.getFullYear(), date2.getMonth(), date2.getDate());
+    return Math.floor((utc2 - utc1) / (1000 * 60 * 60 * 24));
+}
+
+
+/**
+  * Get date format for gantt chart
+  * @method
+  * @name _dateConversionForDetailViewReport
+  * @param {String} date - date
+  * @returns {Object} - returns converted date  
+ */
+function _dateConversionForDetailViewReport(date) {
+let momentValue = moment(date).utcOffset(date);
+return momentValue.format('YYYY-MM-DD HH:mm:ss.SSS')
 }

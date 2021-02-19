@@ -952,10 +952,10 @@ module.exports = class ReportsHelper {
                 let endOf = dateRange.endOf;
                 let startFrom = dateRange.startFrom;
 
-                // query['$or'] = [
-                //     { "syncedAt": { $gte: new Date(startFrom), $lte: new Date(endOf) } },
-                //     { "tasks": { $elemMatch: { isDeleted: { $ne: true } ,syncedAt: { $gte: new Date(startFrom), $lte: new Date(endOf) } } } },
-                // ]
+                query['$or'] = [
+                    { "syncedAt": { $gte: new Date(startFrom), $lte: new Date(endOf) } },
+                    { "tasks": { $elemMatch: { isDeleted: { $ne: true } ,syncedAt: { $gte: new Date(startFrom), $lte: new Date(endOf) } } } },
+                ]
 
                 if (programId) {
                     query['programId'] = ObjectId(programId);

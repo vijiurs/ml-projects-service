@@ -2637,8 +2637,7 @@ function _assessmentDetails( assessmentData ) {
                             _id : assessmentData.programId,
                             name : ""
                         },
-                        entities : [assessmentData.entityId],
-                        project : assessmentData.project
+                        entities : [assessmentData.entityId]
                     }
                 );
 
@@ -2679,23 +2678,6 @@ function _assessmentDetails( assessmentData ) {
                     throw {
                         status : HTTP_STATUS_CODE['bad_request'].status,
                         message : CONSTANTS.apiResponses.FAILED_TO_ADD_ENTITY_TO_SOLUTION
-                    }
-                }
-
-                let solutionUpdated = 
-                await assessmentService.updateSolution(
-                    assessmentData.token,
-                    {
-                        "project" : assessmentData.project,
-                        referenceFrom : "project"
-                    },
-                    assessmentData.solutionDetails.externalId
-                );
-
-                if( !solutionUpdated.success ) {
-                    throw {
-                        status : HTTP_STATUS_CODE['bad_request'].status,
-                        message : CONSTANTS.apiResponses.SOLUTION_NOT_UPDATED
                     }
                 }
 
@@ -2746,8 +2728,7 @@ function _observationDetails( observationData ) {
                             name : ""
                         },
                         status : CONSTANTS.common.PUBLISHED_STATUS,
-                        entities : [observationData.entityId],
-                        project : observationData.project
+                        entities : [observationData.entityId]
                     }
                 );
 
@@ -2762,23 +2743,6 @@ function _observationDetails( observationData ) {
                 result["observationId"] = observationCreatedFromTemplate.data.observationId;
 
             } else {
-
-                let solutionUpdated = 
-                await assessmentService.updateSolution(
-                    observationData.token,
-                    {
-                        project : observationData.project,
-                        referenceFrom : "project"
-                    },
-                    observationData.solutionDetails.externalId
-                );
-
-                if( !solutionUpdated.success ) {
-                    throw {
-                        status : HTTP_STATUS_CODE['bad_request'].status,
-                        message : CONSTANTS.apiResponses.SOLUTION_NOT_UPDATED
-                    }
-                }
 
                 let startDate = new Date();
                 let endDate = new Date();

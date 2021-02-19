@@ -69,7 +69,8 @@ module.exports = class ProjectTemplateTasks extends Abstract {
                 await projectTemplateTasksHelper.bulkCreate(
                     templateTasks,
                     req.params._id,
-                    req.userDetails.userInformation.userId
+                    req.userDetails.userInformation.userId,
+                    req.userDetails.userToken
                 );
 
                 return resolve(projectTemplateTasks);
@@ -123,7 +124,8 @@ module.exports = class ProjectTemplateTasks extends Abstract {
                 await projectTemplateTasksHelper.bulkUpdate(
                     templateTasks,
                     req.params._id,
-                    req.userDetails.userInformation.userId
+                    req.userDetails.userInformation.userId,
+                    req.userDetails.userToken
                 );
 
                 return resolve(projectTemplateTasks);

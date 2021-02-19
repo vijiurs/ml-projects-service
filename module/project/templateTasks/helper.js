@@ -216,7 +216,7 @@ module.exports = class ProjectTemplateTasksHelper {
         data,
         template,
         solutionData,
-        update = false
+        update
     ) {
         return new Promise(async (resolve, reject) => {
             try {
@@ -288,6 +288,7 @@ module.exports = class ProjectTemplateTasksHelper {
                                 parsedData.STATUS = 
                                 CONSTANTS.apiResponses.MIS_MATCHED_PROJECT_AND_TASK_ENTITY_TYPE;
                             } else {
+
                                 allValues.solutionDetails = 
                                 _.pick(
                                     solutionData[parsedData.solutionId],
@@ -429,10 +430,11 @@ module.exports = class ProjectTemplateTasksHelper {
       * @param {Array} tasks - csv tasks data.
       * @param {String} projectTemplateId - project template id.
       * @param {String} userId - user logged in id.
+      * @param {String} token - token is required.
       * @returns {Object} Bulk create project template tasks.
      */
 
-    static bulkCreate( tasks,projectTemplateId,userId ) {
+    static bulkCreate( tasks,projectTemplateId,userId,token ) {
         return new Promise(async (resolve, reject) => {
             try {
 
@@ -459,6 +461,11 @@ module.exports = class ProjectTemplateTasksHelper {
                 }
 
                 let pendingItems = [];
+                let solutionTypes = [
+                    CONSTANTS.common.ASSESSMENT,
+                    CONSTANTS.common.OBSERVATION,
+                    CONSTANTS.common.IMPROVEMENT_PROJECT
+                ];
 
                 for ( let task = 0; task < tasks.length ; task ++ ) {
                     let currentData = UTILS.valueParser(tasks[task]);
@@ -480,8 +487,24 @@ module.exports = class ProjectTemplateTasksHelper {
                             await this.createOrUpdateTask(
                                 currentData,
                                 csvData.data.template,
-                                csvData.data.solutionData
+                                csvData.data.solutionData,
+                                false
                             );
+
+                            if( solutionTypes.includes(createdTask.solutionType) ) {
+                                
+                                await assessmentService.updateSolution(
+                                    token,
+                                    {
+                                        project : {
+                                            _id : projectTemplateId,
+                                            taskId : createdTask._SYSTEM_ID
+                                        },
+                                        referenceFrom : "project"
+                                    },
+                                    createdTask.solutionId
+                                );
+                            }
 
                             input.push(createdTask);
                         }
@@ -507,6 +530,21 @@ module.exports = class ProjectTemplateTasksHelper {
                                 csvData.data.observationData
                             );
 
+                            if( solutionTypes.includes(createdTask.solutionType) ) {
+                                
+                                await assessmentService.updateSolution(
+                                    token,
+                                    {
+                                        project : {
+                                            _id : projectTemplateId,
+                                            taskId : createdTask._SYSTEM_ID
+                                        },
+                                        referenceFrom : "project"
+                                    },
+                                    createdTask.solutionId
+                                );
+                            }
+
                             input.push(createdTask);
                         }
 
@@ -531,7 +569,7 @@ module.exports = class ProjectTemplateTasksHelper {
       * @returns {Object} Bulk update project template tasks.
      */
 
-    static bulkUpdate( tasks,projectTemplateId,userId ) {
+    static bulkUpdate( tasks,projectTemplateId,userId,token ) {
         return new Promise(async (resolve, reject) => {
             try {
 
@@ -558,6 +596,12 @@ module.exports = class ProjectTemplateTasksHelper {
                 }
 
                 let tasksData =  Object.values(csvData.data.tasks);
+
+                let solutionTypes = [
+                    CONSTANTS.common.ASSESSMENT,
+                    CONSTANTS.common.OBSERVATION,
+                    CONSTANTS.common.IMPROVEMENT_PROJECT
+                ];
 
                 if ( csvData.data.tasks && tasksData.length > 0 ) {
 
@@ -596,6 +640,21 @@ module.exports = class ProjectTemplateTasksHelper {
                         csvData.data.solutionData,
                         true  
                     );
+
+                    if( solutionTypes.includes(createdTask.solutionType) ) {
+                                
+                        await assessmentService.updateSolution(
+                            token,
+                            {
+                                project : {
+                                    _id : projectTemplateId,
+                                    taskId : createdTask._SYSTEM_ID
+                                },
+                                referenceFrom : "project"
+                            },
+                            createdTask.solutionId
+                        );
+                    }
 
                     if( 
                         csvData.data.tasks[currentData._SYSTEM_ID].parentId && 

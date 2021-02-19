@@ -952,10 +952,10 @@ module.exports = class ReportsHelper {
                 let endOf = dateRange.endOf;
                 let startFrom = dateRange.startFrom;
 
-                query['$or'] = [
-                    { "syncedAt": { $gte: new Date(startFrom), $lte: new Date(endOf) } },
-                    { "tasks": { $elemMatch: { isDeleted: { $ne: true } ,syncedAt: { $gte: new Date(startFrom), $lte: new Date(endOf) } } } },
-                ]
+                // query['$or'] = [
+                //     { "syncedAt": { $gte: new Date(startFrom), $lte: new Date(endOf) } },
+                //     { "tasks": { $elemMatch: { isDeleted: { $ne: true } ,syncedAt: { $gte: new Date(startFrom), $lte: new Date(endOf) } } } },
+                // ]
 
                 if (programId) {
                     query['programId'] = ObjectId(programId);
@@ -1044,21 +1044,27 @@ module.exports = class ReportsHelper {
                             leastStartDate = projectList.tasks[0].startDate;
                             await Promise.all(projectList.tasks.map(async taskList => {
 
-                                leastStartDate = new Date(taskList.startDate) < new Date(leastStartDate) ? taskList.startDate : leastStartDate;
-                                
-                                labels.push(taskList.name);
-                                data.push({
-                                    task: taskList.name,
-                                    startDate: _dateConversionForDetailViewReport(taskList.startDate),
-                                    endDate: _dateConversionForDetailViewReport(taskList.endDate)
-                                })
+                                if (taskList.startDate && taskList.endDate) {
+                                    leastStartDate = new Date(taskList.startDate) < new Date(leastStartDate) ? taskList.startDate : leastStartDate;
+
+                                    labels.push(taskList.name);
+                                    data.push({
+                                        task: taskList.name,
+                                        startDate: _dateConversionForDetailViewReport(taskList.startDate),
+                                        endDate: _dateConversionForDetailViewReport(taskList.endDate)
+                                    })
+                                }
                             }))
+                          
+                            if (leastStartDate) {
+                               leastStartDate =  _dateConversionForDetailViewReport(leastStartDate)
+                            }
 
                             let responseObj = {
                                 title: projectList.title,
                                 labels: labels,
                                 taskArr: data,
-                                leastStartDate: _dateConversionForDetailViewReport(leastStartDate),
+                                leastStartDate: leastStartDate,
                                 datasets: [
                                     {
                                         data: data.map((t) => {

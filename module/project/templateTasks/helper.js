@@ -560,12 +560,6 @@ module.exports = class ProjectTemplateTasksHelper {
 
                 let tasksData =  Object.values(csvData.data.tasks);
 
-                let solutionTypes = [
-                    CONSTANTS.common.ASSESSMENT,
-                    CONSTANTS.common.OBSERVATION,
-                    CONSTANTS.common.IMPROVEMENT_PROJECT
-                ];
-
                 if ( csvData.data.tasks && tasksData.length > 0 ) {
 
                     tasksData.forEach(task=>{

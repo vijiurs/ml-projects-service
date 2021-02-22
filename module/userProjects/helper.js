@@ -695,6 +695,7 @@ module.exports = class UserProjectsHelper {
                     await this.createProgramAndSolution(
                         requestedData.programId,
                         requestedData.programName,
+                        requestedData.entityId ? [requestedData.entityId] : [],
                         userToken
                     );
 
@@ -1152,6 +1153,7 @@ module.exports = class UserProjectsHelper {
     static createProgramAndSolution(
         programId = "",
         programName = "",
+        entities,
         userToken,
         solutionId
     ) {
@@ -1164,7 +1166,8 @@ module.exports = class UserProjectsHelper {
                     type: CONSTANTS.common.IMPROVEMENT_PROJECT,
                     subType: CONSTANTS.common.IMPROVEMENT_PROJECT,
                     isReusable : false,
-                    solutionId : solutionId
+                    solutionId : solutionId,
+                    entities : entities
                 };
 
                 if (programName !== "") {
@@ -1190,7 +1193,7 @@ module.exports = class UserProjectsHelper {
 
                 result.solutionInformation = _.pick(
                     solutionAndProgramCreation.data.solution,
-                    ["name","externalId","description","_id"]
+                    ["name","externalId","description","_id","entityType"]
                 );
 
                 result.solutionInformation._id =
@@ -1631,7 +1634,9 @@ module.exports = class UserProjectsHelper {
                     "tasks._id",
                     "tasks.solutionDetails",
                     "tasks.submissionDetails",
-                    "programInformation._id"
+                    "tasks.externalId",
+                    "programInformation._id",
+                    "projectTemplateId"
                 ]
             );
 
@@ -1661,8 +1666,8 @@ module.exports = class UserProjectsHelper {
                     entityId : assessmentOrObservationData.entityId,
                     programId :  assessmentOrObservationData.programId,
                     project :  {
-                        "_id" : projectId,
-                        "taskId" : taskId
+                        "_id" : project[0].projectTemplateId,
+                        "taskId" : currentTask.externalId
                     }
                 };
 
@@ -2624,6 +2629,18 @@ function _assessmentDetails( assessmentData ) {
 
             let result = {};
 
+            if( assessmentData.project ) {
+                
+                let templateTasks = 
+                await projectTemplateTasksHelper.taskDocuments({
+                    externalId : assessmentData.project.taskId
+                },["_id"])
+                
+                if( templateTasks.length > 0 ) {
+                    assessmentData.project.taskId = templateTasks[0]._id;
+                }
+            }
+
             if( assessmentData.solutionDetails.isReusable ) {
                 
                 let createdAssessment = 
@@ -2637,7 +2654,8 @@ function _assessmentDetails( assessmentData ) {
                             _id : assessmentData.programId,
                             name : ""
                         },
-                        entities : [assessmentData.entityId]
+                        entities : [assessmentData.entityId],
+                        project : assessmentData.project
                     }
                 );
 
@@ -2681,6 +2699,23 @@ function _assessmentDetails( assessmentData ) {
                     }
                 }
 
+                let solutionUpdated = 
+                await assessmentService.updateSolution(
+                    assessmentData.token,
+                    {
+                        "project" : assessmentData.project,
+                        referenceFrom : "project"
+                    },
+                    assessmentData.solutionDetails.externalId
+                );
+
+                if( !solutionUpdated.success ) {
+                    throw {
+                        status : HTTP_STATUS_CODE['bad_request'].status,
+                        message : CONSTANTS.apiResponses.SOLUTION_NOT_UPDATED
+                    }
+                }
+
                 result["solutionId"] = assessmentData.solutionDetails._id;
             }
 
@@ -2714,6 +2749,18 @@ function _observationDetails( observationData ) {
 
             let result = {};
 
+            if( observationData.project ) {
+                
+                let templateTasks = 
+                await projectTemplateTasksHelper.taskDocuments({
+                    externalId : observationData.project.taskId
+                },["_id"])
+                
+                if( templateTasks.length > 0 ) {
+                    observationData.project.taskId = templateTasks[0]._id;
+                }
+            }
+
             if( observationData.solutionDetails.isReusable ) {
                 
                 let observationCreatedFromTemplate = 
@@ -2728,7 +2775,8 @@ function _observationDetails( observationData ) {
                             name : ""
                         },
                         status : CONSTANTS.common.PUBLISHED_STATUS,
-                        entities : [observationData.entityId]
+                        entities : [observationData.entityId],
+                        project : observationData.project
                     }
                 );
 
@@ -2743,6 +2791,23 @@ function _observationDetails( observationData ) {
                 result["observationId"] = observationCreatedFromTemplate.data.observationId;
 
             } else {
+
+                let solutionUpdated = 
+                await assessmentService.updateSolution(
+                    observationData.token,
+                    {
+                        project : observationData.project,
+                        referenceFrom : "project"
+                    },
+                    observationData.solutionDetails.externalId
+                );
+
+                if( !solutionUpdated.success ) {
+                    throw {
+                        status : HTTP_STATUS_CODE['bad_request'].status,
+                        message : CONSTANTS.apiResponses.SOLUTION_NOT_UPDATED
+                    }
+                }
 
                 let startDate = new Date();
                 let endDate = new Date();

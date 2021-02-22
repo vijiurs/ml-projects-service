@@ -491,21 +491,6 @@ module.exports = class ProjectTemplateTasksHelper {
                                 false
                             );
 
-                            if( solutionTypes.includes(createdTask.solutionType) ) {
-                                
-                                await assessmentService.updateSolution(
-                                    token,
-                                    {
-                                        project : {
-                                            _id : projectTemplateId,
-                                            taskId : createdTask._SYSTEM_ID
-                                        },
-                                        referenceFrom : "project"
-                                    },
-                                    createdTask.solutionId
-                                );
-                            }
-
                             input.push(createdTask);
                         }
                     }
@@ -527,23 +512,9 @@ module.exports = class ProjectTemplateTasksHelper {
                                 currentData,
                                 csvData.data.template,
                                 csvData.data.solutionData,
-                                csvData.data.observationData
+                                csvData.data.observationData,
+                                false
                             );
-
-                            if( solutionTypes.includes(createdTask.solutionType) ) {
-                                
-                                await assessmentService.updateSolution(
-                                    token,
-                                    {
-                                        project : {
-                                            _id : projectTemplateId,
-                                            taskId : createdTask._SYSTEM_ID
-                                        },
-                                        referenceFrom : "project"
-                                    },
-                                    createdTask.solutionId
-                                );
-                            }
 
                             input.push(createdTask);
                         }
@@ -640,21 +611,6 @@ module.exports = class ProjectTemplateTasksHelper {
                         csvData.data.solutionData,
                         true  
                     );
-
-                    if( solutionTypes.includes(createdTask.solutionType) ) {
-                                
-                        await assessmentService.updateSolution(
-                            token,
-                            {
-                                project : {
-                                    _id : projectTemplateId,
-                                    taskId : createdTask._SYSTEM_ID
-                                },
-                                referenceFrom : "project"
-                            },
-                            createdTask.solutionId
-                        );
-                    }
 
                     if( 
                         csvData.data.tasks[currentData._SYSTEM_ID].parentId && 

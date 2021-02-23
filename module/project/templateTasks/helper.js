@@ -216,7 +216,7 @@ module.exports = class ProjectTemplateTasksHelper {
         data,
         template,
         solutionData,
-        update
+        update = false
     ) {
         return new Promise(async (resolve, reject) => {
             try {
@@ -430,11 +430,10 @@ module.exports = class ProjectTemplateTasksHelper {
       * @param {Array} tasks - csv tasks data.
       * @param {String} projectTemplateId - project template id.
       * @param {String} userId - user logged in id.
-      * @param {String} token - token is required.
       * @returns {Object} Bulk create project template tasks.
      */
 
-    static bulkCreate( tasks,projectTemplateId,userId,token ) {
+    static bulkCreate( tasks,projectTemplateId,userId ) {
         return new Promise(async (resolve, reject) => {
             try {
 
@@ -461,11 +460,6 @@ module.exports = class ProjectTemplateTasksHelper {
                 }
 
                 let pendingItems = [];
-                let solutionTypes = [
-                    CONSTANTS.common.ASSESSMENT,
-                    CONSTANTS.common.OBSERVATION,
-                    CONSTANTS.common.IMPROVEMENT_PROJECT
-                ];
 
                 for ( let task = 0; task < tasks.length ; task ++ ) {
                     let currentData = UTILS.valueParser(tasks[task]);
@@ -487,8 +481,7 @@ module.exports = class ProjectTemplateTasksHelper {
                             await this.createOrUpdateTask(
                                 currentData,
                                 csvData.data.template,
-                                csvData.data.solutionData,
-                                false
+                                csvData.data.solutionData
                             );
 
                             input.push(createdTask);
@@ -512,8 +505,7 @@ module.exports = class ProjectTemplateTasksHelper {
                                 currentData,
                                 csvData.data.template,
                                 csvData.data.solutionData,
-                                csvData.data.observationData,
-                                false
+                                csvData.data.observationData
                             );
 
                             input.push(createdTask);
@@ -540,7 +532,7 @@ module.exports = class ProjectTemplateTasksHelper {
       * @returns {Object} Bulk update project template tasks.
      */
 
-    static bulkUpdate( tasks,projectTemplateId,userId,token ) {
+    static bulkUpdate( tasks,projectTemplateId,userId ) {
         return new Promise(async (resolve, reject) => {
             try {
 
@@ -567,12 +559,6 @@ module.exports = class ProjectTemplateTasksHelper {
                 }
 
                 let tasksData =  Object.values(csvData.data.tasks);
-
-                let solutionTypes = [
-                    CONSTANTS.common.ASSESSMENT,
-                    CONSTANTS.common.OBSERVATION,
-                    CONSTANTS.common.IMPROVEMENT_PROJECT
-                ];
 
                 if ( csvData.data.tasks && tasksData.length > 0 ) {
 

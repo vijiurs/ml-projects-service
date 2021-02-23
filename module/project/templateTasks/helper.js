@@ -288,6 +288,7 @@ module.exports = class ProjectTemplateTasksHelper {
                                 parsedData.STATUS = 
                                 CONSTANTS.apiResponses.MIS_MATCHED_PROJECT_AND_TASK_ENTITY_TYPE;
                             } else {
+
                                 allValues.solutionDetails = 
                                 _.pick(
                                     solutionData[parsedData.solutionId],

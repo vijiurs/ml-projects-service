@@ -627,6 +627,7 @@ module.exports = class ReportsHelper {
             }
         });
     }
+    
 }
 
 /**
@@ -655,3 +656,6 @@ function _getDateRangeofReport(reportType) {
     return { startFrom: startFrom, endOf: endOf };
 
 }
+
+
+

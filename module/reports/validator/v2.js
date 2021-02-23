@@ -8,9 +8,6 @@
 module.exports = (req) => {
 
     let reportsValidator = {
-        entity : function () {
-            req.checkQuery("reportType").exists().withMessage("required report type");
-        },
         detailView : function () {
             req.checkQuery("reportType").exists().withMessage("required report type");
         }

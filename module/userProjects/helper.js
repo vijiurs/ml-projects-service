@@ -695,6 +695,7 @@ module.exports = class UserProjectsHelper {
                     await this.createProgramAndSolution(
                         requestedData.programId,
                         requestedData.programName,
+                        requestedData.entityId ? [requestedData.entityId] : "",
                         userToken
                     );
 
@@ -1152,6 +1153,7 @@ module.exports = class UserProjectsHelper {
     static createProgramAndSolution(
         programId = "",
         programName = "",
+        entities,
         userToken,
         solutionId
     ) {
@@ -1164,7 +1166,8 @@ module.exports = class UserProjectsHelper {
                     type: CONSTANTS.common.IMPROVEMENT_PROJECT,
                     subType: CONSTANTS.common.IMPROVEMENT_PROJECT,
                     isReusable : false,
-                    solutionId : solutionId
+                    solutionId : solutionId,
+                    entities : entities
                 };
 
                 if (programName !== "") {
@@ -1190,7 +1193,7 @@ module.exports = class UserProjectsHelper {
 
                 result.solutionInformation = _.pick(
                     solutionAndProgramCreation.data.solution,
-                    ["name","externalId","description","_id"]
+                    ["name","externalId","description","_id","entityType"]
                 );
 
                 result.solutionInformation._id =
@@ -1631,7 +1634,9 @@ module.exports = class UserProjectsHelper {
                     "tasks._id",
                     "tasks.solutionDetails",
                     "tasks.submissionDetails",
-                    "programInformation._id"
+                    "tasks.externalId",
+                    "programInformation._id",
+                    "projectTemplateId"
                 ]
             );
 
@@ -1661,8 +1666,8 @@ module.exports = class UserProjectsHelper {
                     entityId : assessmentOrObservationData.entityId,
                     programId :  assessmentOrObservationData.programId,
                     project :  {
-                        "_id" : projectId,
-                        "taskId" : taskId
+                        "_id" : project[0].projectTemplateId,
+                        "taskId" : currentTask.externalId
                     }
                 };
 
@@ -2624,6 +2629,18 @@ function _assessmentDetails( assessmentData ) {
 
             let result = {};
 
+            if( assessmentData.project ) {
+                
+                let templateTasks = 
+                await projectTemplateTasksHelper.taskDocuments({
+                    externalId : assessmentData.project.taskId
+                },["_id"])
+                
+                if( templateTasks.length > 0 ) {
+                    assessmentData.project.taskId = templateTasks[0]._id;
+                }
+            }
+
             if( assessmentData.solutionDetails.isReusable ) {
                 
                 let createdAssessment = 
@@ -2731,6 +2748,18 @@ function _observationDetails( observationData ) {
         try {
 
             let result = {};
+
+            if( observationData.project ) {
+                
+                let templateTasks = 
+                await projectTemplateTasksHelper.taskDocuments({
+                    externalId : observationData.project.taskId
+                },["_id"])
+                
+                if( templateTasks.length > 0 ) {
+                    observationData.project.taskId = templateTasks[0]._id;
+                }
+            }
 
             if( observationData.solutionDetails.isReusable ) {
                 
